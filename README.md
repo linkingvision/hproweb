@@ -1,6 +1,8 @@
-# hpronvr
+# HPro AI NVR web
 
-This template should help get you started developing with Vue 3 in Vite.
+![Login](./doc/img/login.png)
+![Grid View](./doc/img/view.png)
+Developing with Vue 3 in Vite.
 
 ## Node Version
 v22.18.0
