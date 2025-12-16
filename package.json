@@ -1,0 +1,51 @@
+{
+  "name": "hpronvr",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build"
+  },
+  "dependencies": {
+    "@coreui/coreui": "^5.4.3",
+    "@coreui/vue": "^5.7.0",
+    "axios": "^1.12.2",
+    "d3": "^7.9.0",
+    "dayjs": "^1.11.19",
+    "element-plus": "^2.11.5",
+    "jquery": "^3.7.1",
+    "js-base64": "^3.7.8",
+    "js-md5": "^0.8.3",
+    "pinia": "^3.0.3",
+    "pinia-plugin-persistedstate": "^4.7.1",
+    "vant": "^4.9.21",
+    "vue": "^3.5.22",
+    "vue-i18n": "^11.1.12",
+    "vue-router": "^4.6.3",
+    "vuex": "^4.1.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.2",
+    "@types/jquery": "^3.5.33",
+    "@types/node": "^22.18.11",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitejs/plugin-vue-jsx": "^5.1.1",
+    "@vue/tsconfig": "^0.8.1",
+    "npm-run-all2": "^8.0.4",
+    "sass": "^1.93.2",
+    "sass-loader": "^16.0.6",
+    "typescript": "~5.9.0",
+    "vite": "^7.1.11",
+    "vite-plugin-mkcert": "^1.17.9",
+    "vite-plugin-vue-devtools": "^8.0.3",
+    "vue-tsc": "^3.1.1"
+  }
+}

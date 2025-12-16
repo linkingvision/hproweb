@@ -1,0 +1,32 @@
+body {
+  .c-app {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    // 侧边导航
+    .sidebar-com {
+      .el-menu {
+        .el-menu-item.is-active {
+          color: #000;
+          background: url("../imgs/sidebar.png") no-repeat;
+        }
+        .el-menu-item:hover {
+          background: url("../imgs/sidebar.png") no-repeat;
+        }
+      }
+    }
+
+    // 主页头部组件
+    // .header-com {
+      
+    // }
+
+    .el-select {
+      .el-select__selection {
+        span {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}

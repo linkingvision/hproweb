@@ -1,0 +1,12 @@
+@use './variables';
+@use './custom';
+@use './darkblue';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html {
+  overflow: hidden;
+}
