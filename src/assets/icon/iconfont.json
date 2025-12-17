@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "41766397",
+      "name": "白摄像机",
+      "font_class": "baishexiangji",
+      "unicode": "e88b",
+      "unicode_decimal": 59531
+    },
+    {
+      "icon_id": "41766399",
+      "name": "黑摄像机",
+      "font_class": "heishexiangji",
+      "unicode": "e88d",
+      "unicode_decimal": 59533
+    },
+    {
       "icon_id": "36640581",
       "name": "维护",
       "font_class": "weihu",
@@ -160,25 +174,11 @@
       "unicode_decimal": 59530
     },
     {
-      "icon_id": "41766397",
-      "name": "白摄像机",
-      "font_class": "baishexiangji",
-      "unicode": "e88b",
-      "unicode_decimal": 59531
-    },
-    {
       "icon_id": "41766398",
       "name": "黑球机",
       "font_class": "heiqiuji",
       "unicode": "e88c",
       "unicode_decimal": 59532
-    },
-    {
-      "icon_id": "41766399",
-      "name": "黑摄像机",
-      "font_class": "heishexiangji",
-      "unicode": "e88d",
-      "unicode_decimal": 59533
     },
     {
       "icon_id": "42464505",

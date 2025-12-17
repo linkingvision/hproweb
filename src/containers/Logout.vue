@@ -22,7 +22,7 @@ const logout = async () => {
     userStore.setSession('')
     userStore.setSetIntervalKeepAlive(null);
     document.body.className = '';
-    router.push('/login');
+    router.push('/Login');
   }
 }
 

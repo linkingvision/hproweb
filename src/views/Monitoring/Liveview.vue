@@ -22,6 +22,7 @@
             </div>
           </template>
           <el-tree-v2
+            ref="treeRef"
             style="max-width: 100%;"
             :data="channelData"
             :props="props"
@@ -37,11 +38,11 @@
                 :class="getNodeClass(data)">
                 <i :class="`iconfont ${getNodeIcon(data)}`" 
                    :style="{
-                     color: getNodeColor(data), 
-                     marginRight: '8px', 
-                     fontSize: data.type === 'device' && data.isLeaf ? '20px' : '16px'
+                     opacity: getNodeColor(data),
+                     marginRight: '8px',
+                     fontSize: data.type === 'device' && data.isLeaf ? '16px' : '16px'
                    }"></i>
-                <span :style="{color: getNodeColor(data)}">{{ node.label }}</span>
+                <span :style="{opacity: getNodeColor(data)}">{{ node.label }}</span>
               </div>
             </template>
           </el-tree-v2>
@@ -50,7 +51,24 @@
     </div>
     <div class="liveview-right">
       <div class="liveview_right_video_hed" id="video_hed" @dragover.prevent="dragOver($event)" @drop="dropTarget($event)">
-        <!-- grid 布局单元格 -->
+        
+         <div class="malv" :class="informationshow ? '' : 'malv-hide'" style="position: absolute;">
+            <div class="malv-close" @click="closeInformation">×</div>
+            <div class="malv-left">
+              <div class="information_title">{{ 'Video' }}</div>
+              <div class="information_content" v-for="(a, index) in informationVideo" :key="index">
+                <div class="information_content_left">{{ a.name }}</div>
+                <div class="information_content_right">{{ a.data }}</div>
+              </div>
+            </div>
+            <div class="malv-right">
+              <div class="information_title">{{ 'Audio' }}</div>
+              <div class="information_content" v-for="(a, index) in informationAudio" :key="index">
+                <div class="information_content_left">{{ a.name }}</div>
+                <div class="information_content_right">{{ a.data }}</div>
+              </div>
+            </div>
+          </div>
       </div>
       <div class="control_area" style="width: 100%;">
         <div class="timeline-box" style="width: 100%; height: 80px; padding: 0; box-sizing: border-box; border: none;">
@@ -69,8 +87,8 @@
             </div>
           </div>
           <div class="control-center">
-            <el-date-picker class="fixed_input" v-model="xzvalue" size="small" @change="input_ch" @focus="isShow" @blur="isClose"
-              :picker-options="pickerOptions" :append-to-body="false" :clearable="false" popper-class="date-picker">
+            <el-date-picker class="fixed_input" v-model="xzvalue" size="small" @change="input_ch" @focus="isShow" @panel-change="monthChange" @blur="closePicker"
+              :append-to-body="false" :clearable="false" popper-class="date-picker">
             </el-date-picker>
             <el-select v-model="region" size="small" class="ele" popper-class='selectdrop' @change="timeSpeed(region)" @visible-change="timeInput" popper-style="border: 0;">
               <el-option v-for="(item, index) in regiondata" :key="index" :label="item.label" :value="item.value"></el-option>
@@ -78,8 +96,16 @@
             <button class="resume-btn" @click="resume">
               <i class="iconfont" :class="isPlaying ? 'icon-zanting' : 'icon-bofang'"></i>
             </button>
+            <div id="Audio_slider-bottom" class="Audio_slider-bottom">
+              <div style="margin-right: 10px;">
+                <i class="iconfont" :class="(Audioslider == 0) ? 'icon-shengyinguan' : 'icon-shengyinkai'"
+                  style="font-size:22px;"></i>
+              </div>
+              <el-slider :step='0.1' :show-tooltip="false" :max='1' v-model="Audioslider"
+                style="width:60%;margin-right: 10px;"></el-slider>
+            </div>
           </div>
-          <!-- 右侧 全部关闭、宫格切换、全屏功能 -->
+          
           <div class="gongge-btns" style="height: 50px; padding-right: 20px; width: 17%; display: flex; justify-content: flex-end; align-items: center;">
             <el-button v-if="!isLiveview" class="goto-live" @click="gotoLive" round>{{ t('Monitoring.mon_gotolive') }}</el-button>
             <el-button class="iconfont icon-guanbi2 offAllVideo" @click="Alloffvideo"></el-button>
@@ -91,15 +117,70 @@
     <div v-if="IsTreeFold" class="TreeFold" @click="TreeFold">
       <i class="iconfont icon-liebiao"></i>
     </div>
+    <div class="yuntai" :class="ptzShow ? '' : 'yuntai-hide'">
+      <div class="header">
+        <span>PTZ</span>
+        <i class="iconfont icon-zhankai2" @click="closePtz"></i>
+      </div>
+      <div class="controls">
+        <div class="left">
+          <i class="iconfont icon-jujiao2" @mousedown="PtzAction('focusin')" @mouseup="PtzAction('stop')"></i>
+          <i class="iconfont icon-jujiao1" @mousedown="PtzAction('focusout')" @mouseup="PtzAction('stop')"></i>
+          <i class="iconfont icon-guangquanjia" @mousedown="PtzAction('irisin')" @mouseup="PtzAction('stop')"></i>
+          <i class="iconfont icon-guangquanjian" @mousedown="PtzAction('irisout')" @mouseup="PtzAction('stop')"></i>
+          <i class="iconfont icon-light-open" @mousedown="PtzAction('lighton')" @mouseup="PtzAction('stop')"></i>
+          <i class="iconfont icon-light-close" @mousedown="PtzAction('lightoff')" @mouseup="PtzAction('stop')"></i>
+          <i class="iconfont icon-kaiyushua" @mousedown="PtzAction('wiperon')" @mouseup="PtzAction('stop')"></i>
+          <i class="iconfont icon-guanyushua" @mousedown="PtzAction('wiperoff')" @mouseup="PtzAction('stop')"></i>
+        </div>
+        <div class="right">
+          <div class="ptz-item corner"><div class="zs" @mousedown="PtzAction('upleft')" @mouseup="PtzAction('stop')">
+            <i class="iconfont icon-zuoshang"></i>
+          </div></div>
+          <div class="ptz-item shang" @mousedown="PtzAction('up')" @mouseup="PtzAction('stop')"><i class="iconfont icon-shang"></i></div>
+          <div class="ptz-item corner"><div class="ys" @mousedown="PtzAction('upright')" @mouseup="PtzAction('stop')">
+            <i class="iconfont icon-youshang"></i>
+          </div></div>
+          <div class="ptz-item zuo" @mousedown="PtzAction('left')" @mouseup="PtzAction('stop')"><i class="iconfont icon-zuo"></i></div>
+          <div class="ptz-item center"></div>
+          <div class="ptz-item you" @mousedown="PtzAction('right')" @mouseup="PtzAction('stop')"><i class="iconfont icon-you"></i></div>
+          <div class="ptz-item corner"><div class="zx" @mousedown="PtzAction('downleft')" @mouseup="PtzAction('stop')">
+            <i class="iconfont icon-zuoxia"></i>
+          </div></div>
+          <div class="ptz-item xia" @mousedown="PtzAction('down')" @mouseup="PtzAction('stop')"><i class="iconfont icon-xia"></i></div>
+          <div class="ptz-item corner" ><div class="yx" @mousedown="PtzAction('downright')" @mouseup="PtzAction('stop')">
+            <i class="iconfont icon-youxia"></i>
+          </div></div>
+        </div>
+      </div>
+      <div class="ptz-slider">
+        <span>{{ ptzvalue }}</span>
+        <el-slider v-model="ptzvalue" :show-tooltip="false" :max="1" :min="0.1" :step="0.1"></el-slider>
+      </div>
+      <el-timeline>
+        <el-timeline-item placement="top" v-for="Pre in PresetData" :key="Pre.strName">
+          <el-card>
+            <div class="preset_bgc">
+              <input type="text" class="preset_input" :value="Pre.strName" />
+              <button type="button" class="iconfont icon-RectangleCopy1"
+                @click="preset_jump(Pre.strToken)"></button>
+              <button type="button" class="iconfont icon-icon-test1"
+                @click="preset_set(Pre.strToken, $event)"></button>
+            </div>
+          </el-card>
+        </el-timeline-item>
+      </el-timeline>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import $ from 'jquery'
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { H5sPlayerAudBack } from '@/assets/js/h5splayer.js'
 // import { useRoute } from 'vue-router';
 import { GetDevPartitionApi } from '@/api/configuration/device';
-import { GetDeviceChannels, GetDeviceList, RecEnableApi, GetRecordCalendar, setRecEnableApi } from '@/api/channel';
+import { GetDeviceChannels, RecEnableApi, GetRecordCalendar, setRecEnableApi, GetInformationDataApi, GetPresetsApi, PresetJumpApi, SetPresetApi, PtzApi } from '@/api/channel';
 import { useUserStore } from '@/store/user';
 import { UPlayerSDK as UPlayerSDKClass, UPlayerList as UPlayerListClass, GridLayoutManager } from '@/assets/js/uplayersdk.esm.js';
 import uuid from '@/assets/js/uuid.js'
@@ -133,6 +214,7 @@ const props = {
   children: 'children'
 }
 let expandedKeys = ref<any[]>([])  // 保持所有要默认展开的key
+let treeRef = ref<any>(null)  // 树组件的引用
 
 let IsTreeFold = ref(false) // 左侧树状容器 收起/展示
 
@@ -150,17 +232,68 @@ let UPlayerList = ref<any>(null)
 let PlayingArr = ref<any[]>([])
 let PlayBackArr = ref<any[]>([])
 let isPlaying = ref<boolean>(false)
+let informationshow = ref<boolean>(false)
+let timerRunInfo = ref<any>(null)
+const informationAudio = ref<any[]>([])
+const informationVideo = ref<any[]>([])
+const selectCellId = ref<string>('')
+const mainSDKId = ref<string>('')
+const Audioslider = ref<number>(0)
 
 const initUPlayList = ():void => { // 初始化 UPlayerList
-  UPlayerList.value = new UPlayerListClass('#timeline')
+  UPlayerList.value = new UPlayerListClass('#timeline');
+  const arr = JSON.parse(localStorage.getItem('view-playing') || '[]');
+  if (arr && arr.length > 0) {
+    console.log('恢复播放视频 arr =>', arr)
+    arr.forEach((item: any) => {
+      const conf = {
+        videoid: item.videoid,
+        protocol: item.protocol,
+        host: item.host,
+        token: item.token,
+        session: userStore.session,
+        accessToken: userStore.Access_token,
+        streamprofile: item.streamprofile,
+        resourceUUID: item.resourceUUID,
+        name: item.name,
+        label: item.label,
+        liveVideoType: item.liveVideoType,
+        recording: item.recording,
+        onPlaybackModeChange: (mode: string) => {
+          console.log('onPlaybackModeChange =>', mode);
+          if (mode == 'live') {
+            isLiveview.value = true;
+          } else {
+            isLiveview.value = false;
+          }
+        },
+        onError: (err: object) => {
+          console.warn('Play Error =>', err)
+        }
+      }
+      const UPlayer = new UPlayerSDKClass('G' + conf.videoid, conf);
+      UPlayerList.value.addPlayer(UPlayer);
+      PlayingArr.value.push(UPlayer);
+      PlayBackArr.value.push(UPlayer);
+      isPlaying.value = true;
+    })
+    UPlayerList.value.playAll();
+  }
 }
 const initGridLayout = ():void => {
   GridManager.value = new GridLayoutManager('#video_hed', {
+    cacheKey: 'view-layout',
     padding: 20,
-    aspectRatio:[16, 9],
+    aspectRatio: [16, 9],
     animationDuration: 500,
     createIcons: {
-      recEnableIcon: true
+      playModeIcon: true,
+      playModeText: 'WS2',
+      informationIcon: true,
+      shouwhearIcon: true,
+      snapshotIcon: true,
+      recEnableIcon: true,
+      ptzcontrolIcon: true
     }
   })
   gridListener.closeCellHandler = (event: CustomEvent<any>) => {
@@ -169,8 +302,264 @@ const initGridLayout = ():void => {
   gridListener.recEnableHandler = (event: CustomEvent<any>) => {
     DoManualRecordStart(event.detail.id, event.detail.recEnable)
   }
+  gridListener.changeMainSDKHandler = (event: CustomEvent<any>) => {
+    changeMainSDK(event.detail)
+  }
+  gridListener.InformationHandler = (event: CustomEvent<any>) => {
+    Information(event.detail.id)
+  }
+  gridListener.SnapshotHandler = (event: CustomEvent<any>) => {
+    DoSnapshotWeb(event.detail.id)
+  }
+  gridListener.ShoutwheatHandler = (event: CustomEvent<any>) => {
+    Shoutwheat(event.detail.id, event.detail.audio)
+  }
+  gridListener.PtzControlShowHandler = (event: CustomEvent<any>) => {
+    PtzControlShow(event.detail.id)
+  }
+
   GridManager.value.addEventListener('closeCell', gridListener.closeCellHandler)
   GridManager.value.addEventListener('recEnableClick', gridListener.recEnableHandler)
+  GridManager.value.addEventListener('cellClick', gridListener.changeMainSDKHandler)
+  GridManager.value.addEventListener('Information', gridListener.InformationHandler)
+  GridManager.value.addEventListener('Snapshot', gridListener.SnapshotHandler)
+  GridManager.value.addEventListener('Shoutwheat', gridListener.ShoutwheatHandler)
+  GridManager.value.addEventListener('PtzControlShow', gridListener.PtzControlShowHandler)
+}
+// 打开仪表
+const Information = (id: string) => {
+  const vid = id.slice(1);
+  const sdk = PlayingArr.value.find(item => item.conf.videoid == vid);
+  if (informationshow.value) {
+    informationshow.value = false;
+    clearInterval(timerRunInfo.value);
+    timerRunInfo.value = null;
+  } else {
+    informationshow.value = true;
+    Informationdata(vid, sdk.conf.token);
+    timerRunInfo.value = setInterval(() => {
+      Informationdata(vid, sdk.conf.token);
+    }, 8000)
+  }
+}
+// 获取码流信息
+const Informationdata = async (id: string, token: string) => {
+  const res = await GetInformationDataApi(token);
+  if (res.status == 200) {
+    const item = res.data;
+    informationAudio.value = [{
+      // name: '编码类型',
+      name: 'Codec',
+      data: item.strAudioType
+    }, {
+      // name: '采样率',
+      name: 'Sample Rate',
+      data: item.nAudioSampleRate
+    }, {
+      // name: '采样位宽',
+      name: 'Sample Bit',
+      data: item.nAudioSampleBit
+    }, {
+      // name: '声道数',
+      name: 'Channels',
+      data: item.nAudioChannels
+    }, {
+      // name: '码率',
+      name: 'Bitrate',
+      data: (item.nAudioBitrate / 1024).toFixed(1) + 'kpbs'
+    }];
+    informationVideo.value = [{
+      // name: '编码类型',
+      name: 'Codec',
+      data: item.strVideoType
+    }, {
+      // name: '宽',
+      name: 'Width',
+      data: item.nVideoWidth
+    }, {
+      // name: '高',
+      name: 'Height',
+      data: item.nVideoHeight
+    }, {
+      // name: '帧率',
+      name: 'FPS',
+      data: item.nVideoFPS
+    }, {
+      // name: '码率',
+      name: 'Bitrate',
+      data: (item.nVideoBitrate / 1024).toFixed(1) + 'kpbs'
+    }]
+  }
+}
+// 关闭仪表
+const closeInformation = (): void => {
+  informationshow.value = false;
+  if (timerRunInfo.value) {
+    clearInterval(timerRunInfo.value)
+    timerRunInfo.value = null;
+  }
+}
+// 本地抓图
+const DoSnapshotWeb = (id: string) => {
+  const vid = id.slice(1);
+  const sdk = PlayingArr.value.find(item => item.conf.videoid == vid);
+  if (!sdk) return;
+
+  const date = new Date();
+  const fileName = `${sdk.conf.token}_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}`;
+  let video: any;
+  if (isLiveview.value) {
+    video = $('#' + sdk.conf.videoid).get(0);
+  } else {
+    video = $('#playback' + vid).find('video[pos="0"]').get(0);
+  }
+  // ✅ 新增：跨域属性
+  if (video) video.crossOrigin = 'anonymous';
+  const canvas = document.createElement('canvas');
+  const ctx: any = canvas.getContext('2d');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  var imgURL = canvas.toDataURL("image/png");
+
+  var dlLink = document.createElement('a');
+  dlLink.download = fileName;
+  dlLink.href = imgURL;
+  document.body.appendChild(dlLink);
+  dlLink.click();
+  document.body.removeChild(dlLink);
+}
+
+// 点击语音
+let audioback = ref<any>(null)
+const Shoutwheat = (id: string, audio: boolean) => {
+  const vid = id.slice(1)
+  const sdk = PlayingArr.value.find(item => item.conf.videoid == vid);
+  if (!sdk) return;
+  const conf = {
+    protocol: window.location.protocol,
+    host: window.location.host,
+    rootpath: '/',
+    token: sdk.conf.token,
+    session: userStore.session
+  }
+  if (audio) {
+    audioback.value.disconnect();
+    delete audioback.value;
+    audioback.value = null
+  } else {
+    if (audioback.value) {
+      audioback.value.disconnect();
+      delete audioback.value;
+      audioback.value = null
+    }
+    audioback.value = new H5sPlayerAudBack(conf);
+    audioback.value.connect();
+  }
+  GridManager.value.changeAudio(id, !audio)
+}
+// 云台控制
+const ptzShow = ref<boolean>(false);
+const ptzToken = ref<string>('');
+const PresetData = reactive<any[]>([])
+const ptzvalue = ref<number>(0.5)
+const PtzControlShow = async (id: string) => {
+  // console.log('View 点击云台 id =>', id)
+  const vid = id.slice(1)
+  const sdk = PlayingArr.value.find(item => item.conf.videoid == vid);
+  if (!sdk) return;
+  ptzShow.value = true;
+  ptzToken.value = sdk.conf.token;
+  PresetData.splice(0);
+  const res = await GetPresetsApi(ptzToken.value);
+  if (res.status == 200) {
+    if (res.data && res.data.preset.length > 0) {
+      const preset = res.data.preset;
+      for(let i = 0; i < preset.length; i++) {
+        const newItem = {
+          strName: preset[i].strName,
+          strToken: preset[i].strToken
+        }
+        if (i >= 8) break;
+        PresetData.push(newItem);
+      }
+    }
+  }
+}
+const PtzAction = async (action: string, speed?: number) => {
+  const speedValue = speed || ptzvalue.value;
+  if (!ptzToken.value) return;
+  const res = await PtzApi(ptzToken.value, action, speedValue)
+  if (res.status == 200 && res.data.code == 0) {}
+}
+const preset_jump = async (token: string) => {
+  const res = await PresetJumpApi(ptzToken.value, token, ptzvalue.value)
+  if (res.status == 200 && res.data.code == 0) {}
+}
+const preset_set = async (token: string, event: MouseEvent) => {
+  const target = event.currentTarget as HTMLElement
+  const input = target.previousElementSibling?.previousElementSibling as HTMLInputElement
+  var input_val = input?.value;
+  const res = await SetPresetApi(ptzToken.value, input_val, token)
+  if (res.status == 200 && res.data.code == 0) {}
+}
+const closePtz = () => {
+  ptzShow.value = false;
+  ptzToken.value = '';
+  PresetData.splice(0);
+}
+// 切换主播放器
+const changeMainSDK = (id: string) => {
+  const vid = id.slice(1);
+  // 如果当前为回放，且点击和当前选中时同一个，那么 加入/取消 回放组
+  if (!isLiveview.value && mainSDKId.value === id) {
+    const playSDK = PlayingArr.value.find(item => item.conf.videoid === vid);
+    if (playSDK) {  // 当前点击区域有正在播放的视频
+      const playbackSDK = PlayBackArr.value.find(item => item.conf.videoid === vid);
+      const target = document.getElementById(id)
+      if (playbackSDK) {
+        if (PlayBackArr.value.length > 1) {
+          UPlayerList.value.getOutPlayer(vid);
+          PlayBackArr.value = PlayBackArr.value.filter(item => item.conf.videoid != vid)
+          target?.classList.remove('playback_check_border')
+          target?.classList.remove('blue_dashed')
+          target?.classList.add('red_border')
+        }
+      } else {
+        UPlayerList.value.addPlayer(playSDK);
+        PlayBackArr.value.push(playSDK)
+        target?.classList.remove('red_border')
+        target?.classList.add('playback_check_border')
+      }
+    }
+  } else {
+    if (UPlayerList.value && UPlayerList.value.UPlayerSDKList.length > 0) {
+      UPlayerList.value.changeMainSDK(vid)
+    }
+  }
+
+  selectCellId.value = vid;
+  mainSDKId.value = id;
+
+  if (isLiveview.value) {
+    document.querySelectorAll('.grid_cell.red_border')
+      .forEach(el => el.classList.remove('red_border'))
+    const target = document.getElementById(id);
+      if (target) target.classList.add('red_border')
+  } else {
+    document.querySelectorAll('.grid_cell.red_border').forEach(el => el.classList.remove('red_border'))
+    document.querySelectorAll('.grid_cell.playback_check_border').forEach(el => el.classList.remove('playback_check_border'))
+    const item = PlayBackArr.value.find(item => item.conf.videoid == vid)
+    const target = document.getElementById(id);
+    if (target) {
+      if (item) {
+        target.classList.add('blue_dashed')
+        target.classList.add('playback_check_border')
+      } else {
+        target.classList.add('red_border')
+      }
+    }
+  }
 }
 // 开启 / 关闭手动录像
 const DoManualRecordStart = async (id: string, recEnable: boolean) => {
@@ -234,8 +623,15 @@ const closePlayContainer = (id: string) => {
     } else {
       currentSDK.destory()
     }
+    if (currentSDK.conf.token === ptzToken.value) {
+      closePtz()
+    }
     PlayingArr.value = PlayingArr.value.filter(sdk => sdk.conf.videoid !== vid)
     PlayBackArr.value = PlayBackArr.value.filter(sdk => sdk.conf.videoid !== vid)
+    if (!PlayingArr.value.length) {
+      isLiveview.value = true;
+      isPlaying.value = false;
+    }
   }
 }
 
@@ -252,12 +648,21 @@ const TreeFold = () => {
 
 const getAllKeys = (data: any) => {
   const keys: any[] = [];
-  data.forEach((item: any) => {
-    keys.push(item.id)
-    if (item.children && item.children.length) {
-      keys.push(...getAllKeys(item.children))
+  const stack = [...data]; // 使用栈避免深度递归
+  
+  while (stack.length > 0) {
+    const item = stack.pop();
+    if (item && item.id !== 'placeholder') {
+      keys.push(item.id);
+      if (item.children && item.children.length > 0) {
+        // 只有非叶子节点才继续处理子节点
+        if (!item.isLeaf) {
+          stack.push(...item.children);
+        }
+      }
     }
-  })
+  }
+  
   return keys;
 }
 
@@ -271,7 +676,7 @@ const handleDragStart = (node: any) => {
   drag.value = {};
   isDrag.value = true;
   let conf = {}
-  if (node.data.data.type == "H5_CH_DEV") {
+  if (node.data.data.type == "H5_CH_DEV" || node.data.data.type == "H5_FILE") {
     conf = {
       videoid: uuid(8),
       protocol: window.location.protocol,
@@ -283,6 +688,7 @@ const handleDragStart = (node: any) => {
       label: node.data.data.name,
       resourceUUID: node.data.data.uuid,
       liveVideoType: 'WS2',
+      recording: node.data.data.recording,
       onPlaybackModeChange: (mode: string) => {
         console.log('onPlaybackModeChange =>', mode);
         if (mode == 'live') {
@@ -359,6 +765,7 @@ const dropTarget = async (event: any) => {
   PlayBackArr.value.push(UPlayer)
   UPlayerList.value.playAll();
   isPlaying.value = true;
+  gridListener.changeMainSDKHandler?.({detail: conf.id})
 }
 
 const transformToTreeData = (partitions: any[]): TreeNode[] => {
@@ -374,18 +781,19 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
       id: `partition_${partition.devPartitionId}`,
       label: partition.devPartitionName,
       type: 'partition',
-      children: [],
       data: partition,
-      isLeaf: false,
+      isLeaf: !hasChildren,
       loaded: false
     };
     
-    // 如果有实际的子数据，则立即加载，按照优先级排序
+    // 只有当有实际的子数据时，才设置children属性
     if (hasChildren) {
+      partitionNode.children = [];
+      
       // 1. 优先展示children（子分区）
       if (partition.children && partition.children.length > 0) {
         const childrenNodes = transformToTreeData(partition.children);
-        partitionNode.children!.push(...childrenNodes);
+        partitionNode.children.push(...childrenNodes);
       }
       
       // 2. 其次展示dev设备
@@ -397,14 +805,14 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             type: 'device',
             online: device.online,
             data: device,
-            children: [{ id: 'placeholder', label: '', type: 'device', data: null }], // 设备也可能有子数据
+            children: [{ id: 'placeholder', label: '', type: 'device', data: null }], // 设备需要懒加载通道
             isLeaf: false,
             loaded: false
           });
         });
       }
       
-      // 3. 然后展示map地图
+      // 3. 然后展示map地图 - map是叶子节点，不需要展开图标
       if (partition.map && partition.map.length > 0) {
         partition.map.forEach((map: any) => {
           partitionNode.children!.push({
@@ -412,14 +820,13 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             label: map.mapName,
             type: 'map',
             data: map,
-            children: [{ id: 'placeholder', label: '', type: 'map', data: null }],
-            isLeaf: false,
-            loaded: false
+            isLeaf: true, // map是叶子节点
+            loaded: true
           });
         });
       }
       
-      // 4. 最后展示view视图
+      // 4. 最后展示view视图 - view是叶子节点，不需要展开图标
       if (partition.view && partition.view.length > 0) {
         partition.view.forEach((view: any) => {
           partitionNode.children!.push({
@@ -427,18 +834,15 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             label: view.viewName,
             type: 'view',
             data: view,
-            children: [{ id: 'placeholder', label: '', type: 'view', data: null }],
-            isLeaf: false,
-            loaded: false
+            isLeaf: true, // view是叶子节点
+            loaded: true
           });
         });
       }
       
       partitionNode.loaded = true;
-    } else {
-      // 没有子数据时添加占位符
-      partitionNode.children = [{ id: 'placeholder', label: '', type: 'partition', data: null }];
     }
+    // 没有子数据时不设置children属性，这样树组件就不会显示展开图标
     
     result.push(partitionNode);
   });
@@ -464,14 +868,14 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           type: 'device',
           online: device.online,
           data: device,
-          children: [{ id: 'placeholder', label: '', type: 'device', data: null }], // 添加占位符
+          children: [{ id: 'placeholder', label: '', type: 'device', data: null }], // 设备需要懒加载通道
           isLeaf: false,
           loaded: false
         });
       });
     }
     
-    // 3. 然后展示map地图
+    // 3. 然后展示map地图 - map是叶子节点，不需要展开图标
     if (partition.map && partition.map.length > 0) {
       partition.map.forEach((map: any) => {
         result.push({
@@ -479,14 +883,13 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           label: map.mapName,
           type: 'map',
           data: map,
-          children: [{ id: 'placeholder', label: '', type: 'map', data: null }],
-          isLeaf: false,
-          loaded: false
+          isLeaf: true, // map是叶子节点
+          loaded: true
         });
       });
     }
     
-    // 4. 最后展示view视图
+    // 4. 最后展示view视图 - view是叶子节点，不需要展开图标
     if (partition.view && partition.view.length > 0) {
       partition.view.forEach((view: any) => {
         result.push({
@@ -494,9 +897,8 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           label: view.viewName,
           type: 'view',
           data: view,
-          children: [{ id: 'placeholder', label: '', type: 'view', data: null }],
-          isLeaf: false,
-          loaded: false
+          isLeaf: true, // view是叶子节点
+          loaded: true
         });
       });
     }
@@ -505,82 +907,187 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
   return result;
 };
 
+// 添加加载状态和缓存
+let isLoading = ref(false);
+let deviceCache = new Map(); // 缓存设备通道数据
+
 const getDeviceList = async () => {
-  channelData.value = [];
-  const res = await GetDevPartitionApi();
-  if (res.status == 200 && res.data.code == 0) {
-    const result = res.data.result;
-    // 使用扁平化函数，按照优先级排序
-    const list = flattenRootNodes(result);
-    
-    // 为设备节点加载通道数据
-    for(const item of list) {
-      if (item.type === 'device' && item.data && item.data.token) {
-        const ress = await GetDeviceChannels(item.data.token)
-        if (ress.status == 200 && ress.data.code == 0 && ress.data.result.length > 0) {
-          // 将通道数据转换为树节点格式，保持在线状态
-          item.children = ress.data.result.map((channel: any, index: number) => ({
-            id: `channel_${item.data.devId}_${index}`,
-            label: channel.name || `通道 ${index + 1}`,
-            name: channel.name || `通道 ${index + 1}`,
-            token: channel.token,
-            online: channel.online,
-            type: 'device', // 通道也是device类型，但通过isDeviceChannel区分
-            data: channel,
-            isLeaf: true,
-            isDeviceChannel: true // 标记为设备通道
-          }));
-          item.loaded = true;
-        } else {
-          // 设备没有通道时，清空children但不设置为叶子节点
-          item.children = [];
-          item.loaded = true;
-          // 不设置 item.isLeaf = true，让设备保持为非叶子节点
+  if (isLoading.value) {
+    console.log('正在加载中，跳过重复请求');
+    return;
+  }
+  
+  isLoading.value = true;
+  try {
+    channelData.value = [];
+    const res = await GetDevPartitionApi();
+    if (res.status == 200 && res.data.code == 0) {
+      const result = res.data.result;
+      // 使用扁平化函数，按照优先级排序
+      const list = flattenRootNodes(result);
+      
+      // 为设备节点加载通道数据 - 使用缓存和更小的批次
+      const deviceItems = list.filter(item => item.type === 'device' && item.data && item.data.token);
+      console.log(`需要加载 ${deviceItems.length} 个设备的通道数据`);
+      
+      // 减少批次大小，避免同时发起太多请求
+      const batchSize = 3;
+      for (let i = 0; i < deviceItems.length; i += batchSize) {
+        const batch = deviceItems.slice(i, i + batchSize);
+        
+        await Promise.allSettled(
+          batch.map(async (item) => {
+            try {
+              // 检查缓存
+              const cacheKey = item.data.token;
+              if (deviceCache.has(cacheKey)) {
+                const cachedData = deviceCache.get(cacheKey);
+                if (cachedData.length > 0) {
+                  item.children = cachedData;
+                  item.loaded = true;
+                  item.isLeaf = false;
+                } else {
+                  delete item.children;
+                  item.loaded = true;
+                  item.isLeaf = true;
+                }
+                return;
+              }
+              
+              const ress = await GetDeviceChannels(item.data.token);
+              if (ress.status == 200 && ress.data.code == 0 && ress.data.result.length > 0) {
+                // 将通道数据转换为树节点格式，保持在线状态
+                const channels = ress.data.result.map((channel: any, index: number) => ({
+                  id: `channel_${item.data.devId}_${index}`,
+                  label: channel.name || `通道 ${index + 1}`,
+                  name: channel.name || `通道 ${index + 1}`,
+                  token: channel.token,
+                  online: channel.online,
+                  type: 'device', // 通道也是device类型，但通过isDeviceChannel区分
+                  data: channel,
+                  isLeaf: true,
+                  isDeviceChannel: true // 标记为设备通道
+                }));
+                
+                // 缓存数据
+                deviceCache.set(cacheKey, channels);
+                
+                item.children = channels;
+                item.loaded = true;
+                item.isLeaf = false;
+              } else {
+                // 缓存空结果
+                deviceCache.set(cacheKey, []);
+                
+                // 设备没有通道时，删除children属性，这样就不会显示展开图标
+                delete item.children;
+                item.loaded = true;
+                item.isLeaf = true; // 设置为叶子节点
+              }
+            } catch (error) {
+              console.error(`加载设备 ${item.data.devId} 的通道失败:`, error);
+              // 出错时也要清理占位符
+              delete item.children;
+              item.loaded = true;
+              item.isLeaf = true;
+            }
+          })
+        );
+        
+        // 每批之间添加小延迟，避免服务器压力过大
+        if (i + batchSize < deviceItems.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
+      
+      channelData.value = list;
+      console.log('设备树数据加载完成:', channelData.value);
     }
-    
-    channelData.value = list;
-    console.log('设备树数据:', channelData.value);
+    // 默认展开所有节点
+    expandedKeys.value = getAllKeys(channelData.value);
+  } finally {
+    isLoading.value = false;
   }
-  // 默认展开所有节点
-  expandedKeys.value = getAllKeys(channelData.value)
 }
 
 const xzvalue = ref<Date>(new Date())
 const customDateArr = ref<any>([])    // 用于存放'已标记的日期数组'
-let monthChangeHandler: null | undefined | Function;
+// let monthChangeHandler: EventListener | null = null;
 const input_ch = () => {    // 时间选择器时间发生改变触发的函数
   if (!UPlayerList.value) return;
   UPlayerList.value.setAllPosition(xzvalue.value.getTime()).then(() => {
-    UPlayerList.value.playAll();
+    UPlayerList.value.playAll(xzvalue.value.getTime());
   })
 }
 const isShow = async () => {    // 获取焦点，展示日期
   await nextTick();
-  monthChangeHandler = () => {
-    monthChange()
-  }
-}
-const isClose = () => {   // 失去焦点，清除监听
-
-}
-const monthChange = async () => {   // 切换年月后重新调接口
-
-}
-const SearchRecordCalendar = async (token: string, year: string, month: string) => {    // 根据年月获取有录像的日期
   customDateArr.value = [];
-  $('.available').removeClass('custom_date_class');
-  let res = await GetRecordCalendar(token, year, month);
+  const year = xzvalue.value.getFullYear();
+  const month = xzvalue.value.getMonth() + 1;
 
-}
-const pickerOptions = computed(() => {
-  return {
-    cellClassName(Date: Date) {
-      
-    }
+  if (!selectCellId.value) return;
+  const sdk = PlayingArr.value.find(item => item.conf.videoid == selectCellId.value);
+  if (sdk && sdk.conf.token) {
+    await SearchRecordCalendar(sdk.conf.token, year, month);
+    markRecordDates(year, month)
   }
-})
+}
+const closePicker = () => {
+    document
+      .querySelectorAll('.date-picker td.available')
+      .forEach(td => {
+          td.classList.remove('custom_date_class')
+      })
+}
+const monthChange = async (panelDate: Date, type: 'month' | 'year') => {   // 切换年月后重新调接口
+  const year = panelDate.getFullYear()
+  const month = panelDate.getMonth() + 1 // 0-based
+  // console.log(type, year, month)
+  // 查找当前选中宫格是否存在视频播放器
+  const sdk = PlayingArr.value.find(item => item.conf.videoid === selectCellId.value);
+  if (sdk && sdk.conf.token) {
+    await SearchRecordCalendar(sdk.conf.token, year, month)
+    markRecordDates(year, month)
+  }
+}
+const SearchRecordCalendar = async (token: string, year: number, month: number) => {    // 根据年月获取有录像的日期
+  customDateArr.value = [];
+  // $('.available').removeClass('custom_date_class');
+  let res = await GetRecordCalendar(token, year, month);
+  if (res.status == 200 && res.data.record) {
+    res.data.record.forEach((key: any) => {
+      if (key.bHasRec || key.bHasAlarmRec) {
+        const m = String(month).padStart(2, '0')
+        const d = String(key.nDay).padStart(2, '0')
+        const dateStr = `${year}-${m}-${d}T00:00:00+08:00`
+        customDateArr.value.push(new Date(dateStr).getTime())
+      }
+    })
+  }
+}
+const markRecordDates = (year: number, month: number) => {
+  nextTick(() => {
+    document
+      .querySelectorAll('.date-picker td.available')
+      .forEach(td => {
+        const span = td.querySelector('span')
+        if (!span) return
+
+        const day = span.textContent?.padStart(2, '0')
+        if (!day) return
+
+        const m = String(month).padStart(2, '0')
+        const dateStr = `${year}-${m}-${day}T00:00:00+08:00`
+        const time = new Date(dateStr).getTime()
+
+        if (customDateArr.value.includes(time)) {
+          td.classList.add('custom_date_class')
+        } else {
+          td.classList.remove('custom_date_class')
+        }
+      })
+  })
+}
 
 const gotoLive = async () => {  // 转到直播
   const now = new Date();
@@ -672,6 +1179,8 @@ const Alloffvideo = () => { // 关闭所有视频以及单元格
   UPlayerList.value.destroyAll();
   isLiveview.value = true;
   isPlaying.value = false;
+  mainSDKId.value = '';
+  localStorage.setItem('view-playing', JSON.stringify([]))
   const cellFactory = async (cell: any) => {
     console.log('关闭', cell)
   }
@@ -710,6 +1219,7 @@ const panelFullScreen = (event: any) => { // 全屏展示 / 退出全屏
 
 // 获取节点图标
 const getNodeIcon = (node: TreeNode) => {
+  // console.log('getNodeIcon', node)
   switch (node.type) {
     case 'partition':
       // children节点使用icon-gen
@@ -717,6 +1227,9 @@ const getNodeIcon = (node: TreeNode) => {
     case 'device':
       // 如果是设备通道（叶子节点），使用摄像机图标
       if (node.isLeaf || node.isDeviceChannel) {
+        if (node.data.recording) {
+          return 'icon-lanshexiangji'
+        }
         return 'icon-shexiangjizaixian';
       }
       // dev里的设备使用icon-Device
@@ -753,25 +1266,76 @@ const getNodeColor = (node: TreeNode) => {
   if (node.type === 'device') {
     // 获取在线状态
     const isOnline = node.online !== undefined ? node.online : (node.data && node.data.online);
-    return isOnline ? '#fff' : '#999';
+    return isOnline ? '1' : '0.6';
   }
-  return '#fff';
+  return '1';
 };
 
+// 防抖刷新函数
+let refreshTimer: any = null;
 const refresh = () => {
-  getDeviceList();
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+  }
+  refreshTimer = setTimeout(() => {
+    // 清除缓存，强制重新加载
+    deviceCache.clear();
+    getDeviceList();
+  }, 300);
 }
+
+watch(isLiveview, (newVal) => {
+  if (newVal) {
+    console.log('isLivevie watch =>', newVal);
+    // 去除所有回放组边框 和选中回放组的边框效果
+    document.querySelectorAll('.grid_cell.blue_dashed').forEach(el => el.classList.remove('blue_dashed'))
+    document.querySelectorAll('.grid_cell.playback_check_border').forEach(el => el.classList.remove('playback_check_border'))
+    // 添加直播状态下 选中效果
+    const target = document.getElementById(mainSDKId.value);
+    if (target) target.classList.add('red_border')
+  } else {
+    console.log('isLiveview watch >', newVal)
+    document.querySelectorAll('.grid_cell.red_border')
+      .forEach(el => el.classList.remove('red_border'))
+    PlayBackArr.value.forEach(item => {
+      const target = document.getElementById('G' + item.conf.videoid);
+      if (target) target.classList.add('blue_dashed')
+    })
+    const currentTargetarget = document.getElementById(mainSDKId.value);
+    if (currentTargetarget) {
+      currentTargetarget.classList.add('playback_check_border')
+    }
+  }
+})
 
 onMounted(() => {
   getDeviceList();
-  initUPlayList()
-  initGridLayout()
+  initGridLayout();
+  initUPlayList();
 })
 
 onBeforeUnmount(() => {
-  Alloffvideo()
+  // Alloffvideo()
+  if (UPlayerList.value) {
+    UPlayerList.value.destroyAll();
+    const arr = PlayingArr.value.map(item => item.conf)
+    localStorage.setItem('view-playing', JSON.stringify(arr));
+    PlayingArr.value = [];
+    PlayBackArr.value = [];
+    UPlayerList.value.destroyAll();
+    isLiveview.value = true;
+    isPlaying.value = false;
+    mainSDKId.value = '';
+  }
   GridManager.value.removeEventListener('closeCell', gridListener.closeCellHandler)
   GridManager.value.removeEventListener('recEnableClick', gridListener.recEnableHandler)
+  GridManager.value.removeEventListener('cellClick', gridListener.changeMainSDKHandler)
+  GridManager.value.removeEventListener('Information', gridListener.InformationHandler)
+  GridManager.value.removeEventListener('Snapshot', gridListener.SnapshotHandler)
+  GridManager.value.removeEventListener('Shoutwheat', gridListener.ShoutwheatHandler)
+  GridManager.value.removeEventListener('PtzControlShow', gridListener.PtzControlShowHandler)
+  GridManager.value.destroy();
+  GridManager.value = null;
 })
 
 // const 
@@ -1084,6 +1648,15 @@ interface gridListenerType {
   position: absolute;
   top: 0;
   left: 0;
+  .red_border {
+    border: #f44336 2px solid;
+  }
+  .blue_dashed {
+    border: #0399FE 2px dashed;
+  }
+  .playback_check_border {
+    border: #CDFF00 2px solid;
+  }
   div {
     overflow: hidden;
     position: absolute;
@@ -1115,10 +1688,14 @@ interface gridListenerType {
     text-align: right;
     padding: 0 10px;
     transition: 0.2s;
-    i {
+    i, span {
       margin-left: 10px;
+      font-size: 16px;
       cursor: pointer;
       color: #fff;
+    }
+    span {
+      font-size: 14px;
     }
   }
   .cell-i {
@@ -1158,4 +1735,274 @@ interface gridListenerType {
 //     background-color: #181818;
 //   }
 // }
+.malv {
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  z-index: 100;
+  width: 336px;
+  height: 150px;
+  // background-color: grey;
+  display: flex;
+  transition: 0.2s;
+  .malv-close {
+    position: absolute;
+    top: 3px;
+    right: 8px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .malv-left, .malv-right {
+    width: 50%;
+    height: 100%;
+    background-color: rgba($color: #333, $alpha: 0.5);
+    .information_title {
+      width: 100%;
+      height: 30px;
+      line-height: 30px;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 0 10px;
+    }
+    .information_content {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 2px;
+
+      .information_content_left {
+        width: 50%;
+        color: #3ABBFE;
+        text-align: left;
+      }
+
+      .information_content_right {
+        width: 50%;
+        color: #3ABBFE;
+        text-align: left;
+      }
+
+    }
+  }
+}
+.malv-hide {
+  right: -336px;
+}
+.yuntai {
+  position: absolute;
+  left: 5px;
+  bottom: 0;
+  width: calc(15% - 6px);
+  height: 550px;
+  transition: 0.3s;
+  background-color: rgba($color: #323232, $alpha: 1);
+  .header {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba($color: #2A2A2A, $alpha: 1);
+    i {
+      display: block;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      text-align: center;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 10px;
+      background-color: #232323;
+    }
+  }
+  .el-timeline {
+    padding: 0 20px;
+    margin-top: 10px;
+    .el-timeline-item {
+      padding: 0;
+    }
+    .el-timeline-item__wrapper {
+      .el-timeline-item__timestamp {
+        margin: 0;
+        padding: 0;
+      }
+      .el-card {
+        background-color: transparent;
+        border: none;
+      }
+      .el-card__body {
+        height: 26px;
+        margin-bottom: 4px;
+        padding: 0;
+        background-color: rgba($color: #E5E7EB, $alpha: 0.12) !important;
+      }
+      .preset_bgc {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: transparent;
+        padding: 0 10px;
+        .preset_input{
+          width: 150px;
+          background-color: transparent;
+          border: none;
+          box-shadow: none;
+          padding-left: 10px;
+          color: #fff !important;
+        }
+        button {
+          background-color: transparent;
+          border: none;
+          color: #fff !important;
+          font-size: 16px;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+  .ptz-slider {
+    width: 100%;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .el-slider {
+      width: 100%;
+    }
+  }
+  .controls {
+    width: 100%;
+    height: 144px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    margin: 20px 0;
+    .left {
+      width: 70px;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 32px);
+      grid-template-rows: repeat(4, 32px);
+      grid-column-gap: 5px;
+      grid-row-gap: 5px;
+      i {
+        display: flex;           // 用 flex 让文字居中
+        align-items: center;
+        justify-content: center;
+        background-color: rgba($color: #E5E7EB, $alpha: 0.12);
+        border-radius: 4px;
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+        cursor: pointer;
+      }
+      i:active {
+        color: #0399FE;
+      }
+    }
+    .right {
+      width: 144px;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      grid-column-gap: 0px;
+      grid-row-gap: 0px;
+      .ptz-item {
+        background-color: rgba($color: #E5E7EB, $alpha: 0.12);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+
+        i {
+          font-size: 22px;
+        }
+      }
+      .shang {border-radius: 4px 4px 0 0; cursor: pointer;}
+      .zuo {border-radius: 4px 0 0 4px; cursor: pointer;}
+      .you {border-radius: 0 4px 4px 0; cursor: pointer;}
+      .xia {border-radius: 0 0 4px 4px; cursor: pointer;}
+      .corner {
+        background-color: transparent;
+        .zs, .ys, .zx, .yx {
+          position: absolute;
+          width: 32px;
+          height: 32px;
+          border-radius: 4px;
+          background-color: rgba($color: #E5E7EB, $alpha: 0.12);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          i {
+            font-size: 20px;
+          }
+        }
+        .zs {
+          top: 0;
+          left: 0;
+        }
+        .ys {
+          top: 0;
+          right: 0;
+        }
+        .zx {
+          left: 0;
+          bottom: 0;
+        }
+        .yx {
+          right: 0;
+          bottom: 0;
+        }
+      }
+      .ptz-item:active {
+        i {
+          color: #0399FE;
+        }
+      }
+    }
+  }
+}
+.yuntai-hide {
+  bottom: -550px;
+
+}
+.Audio_slider-bottom {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  width: 210px;
+
+  i {
+    // color: #999999;
+    font-size: 20px;
+  }
+
+  .el-slider__runway {
+    height: 3px;
+    background-color: rgba(73, 74, 76, 0.5) !important;
+
+    .el-slider__bar {
+      height: 3px;
+    }
+
+    .el-slider__button-wrapper {
+      height: 34px;
+      width: 36px;
+
+      .el-slider__button {
+        width: 4px;
+        border: 1px solid #409EFF;
+        height: 12px;
+        background-color: #409eff;
+        border-radius: 0px;
+      }
+    }
+  }
+}
 </style>

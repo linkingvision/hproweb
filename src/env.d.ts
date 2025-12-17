@@ -50,3 +50,7 @@ declare module '@/assets/js/d3.v7.min.js' {
 declare module '@/utils/localRecordingStatus.js' {
   export const RecordingStatus: any
 }
+
+declare module '@/assets/js/h5splayer.js' {
+  export const H5sPlayerAudBack: any
+}

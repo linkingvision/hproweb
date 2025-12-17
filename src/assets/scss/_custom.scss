@@ -284,6 +284,57 @@ body.c-dark-theme {
     }
   }
 
+  // .date-picker td.custom_date_class .el-date-table-cell {
+  //   position: relative;
+  // }
+  .date-picker .custom_date_class {
+    span {
+      background: rgba(64, 158, 255, 0.4);
+      border-radius: 0px !important;
+      color: #fff !important;
+      &:hover {
+        background-color: #409eff;
+      }
+      &:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      /* 上三角的大小 */
+      border-width: 10px 10px 0 0;
+      /* 上三角颜色，其余透明 */
+      border-color: #409eff transparent transparent transparent;
+    }
+    }
+  }
+  .date-picker {
+    .current {
+      span {
+        border-radius: 0px !important;
+
+        &:before {
+          /* 上三角颜色，其余透明 */
+          border-color: #fff transparent transparent transparent;
+        }
+      }
+    }
+  }
+
+  // .date-picker td.custom_date_class .el-date-table-cell::after {
+  //   content: '';
+  //   position: absolute;
+  //   bottom: 4px;
+  //   left: 50%;
+  //   transform: translateX(-50%);
+  //   width: 6px;
+  //   height: 6px;
+  //   background-color: #f56c6c;
+  //   border-radius: 50%;
+  // }
+
   & td,
   & th.is-leaf {
     color: rgba(255, 255, 255, 1);

@@ -28,6 +28,7 @@ watch(() => store.darkMode, (newVal: any) => {
 }, { immediate: true })
 onMounted(() => {
   console.log('TheContainer. 加载...')
+  console.log('length ==== >>>>>>', document.getElementsByTagName('*').length)
 })
 </script>
 

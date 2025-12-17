@@ -18,6 +18,10 @@
         <i class="iconfont icon-peizhi"></i>
         <span>{{ t('Router.router_configuration') }}</span>
       </el-menu-item>
+      <!-- <el-menu-item index="/Analytics" @click="gotoPage('/Analytics')">
+        <i class="iconfont icon-fenxipeizhi"></i>
+        <span>{{ '分析' }}</span>
+      </el-menu-item> -->
       <el-menu-item index="/System" @click="gotoPage('/System')">
         <i class="iconfont icon-xitong"></i>
         <span>{{ t('System.sys_system') }}</span>

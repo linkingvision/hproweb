@@ -23,6 +23,9 @@ const SystemConfig = () => import('@/views/System/Setting/SystemConfig.vue')
 const OperationLog = () => import('@/views/System/Setting/Maintain/OperationLog.vue')
 const SystemMaintenance = () => import('@/views/System/Setting/Maintain/SystemMaintenance.vue')
 const SystemUpgrade = () => import('@/views/System/Setting/Maintain/SystemUpgrade.vue')
+const Analytics = () => import('@/views/Analytics/Analytics.vue')
+const AnaSetting = () => import('@/views/Analytics/Setting/Settings.vue')
+const Rules = () => import('@/views/Analytics/Setting/Rules.vue')
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -187,6 +190,40 @@ const router = createRouter({
           meta: {
             title:'/Configuration/Device/DeviceSDK',
             name: 'Device.device_video_device',
+            icon: '',
+            type: 'Operator'
+          }
+        }]
+      }]
+    }, {
+      path: 'Analytics',
+      name: 'Analytics',
+      component: Analytics,
+      redirect: '/Analytics/AnaSetting/Rules',
+      meta: {
+        title: '/Analytics',
+        name: 'Analytics.An',
+        icon: '',
+        type: 'Opeartor'
+      },
+      children: [{
+        path: 'AnaSetting',
+        name: 'AnaSetting',
+        component: AnaSetting,
+        redirect: '/Analytics/AnaSetting/Rules',
+        meta: {
+          title: '/Analytics/AnaSetting',
+          name: 'System.sys_setting',
+          icon: 'iconfont icon-icon-test1',
+          type: 'Operator'
+        },
+        children: [{
+          path: 'Rules',
+          name: 'Rules',
+          component: Rules,
+          meta: {
+            title:'/Analytics/AnaSetting/Rules',
+            name: 'Rules',
             icon: '',
             type: 'Operator'
           }

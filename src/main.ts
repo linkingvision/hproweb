@@ -5,9 +5,6 @@ import { createPinia } from 'pinia'
 import i18n from '../static/i18n.ts'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-import Vant from 'vant';
-import 'vant/lib/index.css';
-import CoreuiVue from '@coreui/vue'
 import './assets/icon/iconfont.css'
 import './assets/icon/iconfont.js'
 import piniaPluginPersistedstate  from 'pinia-plugin-persistedstate'
@@ -26,7 +23,5 @@ app.use(i18n)
 
 app.use(router)
 app.use(ElementPlus)
-app.use(Vant)
-app.use(CoreuiVue)
 
 app.mount('#app')
