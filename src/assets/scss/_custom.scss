@@ -480,4 +480,24 @@ body.c-dark-theme {
     --el-messagebox-title-color: #fff;
     --el-messagebox-content-color: #ccc;
   }
+  .el-dialog {
+    --el-dialog-bg-color: #2d2d2d;
+    .el-dialog__header {
+      --el-text-color-primary: #fff;
+      .el-dialog__close {
+        --el-color-info: #fff;
+      }
+    }
+    .el-dialog__body{
+      --el-text-color-regular: #fff;
+    }
+    
+  }
+  .el-collapse {
+    --el-collapse-header-bg-color: #2A2A2A;
+    --el-collapse-border-color: #2A2A2A;
+    --el-collapse-content-bg-color: transparent;
+    --el-collapse-border-color: transparent;
+    --el-collapse-header-text-color: #fff;
+  }
 }

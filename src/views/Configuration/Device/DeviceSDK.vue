@@ -953,7 +953,7 @@ onBeforeUnmount(() => {
         <el-table-column :label="t('Device.device_model')" prop="strModel" align="center"></el-table-column>
         <el-table-column fixed="right" width="240">
           <template #header>
-            <el-input v-model="search" :placeholder="t('Common.comm_filtration')"></el-input>
+            <el-input v-model="search" :placeholder="t('Common.comm_filtration')" :prefix-icon="Search"></el-input>
           </template>
         </el-table-column>
       </el-table>

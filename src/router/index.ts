@@ -1,4 +1,5 @@
 
+
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 const Login = () => import('@/containers/Login.vue');
@@ -26,6 +27,9 @@ const SystemUpgrade = () => import('@/views/System/Setting/Maintain/SystemUpgrad
 const Analytics = () => import('@/views/Analytics/Analytics.vue')
 const AnaSetting = () => import('@/views/Analytics/Setting/Settings.vue')
 const Rules = () => import('@/views/Analytics/Setting/Rules.vue')
+const EventSearch = () => import('@/views/Analytics/Setting/EventSearch.vue')
+const InferServerSetting = () => import('@/views/Analytics/Setting/InferServerSetting.vue')
+const InferServerStatus = () => import('@/views/Analytics/Setting/InferServerStatus.vue')
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -202,7 +206,7 @@ const router = createRouter({
       redirect: '/Analytics/AnaSetting/Rules',
       meta: {
         title: '/Analytics',
-        name: 'Analytics.An',
+        name: 'Router.router_analytics',
         icon: '',
         type: 'Opeartor'
       },
@@ -214,16 +218,46 @@ const router = createRouter({
         meta: {
           title: '/Analytics/AnaSetting',
           name: 'System.sys_setting',
-          icon: 'iconfont icon-icon-test1',
+          icon: 'iconfont icon-shezhiicon',
           type: 'Operator'
         },
         children: [{
-          path: 'Rules',
-          name: 'Rules',
-          component: Rules,
+        //   path: 'Rules',
+        //   name: 'Rules',
+        //   component: Rules,
+        //   meta: {
+        //     title:'/Analytics/AnaSetting/Rules',
+        //     name: 'Rules',
+        //     icon: '',
+        //     type: 'Operator'
+        //   }
+        // }, {
+        //   path: 'EventSearch',
+        //   name: 'EventSearch',
+        //   component: EventSearch,
+        //   meta: {
+        //     title:'/Analytics/AnaSetting/EventSearch',
+        //     name: 'EventSearch',
+        //     icon: '',
+        //     type: 'Operator'
+        //   }
+        // }, {
+          path: 'InferServerSetting',
+          name: 'InferServerSetting',
+          component: InferServerSetting,
           meta: {
-            title:'/Analytics/AnaSetting/Rules',
-            name: 'Rules',
+            title:'/Analytics/AnaSetting/InferServerSetting',
+            name: 'InferServerSetting',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'InferServerStatus',
+          name: 'InferServerStatus',
+          component: InferServerStatus,
+          meta: {
+            title:'/Analytics/AnaSetting/InferServerStatus',
+            name: 'InferServerStatus',
             icon: '',
             type: 'Operator'
           }

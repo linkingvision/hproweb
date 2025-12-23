@@ -86,6 +86,11 @@ onMounted(() => {
         }
       }
     }
+    .el-menu-item, .el-sub-menu {
+      i {
+        font-size: 16px;
+      }
+    }
   }
   .basic-right {
     // width: 88.5%;

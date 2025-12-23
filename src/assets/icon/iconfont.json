@@ -6,6 +6,55 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "39601477",
+      "name": "详情",
+      "font_class": "xiangqing",
+      "unicode": "e848",
+      "unicode_decimal": 59464
+    },
+    {
+      "icon_id": "39601478",
+      "name": "关闭小按钮",
+      "font_class": "guanbixiaoanniu",
+      "unicode": "e847",
+      "unicode_decimal": 59463
+    },
+    {
+      "icon_id": "40691008",
+      "name": "设置icon",
+      "font_class": "shezhiicon",
+      "unicode": "e86b",
+      "unicode_decimal": 59499
+    },
+    {
+      "icon_id": "39543868",
+      "name": "推理服务配置",
+      "font_class": "tuilifuwupeizhi",
+      "unicode": "e839",
+      "unicode_decimal": 59449
+    },
+    {
+      "icon_id": "39543869",
+      "name": "规则",
+      "font_class": "guize",
+      "unicode": "e833",
+      "unicode_decimal": 59443
+    },
+    {
+      "icon_id": "39591876",
+      "name": "推理服务状态",
+      "font_class": "tuilifuwuzhuangtai",
+      "unicode": "e846",
+      "unicode_decimal": 59462
+    },
+    {
+      "icon_id": "42603219",
+      "name": "事件搜索",
+      "font_class": "shijiansousuo",
+      "unicode": "e8b8",
+      "unicode_decimal": 59576
+    },
+    {
       "icon_id": "41766397",
       "name": "白摄像机",
       "font_class": "baishexiangji",

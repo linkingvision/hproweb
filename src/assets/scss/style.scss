@@ -10,3 +10,13 @@
 html {
   overflow: hidden;
 }
+
+.el-table {
+  .el-table__cell {  
+    .el-button--text {
+      span {
+        font-size: 12px;
+      }
+    }
+  }
+}

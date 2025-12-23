@@ -13,9 +13,9 @@ const activeIndex = ref<string>('')
 const changeCollapse = () => {
   isCollapse.value = !isCollapse.value
   if (isCollapse.value) {
-    $('.device-left').width('64px')
+    $('.setting-left').width('64px')
   } else {
-    $('.device-left').width('11%')
+    $('.setting-left').width('11%')
   }
 }
 
@@ -30,8 +30,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="device-all">
-    <div class="device-left">
+  <div class="setting-all">
+    <div class="setting-left">
       <div class="collapse-box">
         <div class="collapse" @click="changeCollapse">
           <i class="iconfont icon-liebiao"></i>
@@ -39,31 +39,51 @@ onMounted(() => {
       </div>
       <el-menu
         :default-active="activeIndex"
-        class="device-menu"
+        class="setting-menu"
         :collapse="isCollapse"
         router
         :teleported="false">
-        <el-sub-menu index="/Configuration/Device/DeviceSDK">
+        <!-- <el-sub-menu index="/System/Setting/OperationLog">
           <template #title>
-            <i class="iconfont icon-shebeiguanli"></i>
-            <span>{{ t('Device.device_management') }}</span>
+            <i class="iconfont icon-weihu"></i>
+            <span>{{ t('System.sys_maintenance') }}</span>
           </template>
-          <el-menu-item index="/Configuration/Device/DeviceSDK">{{ t('Device.device_video_device') }}</el-menu-item>
-        </el-sub-menu>
+          <el-menu-item index="/System/Setting/OperationLog">{{ t('System.sys_operation_log') }}</el-menu-item>
+          <el-menu-item index="/System/Setting/SystemMaintenance">{{ t('System.sys_maintenance') }}</el-menu-item>
+          <el-menu-item index="/System/Setting/SystemUpgrade">{{ t('System.sys_upgrade') }}</el-menu-item>
+        </el-sub-menu> -->
+        <el-menu-item index="/Analytics/AnaSetting/Rules">
+          <i class="iconfont icon-guize"></i>
+          <span>{{ t('Analytics.ana_rule_config') }}</span>
+        </el-menu-item>
+        <el-menu-item index="/Analytics/AnaSetting/EventSearch">
+          <i class="iconfont icon-shijiansousuo"></i>
+          <span>{{ t('Analytics.ana_event_search') }}</span>
+        </el-menu-item>
+        <el-menu-item index="/Analytics/AnaSetting/InferServerSetting">
+          <i class="iconfont icon-tuilifuwupeizhi"></i>
+          <span>{{ t('Analytics.ana_infer_server_settting') }}</span>
+        </el-menu-item>
+        <el-menu-item index="/Analytics/AnaSetting/InferServerStatus">
+          <i class="iconfont icon-tuilifuwuzhuangtai"></i>
+          <span>{{ t('Analytics.ana_Infer_server_status') }}</span>
+        </el-menu-item>
       </el-menu>
     </div>
-    <div class="device-right">
+    <div class="setting-right">
       <router-view></router-view>
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
-.device-all {
+  .setting-all {
+    width: 100%;
+    height: 100%;
   display: flex;
   justify-content: space-between;
-  flex-wrap: wrap;
-  .device-left {
+  // flex-wrap: wrap;
+  .setting-left {
     width: 11%;
     max-width: 278px;
     height: calc(100vh - 30px);
@@ -90,34 +110,13 @@ onMounted(() => {
       }
     }
   }
-  .device-right {
+  .setting-right {
     // width: 88.5%;
     flex: 1;
     height: calc(100vh - 30px);
-    overflow-y: auto;
+    // overflow-y: auto;
     background-color: #181818;
     position: relative;
-  }
-}
-</style>
-
-<style lang="scss">
-.el-popper {
-  // background-color: #212121 !important;
-  // border: none !important;
-  .el-menu {
-    background-color: #212121;
-    .el-menu-item {
-      color: #fff;
-    }
-    .el-menu-item:hover {
-      background-color: #181818;
-    }
-    .is-active {
-      color: #0399FE;
-      border-right: #0399FE 3px solid;
-      background-color: #282D33;
-    }
   }
 }
 </style>

@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { GetSysConfigApi, UpdateSysConfigApi } from '@/api/system';
 import { ElMessage } from 'element-plus';
+import { Search } from '@element-plus/icons-vue'
 
 const { t } = useI18n();
 
@@ -124,7 +125,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column align="center">
           <template #header>
-            <el-input v-model="filterText" :placeholder="t('Common.comm_filtration')"></el-input>
+            <el-input v-model="filterText" :placeholder="t('Common.comm_filtration')" :prefix-icon="Search"></el-input>
           </template>
         </el-table-column>
       </el-table>
