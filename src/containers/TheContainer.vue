@@ -26,10 +26,6 @@ const updateBodyTheme = (theme: string) => {
 watch(() => store.darkMode, (newVal: any) => {
   updateBodyTheme(newVal)
 }, { immediate: true })
-onMounted(() => {
-  console.log('TheContainer. 加载...')
-  console.log('length ==== >>>>>>', document.getElementsByTagName('*').length)
-})
 </script>
 
 <template>

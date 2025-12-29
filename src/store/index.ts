@@ -26,6 +26,26 @@ export const useStore = defineStore('main', () =>{
     version.value = value;
   }
 
+  const liveviewrtc = ref<string>('WS');
+  function setLiveviewrtc(value: string) {
+    liveviewrtc.value = value;
+  }
+
+  const liveviewrtc1 = ref<string>('RTC');
+  function setLiveviewrtc1(value: string) {
+    liveviewrtc1.value = value;
+  }
+
+  const RBufferTime = ref<number>(0);
+  function setRBufferTime(value: number) {
+    RBufferTime.value = value;
+  }
+
+  const H264CpuDecode = ref<string | boolean>('false');
+  function setH264CpuDecode(value: string | boolean) {
+    H264CpuDecode.value = value;
+  }
+
   return {
     lang,
     changeLang,
@@ -34,7 +54,15 @@ export const useStore = defineStore('main', () =>{
     sidebarShow,
     setSidebarShow,
     version,
-    setVersion
+    setVersion,
+    liveviewrtc,
+    setLiveviewrtc,
+    liveviewrtc1,
+    setLiveviewrtc1,
+    RBufferTime,
+    setRBufferTime,
+    H264CpuDecode,
+    setH264CpuDecode
   }
 }, {
   persist: true

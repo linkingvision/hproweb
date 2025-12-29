@@ -53,14 +53,20 @@ declare module '@/utils/localRecordingStatus.js' {
 
 declare module '@/assets/js/h5splayer.js' {
   export const H5sPlayerAudBack: any
-  export const H5SPlayerWS: any
+  export const H5sPlayerWS: any
   export const H5sPlayerRTC: any
 }
 
-declare module '@/assets/js/h5jssdk.js' {
-  export const AiDraw: any
-  export const H5sPlayerWS2: any
+// declare module '@/assets/js/h5jssdk.js' {
+//   export const AiDraw: any
+//   export const H5sPlayerWS2: any
+// }
+
+// src/types/h5jssdk.d.ts
+declare class H5sPlayerWS2 {
+  constructor(conf: any)
 }
+declare class AiDraw {}
 
 declare module '@/assets/js/h5splayerhelper.js' {
   export const H5siOS: any

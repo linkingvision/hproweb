@@ -46,10 +46,51 @@ interface AnaEventParams {
   beginTime: string,
   endTime: string,
   channelName: string,
-  ruleTypes: string
+  ruleTypes: string[] | []
 }
 export const GetAnaEventApi = (data: AnaEventParams) => axios({
   url: '/uapi/v1/AnaEvent/List',
   method: 'POST',
+  data
+})
+
+// 获取分类器列表
+interface GetClassifierApi {
+  pageIndex: number,
+  pageSize: number
+}
+export const GetClassifierListApi = (data: GetClassifierApi) => axios({
+  url: '/uapi/v1/Classifier/List',
+  method: 'POST',
+  data
+})
+
+// 删除分类器
+export const DeleteClassifierApi = (data: {ids: number[]}) => axios({
+  url: '/uapi/v1/Classifier/Delete',
+  method: 'DELETE',
+  data
+})
+
+// 添加分类器
+interface addClassifierApi {
+  name: string
+  txtList: string[] | []
+  generateAlarm: boolean
+  language: string
+  objClassList: string[] | []
+  alarmClassIndex: number[] | []
+  uuid?: string
+}
+export const AddClassifierApi = (data: addClassifierApi) => axios({
+  url: '/uapi/v1/Classifier/Add',
+  method: 'POST',
+  data
+})
+
+// 修改分类器
+export const UpdateClassifierApi = (data: addClassifierApi) => axios({
+  url: '/uapi/v1/Classifier/Update',
+  method: 'PUT',
   data
 })

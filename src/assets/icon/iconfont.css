@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 5051372 */
-  src: url('iconfont.woff2?t=1766050967858') format('woff2'),
-       url('iconfont.woff?t=1766050967858') format('woff'),
-       url('iconfont.ttf?t=1766050967858') format('truetype');
+  src: url('iconfont.woff2?t=1766625751070') format('woff2'),
+       url('iconfont.woff?t=1766625751070') format('woff'),
+       url('iconfont.ttf?t=1766625751070') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,134 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-dog:before {
+  content: "\e863";
+}
+
+.icon-bus:before {
+  content: "\e860";
+}
+
+.icon-truck:before {
+  content: "\e85f";
+}
+
+.icon-face:before {
+  content: "\e87c";
+}
+
+.icon-fenleiqi:before {
+  content: "\e9e6";
+}
+
+.icon-background:before {
+  content: "\e9e9";
+}
+
+.icon-car:before {
+  content: "\e82e";
+}
+
+.icon-motorcycle:before {
+  content: "\e82c";
+}
+
+.icon-person:before {
+  content: "\e82d";
+}
+
+.icon-bicycle:before {
+  content: "\e82b";
+}
+
+.icon-heiBzhiA:before {
+  content: "\e842";
+}
+
+.icon-baiAheB:before {
+  content: "\e844";
+}
+
+.icon-heiAheB:before {
+  content: "\e843";
+}
+
+.icon-heiAzhiB:before {
+  content: "\e841";
+}
+
+.icon-baiAzhiB:before {
+  content: "\e840";
+}
+
+.icon-baiBzhiA:before {
+  content: "\e83f";
+}
+
+.icon-shezhianniu:before {
+  content: "\e7f4";
+}
+
+.icon-bianji:before {
+  content: "\e81a";
+}
+
+.icon-huifu:before {
+  content: "\e81d";
+}
+
+.icon-duihao1:before {
+  content: "\e868";
+}
+
+.icon-a-Safetyhat:before {
+  content: "\e87d";
+}
+
+.icon-banxianjiance:before {
+  content: "\e985";
+}
+
+.icon-diedaojiance:before {
+  content: "\e984";
+}
+
+.icon-quyuruqin:before {
+  content: "\e983";
+}
+
+.icon-changguipeizhi:before {
+  content: "\e982";
+}
+
+.icon-renyuandouliu:before {
+  content: "\e980";
+}
+
+.icon-weifatingche:before {
+  content: "\e981";
+}
+
+.icon-cheliangjishu:before {
+  content: "\e97f";
+}
+
+.icon-renyuanjishu:before {
+  content: "\e97c";
+}
+
+.icon-chepaishibie:before {
+  content: "\e97b";
+}
+
+.icon-renlianshibie1:before {
+  content: "\e9c7";
+}
+
+.icon-renyuanjuji:before {
+  content: "\e9cd";
 }
 
 .icon-xiangqing:before {

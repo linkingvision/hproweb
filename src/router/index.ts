@@ -30,6 +30,7 @@ const Rules = () => import('@/views/Analytics/Setting/Rules.vue')
 const EventSearch = () => import('@/views/Analytics/Setting/EventSearch.vue')
 const InferServerSetting = () => import('@/views/Analytics/Setting/InferServerSetting.vue')
 const InferServerStatus = () => import('@/views/Analytics/Setting/InferServerStatus.vue')
+const Classifier = () => import('@/views/Analytics/Setting/Classifier.vue')
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -203,7 +204,7 @@ const router = createRouter({
       path: 'Analytics',
       name: 'Analytics',
       component: Analytics,
-      redirect: '/Analytics/AnaSetting/Rules',
+      redirect: '/Analytics/AnaSetting/InferServerSetting',
       meta: {
         title: '/Analytics',
         name: 'Router.router_analytics',
@@ -214,7 +215,7 @@ const router = createRouter({
         path: 'AnaSetting',
         name: 'AnaSetting',
         component: AnaSetting,
-        redirect: '/Analytics/AnaSetting/Rules',
+        redirect: '/Analytics/AnaSetting/InferServerSetting',
         meta: {
           title: '/Analytics/AnaSetting',
           name: 'System.sys_setting',
@@ -261,6 +262,16 @@ const router = createRouter({
             icon: '',
             type: 'Operator'
           }
+        // }, {
+        //   path: 'Classifier',
+        //   name: 'Classifier',
+        //   component: Classifier,
+        //   meta: {
+        //     title: '/Analytics/AnaSetting/Classifier',
+        //     name: 'Classifier',
+        //     icon: '',
+        //     type: 'Operator'
+        //   }
         }]
       }]
     }, {

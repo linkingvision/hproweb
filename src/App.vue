@@ -26,9 +26,6 @@
   watch(locale, () => {
     updateDocementTitle()
   })
-  onMounted(() => {
-    console.log('length ==== >>>>>>', document.getElementsByTagName('*').length)
-  })
 </script>
 
 <template>

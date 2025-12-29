@@ -101,11 +101,69 @@ body.c-dark-theme {
     }
   }
 
+  .rule-config {
+    .conf_right .el-radio {
+      color: #fff;
+
+      .el-radio__label {
+        padding: 4px;
+        display: inline-block;
+        border-radius: 50%;
+        background-color: #363636;
+        img {
+          display: block;
+        }
+      }
+
+      .el-radio__input.is-checked+.el-radio__label {
+        background-color: #409EFF;
+      }
+    }
+    .el-slider__runway {
+      background-color: #4a4a4a;
+    }
+    .el-slider__button {
+      width: 16px;
+      height: 16px;
+      border: 3px solid #409eff;
+    }
+    .el-input-number {
+      .el-input-number__decrease, .el-input-number__increase {
+        background-color: #2b2b2b;
+        border-color: #606266;
+        i {
+          color: #fff;
+        }
+      }
+    }
+  }
+
 
   span, div, i, p, ul, li, h1, h2, h3, h4, h5, h6, input, button, label, li {
     // color: #fff;
     font-size: 14px;
     // font-family: PingFang-SC, PingFang-SC;
+  }
+  .Pagination {
+    width: 100%;
+    background-color: #202020;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .checkboxgroup {
+    .el-checkbox__label {
+      color: #fff !important;
+      background-color: #2a2a2a !important;
+      padding: 5px 5px 4px;
+      border-radius: 2px;
+    }
+
+    .is-checked {
+      .el-checkbox__label {
+        background-color: #0399FE !important;
+      }
+    }
   }
   .el-menu {
     background-color: transparent;
@@ -159,6 +217,7 @@ body.c-dark-theme {
     }
   }
   .el-table {
+    --el-table-bg-color: transparent;
     .el-table__inner-wrapper:before {
       background-color: transparent;
     }
@@ -201,9 +260,10 @@ body.c-dark-theme {
   .el-form {
     .el-input {
       .el-input__wrapper {
-        background-color: #121212;
+        background-color: transparent;
         border: 1px solid #4A4A4A;
         box-shadow: none;
+        padding: 0 11px;
       }
     }
     .is-disabled {
@@ -446,6 +506,12 @@ body.c-dark-theme {
     .is-disabled {
       --el-fill-color-light: transparent;
     }
+    .el-select__selected-item {
+      .el-tag {
+        --el-tag-bg-color: #333333;
+        --el-tag-text-color: #fff;
+      }
+    }
   }
   .el-pagination {
     --el-text-color-regular: #ccc;
@@ -499,5 +565,22 @@ body.c-dark-theme {
     --el-collapse-content-bg-color: transparent;
     --el-collapse-border-color: transparent;
     --el-collapse-header-text-color: #fff;
+  }
+  .el-tag--info {
+    --el-tag-text-color: #fff;
+    --el-tag-bg-color: #3a3a3a;
+    --el-tag-border-color: #3a3a3a;
+    margin-right: 4px;
+    .el-tag__content {
+      font-size: 12px;
+    }
+  }
+  .button-new-tag {
+    --el-button-bg-color: #3a3a3a;
+    --el-button-border-color: #3a3a3a;
+    --el-button-text-color: #ddd;
+    --el-button-hover-border-color: #3a3a3a;
+    --el-button-hover-bg-color: #3a3a3a;
+    --el-button-hover-text-color: #fff;
   }
 }

@@ -6,6 +6,230 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "40559108",
+      "name": "狗",
+      "font_class": "dog",
+      "unicode": "e863",
+      "unicode_decimal": 59491
+    },
+    {
+      "icon_id": "40559760",
+      "name": "公交车",
+      "font_class": "bus",
+      "unicode": "e860",
+      "unicode_decimal": 59488
+    },
+    {
+      "icon_id": "40559764",
+      "name": "卡车",
+      "font_class": "truck",
+      "unicode": "e85f",
+      "unicode_decimal": 59487
+    },
+    {
+      "icon_id": "41679243",
+      "name": "face",
+      "font_class": "face",
+      "unicode": "e87c",
+      "unicode_decimal": 59516
+    },
+    {
+      "icon_id": "46051321",
+      "name": "分类器",
+      "font_class": "fenleiqi",
+      "unicode": "e9e6",
+      "unicode_decimal": 59878
+    },
+    {
+      "icon_id": "46053009",
+      "name": "背景",
+      "font_class": "background",
+      "unicode": "e9e9",
+      "unicode_decimal": 59881
+    },
+    {
+      "icon_id": "38875959",
+      "name": "汽车",
+      "font_class": "car",
+      "unicode": "e82e",
+      "unicode_decimal": 59438
+    },
+    {
+      "icon_id": "38875960",
+      "name": "摩托车",
+      "font_class": "motorcycle",
+      "unicode": "e82c",
+      "unicode_decimal": 59436
+    },
+    {
+      "icon_id": "38875961",
+      "name": "人",
+      "font_class": "person",
+      "unicode": "e82d",
+      "unicode_decimal": 59437
+    },
+    {
+      "icon_id": "38875962",
+      "name": "自行车",
+      "font_class": "bicycle",
+      "unicode": "e82b",
+      "unicode_decimal": 59435
+    },
+    {
+      "icon_id": "39399019",
+      "name": "黑B至A",
+      "font_class": "heiBzhiA",
+      "unicode": "e842",
+      "unicode_decimal": 59458
+    },
+    {
+      "icon_id": "39399020",
+      "name": "白A和B",
+      "font_class": "baiAheB",
+      "unicode": "e844",
+      "unicode_decimal": 59460
+    },
+    {
+      "icon_id": "39399021",
+      "name": "黑A和B",
+      "font_class": "heiAheB",
+      "unicode": "e843",
+      "unicode_decimal": 59459
+    },
+    {
+      "icon_id": "39399022",
+      "name": "黑A至B",
+      "font_class": "heiAzhiB",
+      "unicode": "e841",
+      "unicode_decimal": 59457
+    },
+    {
+      "icon_id": "39399023",
+      "name": "白A至B",
+      "font_class": "baiAzhiB",
+      "unicode": "e840",
+      "unicode_decimal": 59456
+    },
+    {
+      "icon_id": "39399024",
+      "name": "白B至A",
+      "font_class": "baiBzhiA",
+      "unicode": "e83f",
+      "unicode_decimal": 59455
+    },
+    {
+      "icon_id": "37275268",
+      "name": "设置按钮",
+      "font_class": "shezhianniu",
+      "unicode": "e7f4",
+      "unicode_decimal": 59380
+    },
+    {
+      "icon_id": "38643807",
+      "name": "编辑",
+      "font_class": "bianji",
+      "unicode": "e81a",
+      "unicode_decimal": 59418
+    },
+    {
+      "icon_id": "38708594",
+      "name": "恢复",
+      "font_class": "huifu",
+      "unicode": "e81d",
+      "unicode_decimal": 59421
+    },
+    {
+      "icon_id": "40615300",
+      "name": "对号",
+      "font_class": "duihao1",
+      "unicode": "e868",
+      "unicode_decimal": 59496
+    },
+    {
+      "icon_id": "41696601",
+      "name": "Safety hat ",
+      "font_class": "a-Safetyhat",
+      "unicode": "e87d",
+      "unicode_decimal": 59517
+    },
+    {
+      "icon_id": "43403199",
+      "name": "拌线检测",
+      "font_class": "banxianjiance",
+      "unicode": "e985",
+      "unicode_decimal": 59781
+    },
+    {
+      "icon_id": "43403200",
+      "name": "跌倒检测",
+      "font_class": "diedaojiance",
+      "unicode": "e984",
+      "unicode_decimal": 59780
+    },
+    {
+      "icon_id": "43403201",
+      "name": "区域入侵svg",
+      "font_class": "quyuruqin",
+      "unicode": "e983",
+      "unicode_decimal": 59779
+    },
+    {
+      "icon_id": "43403202",
+      "name": "常规配置",
+      "font_class": "changguipeizhi",
+      "unicode": "e982",
+      "unicode_decimal": 59778
+    },
+    {
+      "icon_id": "43403204",
+      "name": "人员逗留",
+      "font_class": "renyuandouliu",
+      "unicode": "e980",
+      "unicode_decimal": 59776
+    },
+    {
+      "icon_id": "43403205",
+      "name": "违法停车",
+      "font_class": "weifatingche",
+      "unicode": "e981",
+      "unicode_decimal": 59777
+    },
+    {
+      "icon_id": "43403206",
+      "name": "车辆计数",
+      "font_class": "cheliangjishu",
+      "unicode": "e97f",
+      "unicode_decimal": 59775
+    },
+    {
+      "icon_id": "43403208",
+      "name": "人员计数",
+      "font_class": "renyuanjishu",
+      "unicode": "e97c",
+      "unicode_decimal": 59772
+    },
+    {
+      "icon_id": "43403210",
+      "name": "车牌识别",
+      "font_class": "chepaishibie",
+      "unicode": "e97b",
+      "unicode_decimal": 59771
+    },
+    {
+      "icon_id": "45135669",
+      "name": "人脸识别",
+      "font_class": "renlianshibie1",
+      "unicode": "e9c7",
+      "unicode_decimal": 59847
+    },
+    {
+      "icon_id": "45190600",
+      "name": "人员聚集",
+      "font_class": "renyuanjuji",
+      "unicode": "e9cd",
+      "unicode_decimal": 59853
+    },
+    {
       "icon_id": "39601477",
       "name": "详情",
       "font_class": "xiangqing",
