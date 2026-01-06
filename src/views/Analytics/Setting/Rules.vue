@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, onBeforeUnmount, nextTick } from 'vue';
+import $ from 'jquery'
 import { useI18n } from 'vue-i18n';
 import { useStore } from '@/store';
 import { useUserStore } from '@/store/user';
 import { Search } from '@element-plus/icons-vue'
 import { GetDevPartitionApi } from '@/api/configuration/device';
 import { GetDeviceChannels } from '@/api/channel';
-import { GetAnalyticsApi, GetRecordingTemplateApi, GetFaceLibraryApi } from '@/api/Analytics/rules';
+import { GetAnalyticsApi, GetRecordingTemplateApi, GetFaceLibraryApi, SetAnalyticsApi, UpdateAnalyticsApi, DeleteAnalyticsApi } from '@/api/Analytics/rules';
 import { H5sPlayerWS, H5sPlayerRTC } from '@/assets/js/h5splayer.js';
-// import { AiDraw, H5sPlayerWS2 } from '@/assets/js/h5jssdk.js';
 import '@/assets/js/h5jssdk.js';
 import { H5siOS } from '@/assets/js/h5splayerhelper.js';
+import { ElMessage } from 'element-plus';
+import { GetClassifierListApi } from '@/api/Analytics/setting';
 
 
 interface TreeNode {
@@ -28,6 +30,7 @@ interface TreeNode {
 const { t } = useI18n()
 const store = useStore()
 const userStore = useUserStore()
+const { AiDraw, H5sPlayerWS2 } = (window as any).h5jssdk;
 
 const filterText = ref<string>('')
 const tableData = ref<any[]>([])
@@ -306,18 +309,16 @@ const getNodeColor = (node: TreeNode) => {
 // 节点点击事件
 const handleNodeClick = (data: TreeNode, node: any) => {
   // console.log('节点被点击:', data, node.data);
-  ruleConfigVisible.value = false;
-  closeVideo()
+  quitConfig()
   tableData.value = [];
   if (data.isDeviceChannel) {
     const row = {
       index: 1,
       channelName: node.data.name,
       channelToken: node.data.token,
-      data: node.data,
-      rules: analyticsCount.value[node.data.uuid] ? analyticsCount.value[node.data.uuid].length : 0
+      data: node.data.data,
+      rules: analyticsCount.value[node.data.data.uuid] ? analyticsCount.value[node.data.data.uuid].length : 0
     }
-    // console.log('节点被点击 =>', row)
     tableData.value.push(row)
     // console.log(tableData.value)
     total.value = tableData.value.length;
@@ -354,8 +355,8 @@ const loadDeviceChannels = async (deviceNode: TreeNode) => {
       // 将通道数据转换为树节点格式，保持在线状态
       const channels = res.data.result.map((channel: any, index: number) => ({
         id: `channel_${deviceNode.data.devId}_${index}`,
-        label: channel.name || `通道 ${index + 1}`,
-        name: channel.name || `通道 ${index + 1}`,
+        label: channel.name || `${t('Common.comm_channel')} ${index + 1}`,
+        name: channel.name || `${t('Common.comm_channel')} ${index + 1}`,
         token: channel.token,
         online: channel.online,
         type: 'device', // 通道也是device类型，但通过isDeviceChannel区分
@@ -481,13 +482,14 @@ const rulesTableData = ref<any[]>([])
 const rulesTotal = ref<number>(0)
 const pageIndex = ref<number>(1)
 const pageSize = ref<number>(5)
-let confCount = 0
+let confCount =ref<number>(0)
 const analyticsCount = ref<any>({})
 
-const GetAnalytics = async (channelUUID?: string, bEnable?: boolean) => {
+const GetAnalytics = async (channelUUID?: string, bEnable?: boolean, metaEnabled?: boolean) => {
   rulesTableData.value = [];
   rulesTotal.value = 0;
-  confCount = 0;
+  confCount.value = 0;
+  analyticsCount.value = {};
   const res = await GetAnalyticsApi()
   if (res.status == 200 && res.data.code == 0) {
     const list = res.data.result;
@@ -497,9 +499,10 @@ const GetAnalytics = async (channelUUID?: string, bEnable?: boolean) => {
         rulesTotal.value = rulesTableData.value.length
       }
       if (list[i].setting.ruleType == "USC_ANA_RULE_CONF" && channelUUID == list[i].channelUUID) {
-        confCount += 1;
+        confCount.value += 1;
         if (bEnable) {
           goClick(list[i]);
+          ruleForm.value.metaEnable = list[i].channel.metaEnabled
         }
       }
       if (analyticsCount.value[list[i].channelUUID]) {
@@ -518,10 +521,426 @@ const GetAnalytics = async (channelUUID?: string, bEnable?: boolean) => {
   }
 }
 
+const anauuid = ref<string>('')
+const vectPect = ref<boolean>(false)
 // 点击表格列表
-const goClick = (row: any, column?: any) => {}
+const goClick = (row: any, column?: any) => {
+  console.log('goCLick row =>', row)
+  anauuid.value = row.uuid;
+  gotable.value = true;
+  const rule = AnalyticsSetDraw(row);
+  ruleForm.value.name = row.name;
+  ruleForm.value.ruleType = row.ruleType;
+  const ruleTypeData = RuleTypeData.find(item => item.value == row.ruleType)
+  ruleTypeLabel.value = ruleTypeData ? ruleTypeData.label : '';
+  draw.value.clearCanvas();
+  if (row.setting.ruleType == "USC_ANA_RULE_CONF") {
+    if (rule.roiShape.points.length > 2) {
+      draw.value.setPolygon(rule.roiShape.points)
+    }
+    ruleForm.value.schedule = rule.schedule;
+    return
+  }
+  if (rule.shape.points.length > 2) {
+    draw.value.setPolygon(rule.shape.points)
+  } else {
+    draw.value.setDefaultArrowDirection("AB");
+    let conf = {
+      uuid: row.uuid,
+      point: rule.shape.points,
+    }
+    draw.value.setLines(conf)
+  }
+}
 
+const AnalyticsSetDraw = (row: any) => {
+  checkboxgroupShow.value = true;
+  let videoDom = document.getElementById('h5videoRule') as HTMLVideoElement;
+  switch(row.setting.ruleType) {
+    case "USC_ANA_RULE_CONF":
+      ruleForm.value.stream = row.setting.Rule.Conf.stream;
+      ruleForm.value.fps = row.setting.Rule.Conf.fps;
+      ruleForm.value.objectSize = row.setting.Rule.Conf.objSize;
+      ruleForm.value.schedule = row.setting.Rule.Conf.schedule;
+      ruleForm.value.motionDet = row.setting.Rule.Conf.motionDet;
+      ruleForm.value.groudMode = row.setting.Rule.Conf.groudMode;
+      ruleForm.value.colorDet = row.setting.Rule.Conf.colorDet;
+      ruleForm.value.txtSearch = row.setting.Rule.Conf.txtSearch;
+      ruleForm.value.classifiers = row.setting.Rule.Conf.classifiers || [];
+      checkboxgroupShow.value = false;
+      return row.setting.Rule.Conf;
+    case 'USC_ANA_RULE_MIAA':
+      checkList.value = row.setting.Rule.Miaa.objs;
+      return row.setting.Rule.Miaa;
+    case "USC_ANA_RULE_CRAL":
+      direction.value = row.setting.Rule.Cral.direction;
+      checkList.value = row.setting.Rule.Cral.objs;
+      return row.setting.Rule.Cral;
+    case "USC_ANA_RULE_LOIT":
+      ruleForm.value.time = row.setting.Rule.Loit.dwellTime;
+      checkboxgroupShow.value = false;
+      return row.setting.Rule.Loit;
+    case "USC_ANA_RULE_STVE":
+      ruleForm.value.time = row.setting.Rule.Stve.dwellTime;
+      checkList.value = row.setting.Rule.Stve.objs;
+      return row.setting.Rule.Stve;
+    case "USC_ANA_RULE_VECT":
+      checkList.value = row.setting.Rule.Vect.objs;
+      vectPect.value = true;
+      return row.setting.Rule.Vect;
+    case "USC_ANA_RULE_PECT":
+      vectPect.value = true
+      checkboxgroupShow.value = false;
+      return row.setting.Rule.Pect;
+    case "USC_ANA_RULE_PPE":
+      checkboxgroupShow.value = false;
+      return row.setting.Rule.Ppe;
+    case "USC_ANA_RULE_PEFA":
+      checkboxgroupShow.value = false;
+      return row.setting.Rule.Pefa;
+    case "USC_ANA_RULE_FARE":
+      checkboxgroupShow.value = false;
+      ruleForm.value.faceLibraryId = row.setting.Rule.Fare.faceLibraryId;
+      ruleForm.value.faceSimilarityThreshold = row.setting.Rule.Fare.faceSimilarityThreshold;
+      ruleForm.value.faceMinimumSize = row.setting.Rule.Fare.faceMinimumSize;
+      if (videoDom && videoDom.videoWidth && videoDom.offsetWidth > 0) {
+        let width = Math.min(row.setting.Rule.Fare.faceMinimumSize / (videoDom.videoWidth / videoDom.offsetWidth), videoDom.offsetWidth);
+        $(".fareSize").width(width);
+        let height = Math.min(row.setting.Rule.Fare.faceMinimumSize / (videoDom.videoHeight / videoDom.offsetHeight), videoDom.offsetHeight);
+        $(".fareSize").height(height);
+      }
+      return row.setting.Rule.Fare;
+    case "USC_ANA_RULE_LPRE":
+      checkboxgroupShow.value = false;
+      ruleForm.value.lprConfidenceThreshold = row.setting.Rule.Lpre.lprConfidenceThreshold;
+      ruleForm.value.lprWidthMin = row.setting.Rule.Lpre.lprWidthMin;
+      ruleForm.value.lprWidthMax = row.setting.Rule.Lpre.lprWidthMax;
+      ruleForm.value.lprHeightMin = row.setting.Rule.Lpre.lprHeightMin;
+      ruleForm.value.lprHeightMax = row.setting.Rule.Lpre.lprHeightMax;
+      ruleForm.value.lprWidthMax = videoDom.videoWidth
+      ruleForm.value.lprHeightMax = videoDom.videoHeight
+      let minWidth = Math.min(row.setting.Rule.Lpre.lprWidthMin / (videoDom.videoWidth / videoDom.offsetWidth), videoDom.offsetWidth);
+      $(".lprMinSize").width(minWidth);
+      let minHeight = Math.min(row.setting.Rule.Lpre.lprHeightMin / (videoDom.videoHeight / videoDom.offsetHeight), videoDom.offsetHeight);
+      $(".lprMinSize").height(minHeight);
 
+      let maxWidth = Math.min(row.setting.Rule.Lpre.lprWidthMax / (videoDom.videoWidth / videoDom.offsetWidth), videoDom.offsetWidth);
+      $(".lprMaxSize").width(maxWidth);
+      let maxHeight = Math.min(row.setting.Rule.Lpre.lprHeightMax / (videoDom.videoHeight / videoDom.offsetHeight), videoDom.offsetHeight);
+      $(".lprMaxSize").height(maxHeight);
+      // console.log(this.formLabelAlign);
+      return row.setting.Rule.Lpre;
+    case "USC_ANA_RULE_CROD":
+      checkboxgroupShow.value = false;
+      ruleForm.value.detType = row.setting.Rule.Crod.detType;
+      ruleForm.value.threshold = row.setting.Rule.Crod.threshold;
+      ruleForm.value.triggerInterval = row.setting.Rule.Crod.triggerInterval;
+      return row.setting.Rule.Crod;
+    default:
+      break;
+  }
+}
+
+const startDraw = ref<boolean>(false)
+const draw = ref<any>(null)
+const gotable = ref<any>(false) // 决定规则是新增还是修改
+
+const startDrawing = ()  => {
+  if (draw.value == null) {
+    return
+  }
+  draw.value.stopDrawing();
+  gotable.value = false;
+  draw.value.clearCanvas();
+  startDraw.value = true;
+
+  switch (ruleForm.value.ruleType) {
+    case "USC_ANA_RULE_CONF":
+    case "USC_ANA_RULE_MIAA":
+    case "USC_ANA_RULE_LOIT":
+    case "USC_ANA_RULE_STVE":
+    case "USC_ANA_RULE_PPE":
+    case "USC_ANA_RULE_PEFA":
+    case "USC_ANA_RULE_FARE":
+    case "USC_ANA_RULE_LPRE":
+    case "USC_ANA_RULE_CROD":
+      draw.value.setDrawMode("polygon");
+      break;
+    case "USC_ANA_RULE_CRAL":
+    case "USC_ANA_RULE_VECT":
+    case "USC_ANA_RULE_PECT":
+      draw.value.setDrawMode("line");
+      draw.value.setDefaultArrowDirection("AB");
+    default:
+      break;
+  }
+  draw.value.startDrawing();
+}
+const stopDrawing = () => {
+  startDraw.value = false;
+  draw.value.stopDrawing();
+};
+const clearCanvas = () => {
+  startDrawing()
+};
+
+const platformyes = async () => {
+  if (!h5handler.value) return
+  // console.log(ruleForm.value)
+  const scheduleUUID = ruleForm.value.schedule;
+  const polygon = draw.value.getPolygons();
+  const lines = draw.value.getLines();
+  const data: any = {
+    channelUUID: channelUUID.value,
+    name: ruleForm.value.name,
+    priorityLevel: ruleForm.value.priorityLevel,
+    setting: {
+      ruleType: ruleForm.value.ruleType,
+      Rule: {}
+    }
+  }
+  // console.log(scheduleUUID, polygon, lines, data)
+  switch (ruleForm.value.ruleType) {
+    case "USC_ANA_RULE_CONF":
+      let classifiers = [];
+      classifiers = ruleForm.value.classifiers;
+      let conf = {
+        roiShapeType: "USC_RULE_SHAPE_POLYGON",
+        roiShape: {
+          points: polygon.length == 0 ? [{ x: 0, y: 0 }] : draw.value.normalizeVertex(polygon[0].vertices)
+        },
+        fps: Number(ruleForm.value.fps),
+        objSize: Number(ruleForm.value.objectSize),
+        stream: ruleForm.value.stream || 'main',
+        schedule: scheduleUUID,
+        motionDet: ruleForm.value.motionDet,
+        groudMode: ruleForm.value.groudMode,
+        colorDet: ruleForm.value.colorDet,
+        txtSearch: ruleForm.value.txtSearch,
+        classifiers: classifiers,
+      }
+      data.setting.Rule.Conf = conf;
+      data.metaEnabled = ruleForm.value.metaEnabled;
+      if (confCount.value != 0) {
+        gotable.value = true;
+      } else {
+        gotable.value = false;
+      }
+      break;
+    case 'USC_ANA_RULE_MIAA':
+      if (!polygon[0]) return;
+      if (checkList.value.length) {
+        ElMessage({
+          message: t('CommTableEdit.comm_modify_failed'),
+          type: 'error',
+          duration: 2000
+        })
+        return;
+      }
+      const miaa = {
+        shapeType: "USC_RULE_SHAPE_POLYGON",
+        shape: {
+          points: draw.value.normalizeVertex(polygon[0].vertices)
+        },
+        objs: checkList.value
+      }
+      data.setting.Rule.Miaa = miaa;
+      break;
+    case 'USC_ANA_RULE_CRAL':
+      if (!lines[0]) return;
+      if (checkList.value.length == 0) {
+        ElMessage({
+          message: t('CommTableEdit.comm_modify_failed'),
+          type: 'error',
+          duration: 2000
+        })
+        return;
+      }
+      const vertices = [lines[0].start, lines[0].end]
+      const cral = {
+        shapeType: "USC_RULE_SHAPE_DIR_LINE",
+        shape: {
+          points: draw.value.normalizeVertex(vertices)
+        },
+        objs: checkList.value,
+        direction: direction.value
+      }
+      data.setting.Rule.Cral = cral;
+      break;
+    case 'USC_ANA_RULE_LOIT':
+      if (!polygon[0]) return
+      const loit = {
+        shapeType: 'USC_RULE_SHAPE_POLYGON',
+        shape: {
+          points: draw.value.normalizeVertex(polygon[0].vertices)
+        },
+        dwellTime: Number(ruleForm.value.time)
+      }
+      data.setting.Rule.Loit = loit;
+      break;
+    case 'USC_ANA_RULE_STVE':
+      if (!polygon[0]) return;
+      if (checkList.value.length == 0) {
+        ElMessage({
+          message: t('CommTableEdit.comm_modify_failed'),
+          type: 'error',
+          duration: 2000
+        })
+      }
+      const stve = {
+        shapeType: 'USC_RULE_SHAPE_POLYGON',
+        shape: {
+          points: draw.value.normalizeVertex(polygon[0].vertices)
+        },
+        objs: checkList.value,
+        dwellTime: Number(ruleForm.value.time)
+      }
+      data.setting.Rule.Stve = stve;
+      break;
+    case 'USC_ANA_RULE_VECT':
+      if (!lines[0]) return;
+      if (checkList.value.length == 0) {
+        ElMessage({
+          message: t('CommTableEdit.comm_modify_failed'),
+          type: 'error',
+          duration: 2000
+        })
+      }
+      const vertice = [lines[0].start, lines[0].end];
+      const vect = {
+        shapeType: 'USC_RULE_SHAPE_COUNTING_LINE',
+        shape: {
+          points: draw.value.normalizeVertex(vertice)
+        },
+        objs: checkList.value
+      }
+      data.setting.Rule.Vect = vect;
+      break;
+    case 'USC_ANA_RULE_PECT':
+      if (!lines[0]) return;
+      var pectices = [lines[0].start, lines[0].end];
+      const pect = {
+        shapeType: "USC_RULE_SHAPE_COUNTING_LINE",
+        shape: {
+          points: draw.value.normalizeVertex(pectices)
+        }
+      }
+      data.setting.Rule.Pect = pect
+      break;
+    case 'USC_ANA_RULE_PPE':
+      if (!polygon[0]) return;
+      let ppe = {
+        shapeType: "USC_RULE_SHAPE_POLYGON",
+        shape: {
+          points: draw.value.normalizeVertex(polygon[0].vertices)
+        },
+        objs: checkList.value
+      }
+      data.setting.Rule.Ppe = ppe
+      break;
+    case 'USC_ANA_RULE_PEFA':
+      if (!polygon[0]) return;
+      let pefa = {
+        shapeType: "USC_RULE_SHAPE_POLYGON",
+        shape: {
+          points: draw.value.normalizeVertex(polygon[0].vertices)
+        },
+        objs: checkList.value
+      }
+      data.setting.Rule.Pefa = pefa
+      break;
+    case 'USC_ANA_RULE_FARE':
+      if (!polygon[0]) return;
+      let fare = {
+        shapeType: "USC_RULE_SHAPE_POLYGON",
+        shape: {
+          points: draw.value.normalizeVertex(polygon[0].vertices)
+        },
+        faceLibraryId: ruleForm.value.faceLibraryId,
+        faceMinimumSize: parseInt(ruleForm.value.faceMinimumSize),
+        faceSimilarityThreshold: parseInt(ruleForm.value.faceSimilarityThreshold)
+      }
+      data.setting.Rule.fare = fare
+      break;
+    case "USC_ANA_RULE_LPRE":
+      if (!polygon[0]) return;
+      let lpre = {
+        shapeType: "USC_RULE_SHAPE_POLYGON",
+        shape: {
+          points: draw.value.normalizeVertex(polygon[0].vertices)
+        },
+        lprConfidenceThreshold: parseInt(ruleForm.value.lprConfidenceThreshold),
+        lprWidthMin: parseInt(ruleForm.value.lprWidthMin),
+        lprWidthMax: parseInt(ruleForm.value.lprWidthMax),
+        lprHeightMin: parseInt(ruleForm.value.lprHeightMin),
+        lprHeightMax: parseInt(ruleForm.value.lprHeightMax)
+      }
+      data.setting.Rule.lpre = lpre
+      break;
+    case "USC_ANA_RULE_CROD":
+      if (!polygon[0]) return;
+      let crod = {
+        shapeType: "USC_RULE_SHAPE_POLYGON",
+        shape: {
+          points: draw.value.normalizeVertex(polygon[0].vertices)
+        },
+        detType: ruleForm.value.detType,
+        threshold: parseInt(ruleForm.value.threshold),
+        triggerInterval: parseInt(ruleForm.value.triggerInterval),
+      }
+      data.setting.Rule.crod = crod
+      break;
+    default:
+      break;
+  }
+  if (gotable.value) {  // gotable 为 true，执行修改逻辑
+    data.uuid = anauuid.value;
+    const res = await UpdateAnalyticsApi(data);
+    console.log('UpdateAnalytics =>', res)
+    if (res.status == 200 && res.data.code == 0) {
+      ElMessage({
+        message: t('CommTableEdit.comm_modify_success'),
+        type: 'success',
+        duration: 2000
+      })
+      GetAnalytics(currentChannel.value.uuid);
+    }
+  } else {  // gotable 为 false，执行新增逻辑
+    const res = await SetAnalyticsApi(data);
+    console.log('SetAnalytics =>', res);
+    if (res.status == 200 && res.data.code == 0) {
+      ElMessage({
+        message: t('CommTableEdit.comm_add_successfully'),
+        type: 'success',
+        duration: 2000
+      })
+      GetAnalytics(currentChannel.value.uuid);
+    }
+  }
+}
+
+const delRow = async (row: any) => {
+  console.log('DelRow', row)
+  const ids = [row.id];
+  const res = await DeleteAnalyticsApi({ ids });
+  if (res.status == 200 && res.data.code == 0) {
+    ElMessage({
+      message: t('CommTableEdit.comm_delete_successfully'),
+      type: 'success',
+      duration: 2000
+    })
+    if (draw.value) {
+      draw.value.clearCanvas();
+    }
+    GetAnalytics(channelUUID.value);
+  } else {
+    ElMessage({
+      message: t('CommTableEdit.comm_delete_failed'),
+      type: 'error',
+      duration: 2000
+    })
+  }
+}
 
 // 获取录像计划
 const GetRecordingTemplate = async () => {
@@ -575,27 +994,34 @@ const playVideo = async (data: any) => {
   }
   await nextTick()
   if (store.liveviewrtc === 'RTC' || (H5siOS() === true)) {
-    console.log('RTC-------------------')
     h5handler.value = new H5sPlayerRTC(conf)
   } else if (store.liveviewrtc === 'WS') {
-    // console.log('WS--------------', H5sPlayerWS)
     h5handler.value = new H5sPlayerWS(conf)
   } else if (store.liveviewrtc === 'WS2') {
-    console.log('WS2---------------')
     conf.buffersize = store.RBufferTime; //jitter buffer, unit is ms, only for ws2, default is 300.
     conf.h264cpumode = store.H264CpuDecode; //if h264cpumode is true, h264 will force use cpu. only for ws2, default is false
-    h5handler.value = new (window as any).H5sPlayerWS2(conf);
+    h5handler.value = new H5sPlayerWS2(conf);
   }
   objSizeStart.value = true;
   channelUUID.value = data.uuid;
   h5handler.value.connect();
+
+  draw.value = new AiDraw(document.getElementById('h5vcanvasRule'));
+  draw.value.setDefaultArrowDirection('AB')
 }
+// console.log('AiDraw =>' ,AiDraw)
 const closeVideo = () => {
   if (h5handler.value) {
     h5handler.value.disconnect();
     delete h5handler.value;
     h5handler.value = null;
-    channelUUID.value = ''
+    channelUUID.value = '';
+  }
+  if (draw.value) {
+    startDraw.value = false;
+    draw.value.clearCanvas();
+    delete draw.value;
+    draw.value = null;
   }
 }
 
@@ -603,22 +1029,65 @@ const ruleConfigVisible = ref<boolean>(false);
 const channelName = ref<string>('');
 const currentChannel = ref<any>({})
 
-const ruleConfigBread = (row: any) => {
+const ruleConfigBread = async (row: any) => {
   ruleConfigVisible.value = true;
   console.log('ruleConfigBread row =>', row);
   channelName.value = row.data.name;
   currentChannel.value = row.data
-  GetAnalytics(row.data.uuid)
+  GetAnalytics(row.data.uuid, true, row.data.metaEnabled)
   playVideo(row.data);
+  await nextTick();
+  
+  const div = document.getElementById('h5videoRule');
+  const canvas = document.getElementById('h5vcanvasRule') as HTMLCanvasElement | null;
+  if (!div || !canvas) return;
+  // 获取div的宽高
+  var divWidth = div?.offsetWidth;
+  var divHeight = div?.offsetHeight;
+  console.log(divWidth, divHeight)
+  // 将div的宽高赋值给canvas
+  canvas.width = divWidth;
+  canvas.height = divHeight;
 }
 const quitConfig = () => {
   ruleConfigVisible.value = false;
+  gotable.value = false;
   closeVideo();
   channelName.value = '';
   channelUUID.value = '';
+  ruleForm.value = {
+    name: 'Rule1',
+    ruleType: 'USC_ANA_RULE_CONF',
+    time: 60, // 停留时间
+    objectSize: 30, // 检测最小对象大小
+    fps: 0.5, // 帧率
+    schedule: '', // 计划
+    stream: 'main', // 码流
+    priorityLevel: 'Medium',  // 级别
+    faceLibraryId: '',  // 人脸库
+    faceSimilarityThreshold: 60,  // 人脸 相似阈值
+    faceMinimumSize: 40,  // 人脸 最小尺寸
+    lprConfidenceThreshold: 60, // 车牌 相似阈值
+    detType: 'person',  // 人员聚集 检测目标类型
+    threshold: 2, // 人员聚集 报警人数
+    triggerInterval: 10,  // 人员聚集 报警间隔时间
+    lprWidthMin: 60,  // 车牌最小宽度
+    lprHeightMin: 20, // 车牌最小高度
+    lprWidthMax: 180, // 车牌最大宽度
+    lprHeightMax: 60, // 车牌最大高度
+    metaEnabled: true,  // 元数据分析
+    motionDet: false, // 开启移动侦测
+    groudMode: true,  // 地面模式
+    colorDet: true, // 开启颜色检测
+    txtSearch: false, // 文本搜索
+    classifiers: [],  // 分类器
+  }
+}
+const updateObjSize = () => {
+  $('.objSize').width(ruleForm.value.objectSize)
+  $('.objSize').height(ruleForm.value.objectSize)
 }
 
-const startDraw = ref<boolean>(false)
 const ruleForm = ref<any>({
   name: 'Rule1',
   ruleType: 'USC_ANA_RULE_CONF',
@@ -639,54 +1108,66 @@ const ruleForm = ref<any>({
   lprHeightMin: 20, // 车牌最小高度
   lprWidthMax: 180, // 车牌最大宽度
   lprHeightMax: 60, // 车牌最大高度
+  metaEnabled: true,  // 元数据分析
+  motionDet: false, // 开启移动侦测
+  groudMode: true,  // 地面模式
+  colorDet: true, // 开启颜色检测
+  txtSearch: false, // 文本搜索
+  classifiers: [],  // 分类器
 })
 const RuleTypeData = [
-  { label: '常规配置', value: 'USC_ANA_RULE_CONF', icon: 'icon-changguipeizhi' },
-  { label: '安全帽检测', value: 'USC_ANA_RULE_PPE', icon: 'icon-a-Safetyhat' },
-  { label: '区域入侵', value: 'USC_ANA_RULE_MIAA', icon: 'icon-quyuruqin' },
-  { label: '跌倒检测', value: 'USC_ANA_RULE_PEFA', icon: 'icon-diedaojiance' },
-  { label: '绊线检测', value: 'USC_ANA_RULE_CRAL', icon: 'icon-banxianjiance' },
+  { label: t('Analytics.ana_general'), value: 'USC_ANA_RULE_CONF', icon: 'icon-changguipeizhi' }, // 常规配置
+  { label: t('Analytics.ana_rule_ppe'), value: 'USC_ANA_RULE_PPE', icon: 'icon-a-Safetyhat' }, // 安全帽检测
+  { label: t('Analytics.ana_rule_miaa'), value: 'USC_ANA_RULE_MIAA', icon: 'icon-quyuruqin' },  // 区域入侵
+  { label: t('Analytics.ana_rule_pefa'), value: 'USC_ANA_RULE_PEFA', icon: 'icon-diedaojiance' }, // 跌倒检测
+  { label: t('Analytics.ana_rule_cral'), value: 'USC_ANA_RULE_CRAL', icon: 'icon-banxianjiance' },  // 绊线检测
   // { label: "车牌识别", value: '1', icon: 'icon-chepaishibie' },
-  { label: '人员逗留', value: 'USC_ANA_RULE_LOIT', icon: 'icon-renyuandouliu' },
+  { label: t('Analytics.ana_rule_loit'), value: 'USC_ANA_RULE_LOIT', icon: 'icon-renyuandouliu' },  // 人员逗留
   // { label: "人脸识别", value: '2', icon: 'icon-face' },
-  { label: '违法停车', value: 'USC_ANA_RULE_STVE', icon: 'icon-weifatingche' },
+  { label: t('Analytics.ana_rule_stve'), value: 'USC_ANA_RULE_STVE', icon: 'icon-weifatingche' }, // 违法停车
   // { label: "工服检测", value: '3', icon: 'icon-gongfujiance' },
-  { label: '车辆计数', value: 'USC_ANA_RULE_VECT', icon: 'icon-cheliangjishu' },
+  { label: t('Analytics.ana_rule_vect'), value: 'USC_ANA_RULE_VECT', icon: 'icon-cheliangjishu' },  // 车辆计数
   // { label: "火焰&烟雾", value: '4', icon: 'icon-huoyanyanwu' },
-  { label: '人员计数', value: 'USC_ANA_RULE_PECT', icon: 'icon-renyuanjishu' },
-  { label: '人脸识别', value: 'USC_ANA_RULE_FARE', icon: 'icon-renlianshibie1' },
-  { label: '车牌识别', value: 'USC_ANA_RULE_LPRE', icon: 'icon-chepaishibie' },
-  { label: '人员聚集', value: 'USC_ANA_RULE_CROD', icon: 'icon-renyuanjishu' },
+  { label: t('Analytics.ana_rule_pect'), value: 'USC_ANA_RULE_PECT', icon: 'icon-renyuanjishu' }, // 人员计数
+  { label: t('Analytics.ana_face_recognition'), value: 'USC_ANA_RULE_FARE', icon: 'icon-renlianshibie1' }, // 人脸识别
+  { label: t('Analytics.ana_lpre'), value: 'USC_ANA_RULE_LPRE', icon: 'icon-chepaishibie' }, // 车牌识别
+  { label: t('Analytics.ana_rule_crod'), value: 'USC_ANA_RULE_CROD', icon: 'icon-renyuanjishu' }, // 人员聚焦
 ]
 const fpsOptions = [{
   value: 0.5,
-  label: '2秒1次'
+  label: t('Analytics.ana_once_2s')
 }, {
   value: 0.2,
-  label: '5秒1次'
+  label: t('Analytics.ana_once_5s')
 }, {
   value: 0.1,
-  label: '10秒1次'
+  label: t('Analytics.ana_once_10s')
 }, {
   value: 0.033,
-  label: '30秒一次'
+  label: t('Analytics.ana_once_30s')
 }, {
   value: 0.017,
-  label: '60秒1次'
+  label: t('Analytics.ana_once_60s')
 }, {
   value: 0.008,
-  label: '120秒一次'
+  label: t('Analytics.ana_once_120s')
 }]
 const scheduleName: Record<string, string> = {
-  "Recording always": "持续录像",
-  "Motion recording": "移动侦测录像",
-  "Object recording": "物体侦测录像",
-  "Motion & Object recording": "移动&物体侦测录像",
-  "Not recording": "不录像",
+  "Recording always": t('Analytics.ana_recording_always'),
+  "Motion recording": t('Analytics.ana_motion_recording'),
+  "Object recording": t('Analytics.ana_object_recording'),
+  "Motion & Object recording": t('Analytics.ana_motion_object_recording'),
+  "Not recording": t('Analytics.ana_not_recording'),
+}
+const shapeObj: any = {
+  "person": "icon-person",
+  "vehicle": "icon-car",
+  "motorcycle": "icon-motorcycle",
+  "bicycle": "icon-bicycle",
 }
 const faceLibraryList = ref<any[]>([])
 const scheduleArr = ref<any[]>([])
-const ruleTypeLabel = ref<string>('常规配置')
+const ruleTypeLabel = ref<string>(t('Analytics.ana_general'))
 const checkboxgroupShow = ref<boolean>(false);
 const checkList = ref<any[]>([]);
 const direction = ref<string>('AB');
@@ -734,8 +1215,29 @@ const handleChange = (value: string) => {
   // console.log('checkboxgroupShow =>', checkboxgroupShow.value)
 }
 
+const moreSetting = ref<boolean>(false);
+const moreSettingsClose = () => {
+  moreSetting.value = false;
+}
+const classifierList = ref<any[]>([]);
+const GetClassifierList = async () => {
+  const res = await GetClassifierListApi({
+    pageIndex: 1,
+    pageSize: 10000
+  });
+  if (res.status == 200 && res.data.code == 0) {
+    classifierList.value = res.data.result.list;
+  }
+}
+
 // 人脸识别-最小尺寸变化
-const updateFareSize = () => {}
+const updateFareSize = (value: any) => {
+  const videoDom = document.getElementById('h5videoRule')  as HTMLVideoElement;
+  let width = Math.min(ruleForm.value.faceMinimumSize / (videoDom.videoWidth / videoDom.offsetWidth), videoDom.offsetWidth);
+  $(".fareSize").width(width);
+  let height = Math.min(ruleForm.value.faceMinimumSize / (videoDom.videoHeight / videoDom.offsetHeight), videoDom.offsetHeight);
+  $(".fareSize").height(height);
+}
 // 监听过滤文本变化
 watch(filterText, () => {
   if (filterText.value.trim()) {
@@ -750,16 +1252,7 @@ onMounted(() => {
   getDeviceList()
   GetRecordingTemplate()
   GetFaceLibrary()
-  const div = document.getElementById('h5videoRule');
-  const canvas = document.getElementById('h5vcanvasRule') as HTMLCanvasElement | null;
-  if (!div || !canvas) return;
-  // 获取div的宽高
-  var divWidth = div?.offsetWidth;
-  var divHeight = div?.offsetHeight;
-
-  // 将div的宽高赋值给canvas
-  canvas.width = divWidth;
-  canvas.height = divHeight;
+  GetClassifierList()
 })
 
 onBeforeUnmount(() => {
@@ -832,14 +1325,14 @@ const activeNames = ['1']
         <div class="conf-img">
           <div class="header">
             <div class="back">
-              <span class="quit" @click="quitConfig">规则配置</span>
+              <span class="quit" @click="quitConfig">{{ t('Analytics.ana_rule_config') }}</span>
               >
-              <span>配置{{ channelName }}</span>
+              <span>{{ t('Router.router_configuration') + channelName }}</span>
             </div>
             <div class="opeartion">
-              <el-button v-if="!startDraw" size="small"><i class="iconfont icon-bianji"></i></el-button>
-              <el-button v-else size="small"><i class="iconfont icon-duihao1"></i></el-button>
-              <el-button size="small" type="primary"><i class="iconfont icon-huifu"></i></el-button>
+              <el-button v-if="!startDraw" size="small" @click="startDrawing"><i class="iconfont icon-bianji"></i></el-button>
+              <el-button v-else size="small" @click="stopDrawing"><i class="iconfont icon-duihao1"></i></el-button>
+              <el-button size="small" type="primary" @click="clearCanvas"><i class="iconfont icon-huifu"></i></el-button>
             </div>
           </div>
           <div class="analytics_rule_right_video">
@@ -854,14 +1347,14 @@ const activeNames = ['1']
         <div class="conf-form">
           <div class="header"></div>
           <el-form :model="ruleForm" label-position="left" label-width="100px" style="padding: 10px 20px;">
-            <el-form-item label="名称">
+            <el-form-item :label="t('CommTableEdit.comm_table_name')">
               <el-input v-model="ruleForm.name" style="width: 210px;"></el-input>
             </el-form-item>
-            <el-form-item label="检查类型">
+            <el-form-item :label="t('Analytics.ana_check_type')">
               <el-select v-model="ruleTypeLabel" @visible-change="handleVisibleChange" popper-class="ruleTypeSelect"
                 style="width: 210px;"></el-select>
             </el-form-item>
-            <el-form-item label="对象" v-show="checkboxgroupShow">
+            <el-form-item :label="t('Analytics.ana_object')" v-show="checkboxgroupShow">
               <el-checkbox-group class="checkboxgroup" v-model="checkList">
                 <el-checkbox label="person"
                   :disabled="ruleForm.ruleType == 'USC_ANA_RULE_STVE' || ruleForm.ruleType == 'USC_ANA_RULE_VECT' || ruleForm.ruleType == 'USC_ANA_RULE_FARE' || ruleForm.ruleType == 'USC_ANA_RULE_LPRE'">
@@ -878,10 +1371,10 @@ const activeNames = ['1']
                     <i class="iconfont icon-bicycle" style="font-size: 24px;"></i></el-checkbox>
               </el-checkbox-group>
             </el-form-item>
-            <el-form-item label="停留时间" v-show="ruleForm.ruleType == 'USC_ANA_RULE_LOIT' || ruleForm.ruleType == 'USC_ANA_RULE_STVE'">
+            <el-form-item :label="t('Analytics.ana_dwell_time')" v-show="ruleForm.ruleType == 'USC_ANA_RULE_LOIT' || ruleForm.ruleType == 'USC_ANA_RULE_STVE'">
               <el-input v-model="ruleForm.time" style="width: 210px;"></el-input>
             </el-form-item>
-            <el-form-item label="方向" v-show="ruleForm.ruleType == 'USC_ANA_RULE_CRAL'">
+            <el-form-item :label="t('Analytics.ana_direction')" v-show="ruleForm.ruleType == 'USC_ANA_RULE_CRAL'">
               <el-radio-group v-model="direction" v-show="store.darkMode">
                 <el-radio label="BA"><img src="../imgs/blackA.svg" width="25"></el-radio>
                 <el-radio label="AB"><img src="../imgs/blackB.svg" width="25"></el-radio>
@@ -893,23 +1386,23 @@ const activeNames = ['1']
                 <el-radio label="BOTH"><img src="../imgs/whiteAB.svg" width="25"></el-radio>
               </el-radio-group>
             </el-form-item>
-            <el-form-item label="帧率" v-show="ruleForm.ruleType == 'USC_ANA_RULE_CONF'">
+            <el-form-item :label="t('Analytics.ana_fps')" v-show="ruleForm.ruleType == 'USC_ANA_RULE_CONF'">
               <el-select v-model="ruleForm.fps" style="width: 210px;" filterable>
                 <el-option v-for="item in fpsOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="计划" v-show="ruleForm.ruleType == 'USC_ANA_RULE_CONF'">
+            <el-form-item :label="t('Analytics.ana_schedule')" v-show="ruleForm.ruleType == 'USC_ANA_RULE_CONF'">
               <el-select v-model="ruleForm.schedule" style="width: 210px;">
                 <el-option v-for="(item, index) in scheduleArr" :key="index" :label="item.name" :value="item.uuid"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item :label="'码流'" v-show="ruleForm.ruleType == 'USC_ANA_RULE_CONF'">
+            <el-form-item :label="t('Configuration.conf_dev_stream')" v-show="ruleForm.ruleType == 'USC_ANA_RULE_CONF'">
               <el-select v-model="ruleForm.stream" style="width: 210px;">
-                <el-option :label="'主码流'" value="main"></el-option>
-                <el-option :label="'辅码流'" value="sub"></el-option>
+                <el-option :label="t('Configuration.conf_dev_main_stream')" value="main"></el-option>
+                <el-option :label="t('Configuration.conf_dev_sub_stream')" value="sub"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item :label="'级别'" v-show="ruleForm.ruleType != 'USC_ANA_RULE_CONF'">
+            <el-form-item :label="t('Analytics.ana_priority')" v-show="ruleForm.ruleType != 'USC_ANA_RULE_CONF'">
               <el-select v-model="ruleForm.priorityLevel" style="width: 210px;">
                 <el-option label="Critical" value="Critical"></el-option>
                 <el-option label="High" value="High"></el-option>
@@ -917,46 +1410,46 @@ const activeNames = ['1']
                 <el-option label="Low" value="Low"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item :label="'人脸库'"
+            <el-form-item :label="t('Analytics.ana_face_library')"
               v-show="ruleForm.ruleType == 'USC_ANA_RULE_FARE'">
               <el-select v-model="ruleForm.faceLibraryId" style="width: 210px;">
                 <el-option v-for="(item, i) in faceLibraryList" :key="i" :label="item.faceLibraryName"
                   :value="item.faceLibraryId"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item :label="'相似阈值'"
+            <el-form-item :label="t('Analytics.ana_please_similarity')"
               v-show="ruleForm.ruleType == 'USC_ANA_RULE_FARE'">
               <el-input v-model="ruleForm.faceSimilarityThreshold" style="width: 210px;"
                 placeholder="1-100"></el-input>
             </el-form-item>
-            <el-form-item :label="'最小尺寸'"
+            <el-form-item :label="t('Analutics.ana_please_min_size')"
               v-show="ruleForm.ruleType == 'USC_ANA_RULE_FARE'">
               <el-input v-model="ruleForm.faceMinimumSize" style="width: 210px;"
                 @change="updateFareSize"></el-input>
             </el-form-item>
-            <el-form-item :label="'相似阈值'"
+            <el-form-item :label="t('Analytics.ana_please_similarity')"
               v-show="ruleForm.ruleType == 'USC_ANA_RULE_LPRE'">
               <el-input v-model="ruleForm.lprConfidenceThreshold" style="width: 210px;"
                 placeholder="1-100"></el-input>
             </el-form-item>
-            <el-form-item :label="'检测目标类型'"
+            <el-form-item :label="t('Analytics.ana_rule_detType')"
               v-show="ruleForm.ruleType == 'USC_ANA_RULE_CROD'">
               <el-select v-model="ruleForm.detType" style="width: 210px;">
                 <el-option label="head" value="head"></el-option>
                 <el-option label="person" value="person"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item :label="'报警人数'"
+            <el-form-item :label="t('Analytics.ana_rule_crpe')"
               v-show="ruleForm.ruleType == 'USC_ANA_RULE_CROD'">
               <el-input v-model="ruleForm.threshold" style="width: 210px;" placeholder="1-100"></el-input>
             </el-form-item>
-            <el-form-item :label="'报警时间间隔'"
+            <el-form-item :label="t('Analytics.ana_rule_cooldown')"
               v-show="ruleForm.ruleType == 'USC_ANA_RULE_CROD'">
               <el-input v-model="ruleForm.triggerInterval" style="width: 210px;"></el-input>
             </el-form-item>
           </el-form>
           <div v-show="ruleForm.ruleType == 'USC_ANA_RULE_LPRE'" style="padding: 0 20px;">
-            车牌最小尺寸&nbsp; 
+            {{ t('Analytics.ana_license_plate_min_size') }}&nbsp; 
             <span class="iconfont icon-xiaotishi" style="font-size: 12px;color: #F70502;"></span>
             <el-form class="el_form" v-show="ruleForm.ruleType == 'USC_ANA_RULE_LPRE'" label-position="right"
               label-width="70px" :model="ruleForm"
@@ -978,7 +1471,7 @@ const activeNames = ['1']
             </el-form>
           </div>
           <div v-show="ruleForm.ruleType == 'USC_ANA_RULE_LPRE'" style="padding: 0 20px;">
-            车牌最大尺寸&nbsp; 
+            {{ t('Analytics.ana_license_plate_max_size') }}&nbsp; 
             <span class="iconfont icon-xiaotishi" style="font-size: 12px;color: #F3F300;"></span>
             <el-form class="el_form" v-show="ruleForm.ruleType == 'USC_ANA_RULE_LPRE'" label-position="right"
               label-width="70px" :model="ruleForm"
@@ -996,15 +1489,20 @@ const activeNames = ['1']
             </el-form>
           </div>
           <div v-show="ruleForm.ruleType == 'USC_ANA_RULE_CONF'" style="margin: 0 20px;">
-            <div>检测最小对象大小</div>
+            <div>{{ t('Analytics.ana_obj_size') }}</div>
             <br>
-            <el-slider v-model="ruleForm.objectSize" show-input></el-slider>
+            <el-slider v-model="ruleForm.objectSize" show-input @input="updateObjSize"></el-slider>
             <!-- <el-input style="width: 80px;" v-model="formLabelAlign.objectSize"></el-input> -->
+          </div>
+          <div v-show="ruleForm.ruleType === 'USC_ANA_RULE_CONF'"
+            @click="() => { moreSetting = true; console.log(ruleForm) }" style="cursor: pointer; color: #177DDC; padding: 20px 20px 0 20px;">
+            {{ t('Analytics.ana_more_settings') }}
+            <i class="iconfont icon-shezhianniu"></i>
           </div>
           <div style="width: 100%; padding: 20px; display: flex; justify-content: space-between;">
             <el-button v-if="ruleForm.ruleType == 'USC_ANA_RULE_CONF'" class="iconfont icon-fuzhi" style="width: 60px; height: 28px;"></el-button>
             <el-button v-else  style="border:0px;background-color: transparent;"></el-button>
-            <el-button class="form_butt" type="primary" :disabled="startDraw" style="width: 60px; height: 28px;">确定</el-button>
+            <el-button class="form_butt" type="primary" :disabled="startDraw" @click="platformyes" style="width: 60px; height: 28px;">{{ t('CommTableEdit.comm_ok') }}</el-button>
           </div>
         </div>
       </div>
@@ -1012,26 +1510,63 @@ const activeNames = ['1']
         <el-table 
           :data="rulesTableData.slice((pageIndex - 1) * pageSize, pageIndex * pageSize)"
           height="260"
+          highlight-current-row
+          @row-click="goClick"
         >
-          <el-table-column prop="name" label="名称" width="120" align="center"></el-table-column>
+          <el-table-column prop="name" :label="t('CommTableEdit.comm_table_name')" width="120" align="center"></el-table-column>
           <el-table-column prop="uuid" label="UUID" width="300" align="center"></el-table-column>
-          <el-table-column prop="setting.ruleType" label="检查类型" width=200 align="center"></el-table-column>
-          <el-table-column label="对象" align="center"></el-table-column>
-          <el-table-column label="开启" width="120" align="center">
+          <el-table-column prop="setting.ruleType" :label="t('Analytics.ana_check_type')" width=200 align="center"></el-table-column>
+          <el-table-column :label="t('Analytics.ana_object')" align="center">
+            <template #default="{ row }">
+              <div v-if="row.setting.ruleType == 'USC_ANA_RULE_MIAA'" style="font-size: 20px;">
+                <span v-for="item in row.setting.Rule.Miaa.objs" :class="'iconfont ' + shapeObj[item]"
+                  :key="item">&nbsp;&nbsp;</span>
+              </div>
+              <div v-else-if="row.setting.ruleType == 'USC_ANA_RULE_CRAL'" style="font-size: 20px;">
+                <span v-for="item in row.setting.Rule.Cral.objs" :class="'iconfont ' + shapeObj[item]"
+                  :key="item">&nbsp;&nbsp;</span>
+              </div>
+              <div v-else-if="row.setting.ruleType == 'USC_ANA_RULE_STVE'" style="font-size: 20px;">
+                <span v-for="item in row.setting.Rule.Stve.objs" :class="'iconfont ' + shapeObj[item]"
+                  :key="item">&nbsp;&nbsp;</span>
+              </div>
+              <div v-else-if="row.setting.ruleType == 'USC_ANA_RULE_VECT'" style="font-size: 20px;">
+                <span v-for="item in row.setting.Rule.Vect.objs" :class="'iconfont ' + shapeObj[item]"
+                  :key="item">&nbsp;&nbsp;</span>
+              </div>
+              <div v-else-if="row.setting.ruleType == 'USC_ANA_RULE_PECT'" style="font-size: 20px;">
+                <span v-for="item in row.setting.Rule.Pect.objs" :class="'iconfont ' + shapeObj[item]"
+                  :key="item">&nbsp;&nbsp;</span>
+              </div>
+              <div v-else-if="row.setting.ruleType == 'USC_ANA_RULE_PPE'" style="font-size: 20px;">
+                <span :class="'iconfont icon-person'"></span>
+              </div>
+              <div v-else-if="row.setting.ruleType == 'USC_ANA_RULE_FARE'" style="font-size: 20px;">
+                <span :class="'iconfont icon-person'"></span>
+              </div>
+              <div v-else-if="row.setting.ruleType == 'USC_ANA_RULE_LPRE'" style="font-size: 20px;">
+                <!-- <span :class="'iconfont icon-person'"></span> -->
+              </div>
+              <div v-else-if="row.setting.ruleType == 'USC_ANA_RULE_PEFA'" style="font-size: 20px;">
+                <span :class="'iconfont icon-person'"></span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column :label="t('Common.comm_enable')" width="120" align="center">
             <template #default="{ row }">
             <div>
               <el-switch v-model="row.enabled" disabled></el-switch>
             </div>
           </template>
           </el-table-column>
-          <el-table-column label="方向" width="160" align="center">
+          <el-table-column :label="t('Analytics.ana_direction')" width="160" align="center">
             <template #default="{ row }">
               <div v-if="row.setting.ruleType == 'USC_ANA_RULE_CRAL'">
                 <span>{{ row.setting.Rule.Cral.direction }}</span>
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="保留时间" width="120" align="center">
+          <el-table-column :label="t('Analytics.ana_dwell_time')" width="120" align="center">
             <template #default="{ row }">
               <div v-if="row.setting.ruleType == 'USC_ANA_RULE_LOIT'">
                 <span>{{ row.setting.Rule.Loit.dwellTime }}</span>
@@ -1041,9 +1576,9 @@ const activeNames = ['1']
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="100" align="center">
+          <el-table-column :label="t('CommTableEdit.comm_operational')" width="100" align="center">
             <template #default="{ row }">
-              <el-button type="text" >删除</el-button>
+              <el-button type="text" @click.stop="delRow(row)">{{ t('CommTableEdit.comm_delete') }}</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -1060,7 +1595,7 @@ const activeNames = ['1']
       </div>
       <div v-if="popoverVisible && ruleConfigVisible" class="popoverRuleType">
         <div class="ruleTypeHeader">
-          <span>检查类型</span>
+          <span>{{ t('Analytics.ana_check_type') }}</span>
           <i class="iconfont icon-guanbixiaoanniu" style="cursor: pointer; font-size: 20px;" @click="selectRuleType(false)"></i>
         </div>
         <div class="ruleTypeContainer">
@@ -1071,6 +1606,51 @@ const activeNames = ['1']
           </div>
         </div>
       </div>
+      <el-dialog v-model="moreSetting" :title="t('Analytics.ana_more_settings')" width="600" top="20vh" custom-class="moreSettins">
+        <div class="more_settings">
+          <el-checkbox v-model="ruleForm.metaEnabled">
+            <template #default>
+              <span class="iconfont icon-yuanshujufenxi" style="font-size: 16px;"> </span>
+              <span>{{ t('Analytics.ana_rule_mesg') }}</span>
+            </template>
+          </el-checkbox>
+          <el-checkbox v-model="ruleForm.motionDet">
+            <template #default>
+              <span class="iconfont icon-yidongzhence1" style="font-size: 16px;"> </span>
+              <span>{{ t('Analytics.ana_enable_motion_detection') }}</span>
+            </template>
+          </el-checkbox>
+          <el-checkbox v-model="ruleForm.groudMode">
+            <template #default>
+              <span class="iconfont icon-dimianmoshi" style="font-size: 16px;"> </span>
+              <span>{{ t('Analytics.ana_ground_mode') }}</span>
+            </template>
+          </el-checkbox>
+          <el-checkbox v-model="ruleForm.colorDet">
+            <template #default>
+              <span class="iconfont icon-yansejiance" style="font-size: 16px;"> </span>
+              <span>{{ t('Analytics.ana_enable_color_detection') }}</span>
+            </template>
+          </el-checkbox>
+          <el-checkbox v-model="ruleForm.txtSearch">
+            <template #default>
+              <span class="iconfont icon-wenbensousuo1" style="font-size: 16px;"> </span>
+              <span>{{ t('Analytics.ana_text_search') }}</span>
+            </template>
+          </el-checkbox>
+        </div>
+        <hr style="border-color: #888; background-color: transparent; color: transparent; ">
+        <div class="more_settings_label" style="margin: 20px 0 0 70px;">{{ t('Analytics.ana_classifier') }}</div>
+        <div class="more_settings">
+          <el-select v-model="ruleForm.classifiers" style="width: 217px;" multiple >
+            <el-option v-for="item in classifierList" :key="item.value" :label="item.name" :value="item.uuid">
+            </el-option>
+          </el-select>
+        </div>
+        <template #footer>
+          <el-button type="primary" @click="moreSettingsClose">{{$t("CommTableEdit.comm_ok")}}</el-button>
+        </template>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -1088,6 +1668,9 @@ const activeNames = ['1']
       }
       .el-table__row {
         background-color: transparent;
+      }
+      .el-table__row {
+        cursor: pointer;
       }
     }
   }
@@ -1306,6 +1889,56 @@ const activeNames = ['1']
   }
   .el-radio .el-radio__input {
     display: none !important;
+  }
+}
+:deep(.el-dialog) {
+  padding: 0 !important;
+  // margin: 0;
+  .el-dialog__header {
+    height: 40px;
+    line-height: 50px;
+    padding: 0 20px;
+    background-color: #454545;
+  }
+  .el-dialog__body {
+    padding: 20px;
+  }
+  .el-dialog__footer {
+    padding: 20px;
+  }
+}
+.more_settings {
+  padding-top: 10px;
+  padding-left: 80px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  width: 100%;
+  :deep(.el-checkbox) {
+    height: 35px;
+    line-height: 35px;
+    text-align: left;
+    padding: 0 15px;
+    border-radius: 3px;
+    background: #404040;
+    color: #fff;
+    margin-bottom: 10px;
+
+    .el-checkbox__label {
+      padding-left: 0;
+    }
+
+    .el-checkbox__input {
+      display: none !important;
+    }
+    
+  }
+  :deep(.is-checked) {
+    background-color: #0399FE !important;
+    .el-checkbox__label {
+      color: #fff !important;
+    }
   }
 }
 </style>

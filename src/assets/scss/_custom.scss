@@ -236,15 +236,19 @@ body.c-dark-theme {
   }
 
   .el-table__body tr:hover>td {
-    background: none !important;
+    background: #2c2c2c !important;
   }
 
   .el-table__body tr.hover-row>td {
     background-color: #252525 !important;
   }
+  .current-row>td.el-table__cell {
+    --el-table-current-row-bg-color: #2c2c2c;
+  }
   .el-table__row {
     background-color: #252525;
   }
+  
   .el-input {
     .el-input__wrapper {
       // background-color: #121212;

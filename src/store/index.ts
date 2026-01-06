@@ -9,8 +9,9 @@ export const useStore = defineStore('main', () =>{
   }
 
   // 主题
-  const darkMode = ref<string | boolean>('c-dark-theme')
-  function setDarkMode(value: string | boolean) {
+  type ThemeType = 'darkblue' | 'c-dark-theme' | false
+  const darkMode = ref<ThemeType>('c-dark-theme')
+  function setDarkMode(value: ThemeType) {
     darkMode.value = value;
   }
 

@@ -74,3 +74,9 @@ export const PtzApi = (ptzToken: string, action: string, speed: number) => axios
   url: '/uapi/v1/Ptz?token=' + ptzToken + '&action=' + action + '&speed=' + speed,
   method: 'GET'
 })
+
+// 视图查询
+export const GetViewApi = (id: string) => axios({
+  url: 'uapi/v1/View/' + id,
+  method: 'GET'
+})

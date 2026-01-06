@@ -6,6 +6,41 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "45190532",
+      "name": "元数据分析",
+      "font_class": "yuanshujufenxi",
+      "unicode": "e9d2",
+      "unicode_decimal": 59858
+    },
+    {
+      "icon_id": "45190533",
+      "name": "颜色检测",
+      "font_class": "yansejiance",
+      "unicode": "e9d3",
+      "unicode_decimal": 59859
+    },
+    {
+      "icon_id": "45190534",
+      "name": "地面模式",
+      "font_class": "dimianmoshi",
+      "unicode": "e9d1",
+      "unicode_decimal": 59857
+    },
+    {
+      "icon_id": "45190536",
+      "name": "移动侦测",
+      "font_class": "yidongzhence1",
+      "unicode": "e9ce",
+      "unicode_decimal": 59854
+    },
+    {
+      "icon_id": "45190537",
+      "name": "文本搜索",
+      "font_class": "wenbensousuo1",
+      "unicode": "e9cf",
+      "unicode_decimal": 59855
+    },
+    {
       "icon_id": "40559108",
       "name": "狗",
       "font_class": "dog",

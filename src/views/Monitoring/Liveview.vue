@@ -34,15 +34,30 @@
               <div
                 draggable="true"
                 @dragstart="handleDragStart(node)"
-                style="display: flex; align-items: center;"
+                style="width: 100%; display: flex; align-items: center; position: relative;"
                 :class="getNodeClass(data)">
-                <i :class="`iconfont ${getNodeIcon(data)}`" 
+                <!-- SVG图标 - 用于录像状态 -->
+                <svg v-if="data.data && data.data.recording" class="icon" aria-hidden="true" :style="{
+                  marginRight: '8px'
+                }">
+                  <use :xlink:href="getRecordingIcon(data)"></use>
+                </svg>
+                <!-- 字体图标 - 用于非录像状态 -->
+                <i v-else :class="`iconfont ${getNodeIcon(data)}`" 
                    :style="{
                      opacity: getNodeColor(data),
                      marginRight: '8px',
-                     fontSize: data.type === 'device' && data.isLeaf ? '16px' : '16px'
+                     fontSize: data.type === 'device' && data.isLeaf ? '16px' : '16px',
+                     color: isChannelPlaying(data) ? '#00ff00' : 'inherit'
                    }"></i>
-                <span :style="{opacity: getNodeColor(data)}">{{ node.label }}</span>
+                <span :style="{
+                  opacity: getNodeColor(data),
+                  color: isChannelPlaying(data) ? '#00ff00' : 'inherit'
+                }">{{ node.label }}</span>
+                <!-- 播放状态指示 -->
+                <span v-if="isChannelPlaying(data)" style="color: #00ff00; font-size: 12px; position: absolute; right: 10px;">
+                  Playing...
+                </span>
               </div>
             </template>
           </el-tree-v2>
@@ -180,7 +195,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { H5sPlayerAudBack } from '@/assets/js/h5splayer.js'
 // import { useRoute } from 'vue-router';
 import { GetDevPartitionApi } from '@/api/configuration/device';
-import { GetDeviceChannels, RecEnableApi, GetRecordCalendar, setRecEnableApi, GetInformationDataApi, GetPresetsApi, PresetJumpApi, SetPresetApi, PtzApi } from '@/api/channel';
+import { GetDeviceChannels, RecEnableApi, GetRecordCalendar, setRecEnableApi, GetInformationDataApi, GetPresetsApi, PresetJumpApi, SetPresetApi, PtzApi, GetViewApi } from '@/api/channel';
+import { useStore } from '@/store';
 import { useUserStore } from '@/store/user';
 import { UPlayerSDK as UPlayerSDKClass, UPlayerList as UPlayerListClass, GridLayoutManager } from '@/assets/js/uplayersdk.esm.js';
 import uuid from '@/assets/js/uuid.js'
@@ -201,6 +217,7 @@ interface TreeNode {
 
 // const route = useRoute()
 const userStore = useUserStore()
+const store = useStore()
 const { t } = useI18n()
 
 let filterText = ref<string>('')
@@ -226,7 +243,8 @@ let gridListener = reactive<gridListenerType>({
   SnapshotHandler: null,
   InformationHandler: null,
   ShoutwheatHandler: null,
-  PtzControlShowHandler: null
+  PtzControlShowHandler: null,
+  layoutLoadedFromCacheHandler: null
 })
 let UPlayerList = ref<any>(null)
 let PlayingArr = ref<any[]>([])
@@ -242,53 +260,17 @@ const Audioslider = ref<number>(0)
 
 const initUPlayList = ():void => { // 初始化 UPlayerList
   UPlayerList.value = new UPlayerListClass('#timeline');
-  const arr = JSON.parse(localStorage.getItem('view-playing') || '[]');
-  if (arr && arr.length > 0) {
-    console.log('恢复播放视频 arr =>', arr)
-    arr.forEach((item: any) => {
-      const conf = {
-        videoid: item.videoid,
-        protocol: item.protocol,
-        host: item.host,
-        token: item.token,
-        session: userStore.session,
-        accessToken: userStore.Access_token,
-        streamprofile: item.streamprofile,
-        resourceUUID: item.resourceUUID,
-        name: item.name,
-        label: item.label,
-        liveVideoType: item.liveVideoType,
-        recording: item.recording,
-        onPlaybackModeChange: (mode: string) => {
-          console.log('onPlaybackModeChange =>', mode);
-          if (mode == 'live') {
-            isLiveview.value = true;
-          } else {
-            isLiveview.value = false;
-          }
-        },
-        onError: (err: object) => {
-          console.warn('Play Error =>', err)
-        }
-      }
-      const UPlayer = new UPlayerSDKClass('G' + conf.videoid, conf);
-      UPlayerList.value.addPlayer(UPlayer);
-      PlayingArr.value.push(UPlayer);
-      PlayBackArr.value.push(UPlayer);
-      isPlaying.value = true;
-    })
-    UPlayerList.value.playAll();
-  }
+  GridManager.value.initialize()
 }
 const initGridLayout = ():void => {
   GridManager.value = new GridLayoutManager('#video_hed', {
-    cacheKey: 'view-layout',
+    cacheKey: 'hpro-view-layout',
     padding: 20,
     aspectRatio: [16, 9],
     animationDuration: 500,
     createIcons: {
       playModeIcon: true,
-      playModeText: 'WS2',
+      playModeText: store.liveviewrtc,
       informationIcon: true,
       shouwhearIcon: true,
       snapshotIcon: true,
@@ -317,6 +299,50 @@ const initGridLayout = ():void => {
   gridListener.PtzControlShowHandler = (event: CustomEvent<any>) => {
     PtzControlShow(event.detail.id)
   }
+  gridListener.layoutLoadedFromCacheHandler = async (event: CustomEvent<any>) => {
+    console.log('layoutLoadedFromCacheHandler =>', event.detail)
+    await nextTick()
+    event.detail.forEach((item: any) => {
+      item.forEach((row: any) => {
+        if (row && row.camera) {
+          const conf = {
+            videoid: row.camera.videoid,
+            protocol: window.location.protocol,
+            host: userStore.WSROOT,
+            token: row.camera.token,
+            session: userStore.session,
+            accessToken: userStore.Access_token,
+            resourceUUID: row.camera.resourceUUID,
+            name: row.camera.name,
+            label: row.camera.label,
+            liveVideoType: store.liveviewrtc,
+            recording: row.camera.recording,
+            onPlaybackModeChange: (mode: string) => {
+              console.log('onPlaybackModeChange =>', mode);
+              if (mode == 'live') {
+                isLiveview.value = true;
+                GridManager.value.changePlayModeText(store.liveviewrtc)
+              } else {
+                isLiveview.value = false;
+                GridManager.value.changePlayModeText(store.liveviewrtc1)
+              }
+            },
+            onError: (err: object) => {
+              console.warn('Play Error =>', err)
+            }
+          }
+
+          // console.log('G' + conf.videoid, document.getElementById('G' + conf.videoid))
+          const UPlayer = new UPlayerSDKClass('G' + conf.videoid, conf);
+          UPlayerList.value.addPlayer(UPlayer);
+          PlayingArr.value.push(UPlayer);
+          PlayBackArr.value.push(UPlayer);
+          isPlaying.value = true;
+        }
+      })
+      UPlayerList.value.playAll();
+    })
+  }
 
   GridManager.value.addEventListener('closeCell', gridListener.closeCellHandler)
   GridManager.value.addEventListener('recEnableClick', gridListener.recEnableHandler)
@@ -325,6 +351,8 @@ const initGridLayout = ():void => {
   GridManager.value.addEventListener('Snapshot', gridListener.SnapshotHandler)
   GridManager.value.addEventListener('Shoutwheat', gridListener.ShoutwheatHandler)
   GridManager.value.addEventListener('PtzControlShow', gridListener.PtzControlShowHandler)
+  GridManager.value.addEventListener('layoutLoadedFromCache', gridListener.layoutLoadedFromCacheHandler)
+  // console.log(GridManager.value)
 }
 // 打开仪表
 const Information = (id: string) => {
@@ -632,6 +660,13 @@ const closePlayContainer = (id: string) => {
       isLiveview.value = true;
       isPlaying.value = false;
     }
+    updatePlayingStatus('del', currentSDK.conf.playingId)
+    // 触发树的重新渲染以更新播放状态显示
+    nextTick(() => {
+      if (treeRef.value) {
+        treeRef.value.$forceUpdate?.();
+      }
+    });
   }
 }
 
@@ -672,11 +707,12 @@ let isLiveview = ref(true)
 
 // 设备树开始拖动设备
 const handleDragStart = (node: any) => {
-  console.log('handleDragStart =>', node.data.data)
+  // console.log('handleDragStart =>', node.data.data)
   drag.value = {};
   isDrag.value = true;
   let conf = {}
   if (node.data.data.type == "H5_CH_DEV" || node.data.data.type == "H5_FILE") {
+    console.log('handleDragStart channel =>', node.data)
     conf = {
       videoid: uuid(8),
       protocol: window.location.protocol,
@@ -689,12 +725,15 @@ const handleDragStart = (node: any) => {
       resourceUUID: node.data.data.uuid,
       liveVideoType: 'WS2',
       recording: node.data.data.recording,
+      playingId: node.data.id,  // 仅用于设备树显示状态
       onPlaybackModeChange: (mode: string) => {
-        console.log('onPlaybackModeChange =>', mode);
+        console.log('onPlaybackModeChange view =>', mode);
         if (mode == 'live') {
           isLiveview.value = true;
+          GridManager.value.changePlayModeText(store.liveviewrtc)
         } else {
           isLiveview.value = false;
+          GridManager.value.changePlayModeText(store.liveviewrtc1)
         }
       },
       onError: (err: object) => {
@@ -702,18 +741,27 @@ const handleDragStart = (node: any) => {
       }
     }
     drag.value = conf;
-    GridManager.value.showLines();
-    GridManager.value.highlightCells([]);
   } else {
-    return;
+    if (node.data.type == 'view') {
+      console.log('handleDragStart view =>', node.data)
+      drag.value.viewId = node.data.data.viewId;
+      drag.value.playingId = node.data.id;
+    } else if (node.data.type == 'map') {
+      console.log('handleDragStart map =>', node.data)
+      // 暂时为map设置playingId，但不实现播放逻辑
+      drag.value.mapId = node.data.data.mapId;
+      drag.value.playingId = node.data.id;
+    }
   }
+  GridManager.value.showLines();
+  GridManager.value.highlightCells([]);
   console.log('drag =>', drag.value)
 }
 
 // 正在拖动
 const dragOver = (event: any) => {
-  if (!isDrag.value || !drag.value.videoid) return;
-  const container: Element | null = document.getElementById('video_hed');
+  if (!isDrag.value && !drag.value.viewId || !isDrag.value && !drag.value.videoid) return;
+  // const container: Element | null = document.getElementById('video_hed');
   // const rect: any = container?.getBoundingClientRect();
   const eventX = event.pageX;
   const eventY = event.pageY;
@@ -730,42 +778,173 @@ const dragOver = (event: any) => {
 
 // 拖动结束，放置到指定位置
 const dropTarget = async (event: any) => {
-  if (!isDrag.value || !drag.value.videoid) return;
-  const container: Element | null = document.getElementById('video_hed');
+  if (!isDrag.value && !drag.value.viewId || !isDrag.value && !drag.value.videoid) return;
+  // const container: Element | null = document.getElementById('video_hed');
   // const rect: any = container?.getBoundingClientRect();
-  let eventX = event.pageX;
-  let eventY = event.pageY;
-  let recEnable = false;
-  const res = await RecEnableApi(drag.value.token);
-  console.log('record =>', res)
-  if (res.status == 200 && res.data.code == 0) {
-    recEnable = res.data.result.manualRecEnable;
-  }
-  let conf = {
-    pageX: eventX,
-    pageY: eventY,
-    id: 'G' + drag.value.videoid,
-    recording: false,
-    recEnable,
-    audio: false,
-    camera: {
+  if (drag.value.videoid) {
+    let eventX = event.pageX;
+    let eventY = event.pageY;
+    let recEnable = false;
+    const res = await RecEnableApi(drag.value.token);
+    console.log('record =>', res)
+    if (res.status == 200 && res.data.code == 0) {
+      recEnable = res.data.result.manualRecEnable;
+    }
+    let conf = {
+      pageX: eventX,
+      pageY: eventY,
       id: 'G' + drag.value.videoid,
-      token: drag.value.token,
-      session: drag.value.session
+      recording: false,
+      recEnable,
+      audio: false,
+      camera: {
+        videoid: drag.value.videoid,
+        token: drag.value.token,
+        session: drag.value.session,
+        name: drag.value.name,
+        label: drag.value.name,
+        resourceUUID: drag.value.resourceUUID,
+        recording: drag.value.recording
+      }
+    }
+    GridManager.value.claimCellByCoordinates(conf);
+    isDrag.value = false;
+    GridManager.value.hideLines()
+    GridManager.value.highlightCells([]);
+
+    const UPlayer = new UPlayerSDKClass(conf.id, drag.value)
+    UPlayerList.value.addPlayer(UPlayer);
+    PlayingArr.value.push(UPlayer)
+    PlayBackArr.value.push(UPlayer)
+    UPlayerList.value.playAll();
+    isPlaying.value = true;
+    gridListener.changeMainSDKHandler?.({detail: conf.id})
+    updatePlayingStatus('add', drag.value.playingId)
+  } else if (drag.value.viewId) {
+    srcView(drag.value.viewId);
+    // GridManager.value.claimCellByCoordinates(conf);
+    isDrag.value = false;
+    GridManager.value.hideLines()
+    GridManager.value.highlightCells([]);
+    updatePlayingStatus('add', drag.value.playingId)
+  } else if (drag.value.mapId) {
+    // 暂时不实现map的播放逻辑，但更新播放状态用于显示
+    console.log('Map dropped, but playback not implemented yet');
+    isDrag.value = false;
+    GridManager.value.hideLines()
+    GridManager.value.highlightCells([]);
+    updatePlayingStatus('add', drag.value.playingId)
+  }
+  
+  // 触发树的重新渲染以更新播放状态显示
+  nextTick(() => {
+    // 强制更新树组件
+    if (treeRef.value) {
+      treeRef.value.$forceUpdate?.();
+    }
+  });
+}
+
+const srcView = async (viewId: string) => {
+  // 先清除所有正在播放的视频
+  Alloffvideo();
+  const res = await GetViewApi(viewId)
+  if (res.status == 200 && res.data.code == 0) {
+    const result = res.data.result;
+    const layoutData = transformViewToGrid(result.layout, result.viewEntity)
+    console.log('srcView =>', layoutData);
+    // localStorage.removeItem('hpro-view-layout');
+    localStorage.setItem('hpro-view-layout', JSON.stringify(layoutData));
+    GridManager.value.initialize()
+    await nextTick();
+  }
+}
+
+const transformViewToGrid = (layoutData: any, viewEntities: any) => {
+  // 获取布局信息
+  const layout = layoutData.setting.layoutView
+  // viewEntities 为视频实体信息，构建位置映射
+
+  // 创建位置到视频实体的映射
+  const positionMap: any = {};
+  viewEntities.forEach((entity: any) => {
+    const pos = entity.layoutPosition;
+    if (pos) {
+      positionMap[pos] = {
+        token: entity.Channel.token,
+        name: entity.Channel.name,
+        resourceUUID: entity.resourceUUID,
+        recording: entity.Channel.recording
+      }
+    }
+  });
+
+  // 确定网格大小（从布局中找最大行列）
+  const maxRow = Math.max(...layout.map((cell: any) => cell.rowEnd)) - 1;
+  const maxCol = Math.max(...layout.map((cell: any) => cell.colEnd)) - 1;
+  // 初始化结果数组(4x4网格)
+  const result: any[] = Array.from({ length: maxRow }, () => 
+    Array.from({ length: maxCol }, () => ({}))
+  )
+
+  // 转换每个布局单元格
+  layout.forEach((cell: any) => {
+    const row = cell.rowStart - 1;
+    const col = cell.colStart - 1;
+    // 构建位置字符串（如 "h1-1"）
+    const posKey = `h${cell.rowStart}-${cell.colStart}`;
+    
+    // 检查该位置是否有视频
+    const hasCamera = positionMap[posKey];
+
+    if (hasCamera) {
+      // 生成唯一的ID和videoID（这里简单处理，实际可能需要更复杂的生成逻辑）
+      const videoId = uuid(8);
+      result[row][col] = {
+        row: row,
+        column: col,
+        rowSpan: cell.merged ? (cell.rowEnd - cell.rowStart) : 1,
+        columnSpan: cell.merged ? (cell.colEnd - cell.colStart) : 1,
+        forceLbm: false,
+        claimed: true,
+        camera: {
+          videoid: videoId,
+          token: hasCamera.token,
+          session: userStore.session, // 这里需要实际的session生成逻辑
+          name: hasCamera.name,
+          label: hasCamera.name,
+          resourceUUID: hasCamera.resourceUUID,
+          recording: hasCamera.recording
+        },
+        id: `G${videoId}`
+      };
+      
+      // 如果是合并单元格，需要标记其他被合并的位置为已占用
+      if (cell.merged) {
+        for (let r = row; r < cell.rowEnd - 1; r++) {
+          for (let c = col; c < cell.colEnd - 1; c++) {
+            if (r !== row || c !== col) {
+              // 被合并的其他单元格设置为null或其他标记
+              result[r][c] = null;
+            }
+          }
+        }
+      }
+    }
+    // 如果没有视频，且该位置没有被标记为null（即不是被合并的其他部分）
+    else if (result[row][col] === undefined || result[row][col] !== null) {
+      result[row][col] = {};
+    }
+  })
+  // 清理被合并单元格占用的位置（设置为{}）
+  for (let i = 0; i < result.length; i++) {
+    for (let j = 0; j < result[i].length; j++) {
+      if (result[i][j] === null) {
+        result[i][j] = {};
+      }
     }
   }
-  GridManager.value.claimCellByCoordinates(conf);
-  isDrag.value = false;
-  GridManager.value.hideLines()
-  GridManager.value.highlightCells([]);
-
-  const UPlayer = new UPlayerSDKClass(conf.id, drag.value)
-  UPlayerList.value.addPlayer(UPlayer);
-  PlayingArr.value.push(UPlayer)
-  PlayBackArr.value.push(UPlayer)
-  UPlayerList.value.playAll();
-  isPlaying.value = true;
-  gridListener.changeMainSDKHandler?.({detail: conf.id})
+  return result;
 }
 
 const transformToTreeData = (partitions: any[]): TreeNode[] => {
@@ -928,7 +1107,7 @@ const getDeviceList = async () => {
       
       // 为设备节点加载通道数据 - 使用缓存和更小的批次
       const deviceItems = list.filter(item => item.type === 'device' && item.data && item.data.token);
-      console.log(`需要加载 ${deviceItems.length} 个设备的通道数据`);
+      // console.log(`需要加载 ${deviceItems.length} 个设备的通道数据`);
       
       // 减少批次大小，避免同时发起太多请求
       const batchSize = 3;
@@ -1001,7 +1180,7 @@ const getDeviceList = async () => {
       }
       
       channelData.value = list;
-      console.log('设备树数据加载完成:', channelData.value);
+      // console.log('设备树数据加载完成:', channelData.value);
     }
     // 默认展开所有节点
     expandedKeys.value = getAllKeys(channelData.value);
@@ -1180,11 +1359,14 @@ const Alloffvideo = () => { // 关闭所有视频以及单元格
   isLiveview.value = true;
   isPlaying.value = false;
   mainSDKId.value = '';
-  localStorage.setItem('view-playing', JSON.stringify([]))
+  // 清除所有播放状态
+  playingIdArr.value = [];
+  // localStorage.setItem('view-playing', JSON.stringify([]))
   const cellFactory = async (cell: any) => {
     console.log('关闭', cell)
   }
   GridManager.value.reloadStageConfiguration(cellFactory)
+  // localStorage.removeItem('hpro-view-layout');
 }
 
 const panelFullScreen = (event: any) => { // 全屏展示 / 退出全屏
@@ -1217,6 +1399,48 @@ const panelFullScreen = (event: any) => { // 全屏展示 / 退出全屏
   }
 }
 
+// 获取录像状态的SVG图标
+const getRecordingIcon = (node: TreeNode) => {
+  if (isChannelPlaying(node)) {
+    return '#icon-lvshexiangji';
+  }
+  return getNodeIcon(node);
+};
+
+const playingIdArr = ref<string[]>([])
+
+const updatePlayingStatus = (type: string, id: string) => {
+  if (!id) return;
+  
+  if (type == 'add') {
+    // 添加播放状态，先检查是否已存在，避免重复添加
+    if (!playingIdArr.value.includes(id)) {
+      playingIdArr.value.push(id);
+    }
+  } else if (type == 'del') {
+    // 删除播放状态
+    playingIdArr.value = playingIdArr.value.filter(item => item !== id);
+  }
+  
+  // console.log('playingIdArr after update =>', playingIdArr.value);
+}
+
+// 检查通道是否正在播放
+const isChannelPlaying = (node: TreeNode) => {
+  if (!node.data) return false;
+  
+  // 只对叶子节点（实际的通道）或view类型进行播放状态检查
+  // 避免父设备节点也显示播放状态
+  if (!node.isLeaf && !node.isDeviceChannel && node.type !== 'view') return false;
+  
+  // 检查当前节点是否在播放列表中
+  const isPlaying = playingIdArr.value.includes(node.id);
+  if (isPlaying) {
+    console.log('isChannelPlaying', node.id, node.label);
+  }
+  return isPlaying;
+};
+
 // 获取节点图标
 const getNodeIcon = (node: TreeNode) => {
   // console.log('getNodeIcon', node)
@@ -1228,7 +1452,11 @@ const getNodeIcon = (node: TreeNode) => {
       // 如果是设备通道（叶子节点），使用摄像机图标
       if (node.isLeaf || node.isDeviceChannel) {
         if (node.data.recording) {
-          return 'icon-lanshexiangji'
+          if (store.darkMode) {
+            return '#icon-baishexiangji'
+          } else {
+            return '#icon-heishexiangji'
+          }
         }
         return 'icon-shexiangjizaixian';
       }
@@ -1318,8 +1546,8 @@ onBeforeUnmount(() => {
   // Alloffvideo()
   if (UPlayerList.value) {
     UPlayerList.value.destroyAll();
-    const arr = PlayingArr.value.map(item => item.conf)
-    localStorage.setItem('view-playing', JSON.stringify(arr));
+    // const arr = PlayingArr.value.map(item => item.conf)
+    // localStorage.setItem('view-playing', JSON.stringify(arr));
     PlayingArr.value = [];
     PlayBackArr.value = [];
     UPlayerList.value.destroyAll();
@@ -1334,6 +1562,7 @@ onBeforeUnmount(() => {
   GridManager.value.removeEventListener('Snapshot', gridListener.SnapshotHandler)
   GridManager.value.removeEventListener('Shoutwheat', gridListener.ShoutwheatHandler)
   GridManager.value.removeEventListener('PtzControlShow', gridListener.PtzControlShowHandler)
+  GridManager.value.removeEventListener('layoutLoadedFromCache', gridListener.layoutLoadedFromCacheHandler)
   GridManager.value.destroy();
   GridManager.value = null;
 })
@@ -1346,7 +1575,8 @@ interface gridListenerType {
   SnapshotHandler: null | Function,
   InformationHandler: null | Function,
   ShoutwheatHandler: null | Function,
-  PtzControlShowHandler: null | Function
+  PtzControlShowHandler: null | Function,
+  layoutLoadedFromCacheHandler: null | Function
 }
 </script>
 
@@ -1388,6 +1618,13 @@ interface gridListenerType {
         font-size: 20px;
         cursor: pointer;
       }
+    }
+    .icon {
+      width: 16px;
+      height: 16px;
+      // vertical-align: 15px;
+      fill: currentColor;
+      overflow: hidden;
     }
     :deep(.el-collapse) {
       // background-color: #424242;

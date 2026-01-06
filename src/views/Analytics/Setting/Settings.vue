@@ -52,14 +52,14 @@ onMounted(() => {
           <el-menu-item index="/System/Setting/SystemMaintenance">{{ t('System.sys_maintenance') }}</el-menu-item>
           <el-menu-item index="/System/Setting/SystemUpgrade">{{ t('System.sys_upgrade') }}</el-menu-item>
         </el-sub-menu> -->
-        <!-- <el-menu-item index="/Analytics/AnaSetting/Rules">
+        <el-menu-item index="/Analytics/AnaSetting/Rules">
           <i class="iconfont icon-guize"></i>
           <span>{{ t('Analytics.ana_rule_config') }}</span>
-        </el-menu-item> -->
-        <!-- <el-menu-item index="/Analytics/AnaSetting/EventSearch">
+        </el-menu-item>
+        <el-menu-item index="/Analytics/AnaSetting/EventSearch">
           <i class="iconfont icon-shijiansousuo"></i>
           <span>{{ t('Analytics.ana_event_search') }}</span>
-        </el-menu-item> -->
+        </el-menu-item>
         <el-menu-item index="/Analytics/AnaSetting/InferServerSetting">
           <i class="iconfont icon-tuilifuwupeizhi"></i>
           <span>{{ t('Analytics.ana_infer_server_settting') }}</span>
@@ -68,10 +68,10 @@ onMounted(() => {
           <i class="iconfont icon-tuilifuwuzhuangtai"></i>
           <span>{{ t('Analytics.ana_Infer_server_status') }}</span>
         </el-menu-item>
-        <!-- <el-menu-item index="/Analytics/AnaSetting/Classifier">
+        <el-menu-item index="/Analytics/AnaSetting/Classifier">
           <i class="iconfont icon-fenleiqi"></i>
-          <span>{{ '分类器' }}</span>
-        </el-menu-item> -->
+          <span>{{ t('Analytics.ana_classifier') }}</span>
+        </el-menu-item>
       </el-menu>
     </div>
     <div class="setting-right">

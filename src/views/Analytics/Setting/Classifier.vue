@@ -85,7 +85,7 @@ const delRow = async (row: any) => {
     const res = await DeleteClassifierApi(params);
     if (res.status == 200 && res.data.code == 0) {
       ElMessage({
-        message: '删除成功',
+        message: t('CommTableEdit.comm_delete_successfully'),
         type: 'success',
         duration: 2000
       })
@@ -113,7 +113,7 @@ const delAll = async () => {
     const res = await DeleteClassifierApi(params);
     if (res.status == 200 && res.data.code == 0) {
       ElMessage({
-        message: '删除成功',
+        message: t('CommTableEdit.comm_delete_successfully'),
         type: 'success',
         duration: 2000
       })
@@ -129,7 +129,7 @@ const onSubmit = async () => {
     const res = await AddClassifierApi(classifierForm);
     if (res.status == 200 && res.data.code == 0) {
       ElMessage({
-        message: '添加成功',
+        message: t('CommTableEdit.comm_add_successfully'),
         type: 'success',
         duration: 2000
       })
@@ -140,7 +140,7 @@ const onSubmit = async () => {
     const res = await UpdateClassifierApi(classifierForm);
     if (res.status == 200 && res.data.code == 0) {
       ElMessage({
-        message: '修改成功',
+        message: t('CommTableEdit.comm_modify_success'),
         type: 'success',
         duration: 2000
       })
@@ -194,16 +194,16 @@ onMounted(() => {
     <div v-if="visible" class="classifier-opeartion">
       <div class="bread-header">
         <el-breadcrumb :separator-icon="ArrowRight">
-          <el-breadcrumb-item class="can-click" @click="goback">分类器</el-breadcrumb-item>
+          <el-breadcrumb-item class="can-click" @click="goback">{{ t('Analytics.ana_classifier') }}</el-breadcrumb-item>
           <el-breadcrumb-item v-if="opeartion == 'edit'">{{ $t("CommTableEdit.comm_edit") }}</el-breadcrumb-item>
           <el-breadcrumb-item v-if="opeartion == 'add'">{{ $t("CommTableEdit.comm_add") }}</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
       <el-form class="classifier-form" :model="classifierForm" label-width="auto" label-position="right" style="max-width: 600px;">
-        <el-form-item label="名称">
+        <el-form-item :label="t('CommTableEdit.comm_table_name')">
           <el-input v-model="classifierForm.name" style="width: 300px;"></el-input>
         </el-form-item>
-        <el-form-item label="文本列表">
+        <el-form-item :label="t('Analytics.ana_txt_list')">
           <el-tag type="info" v-for="tag in classifierForm.txtList" :key="tag" closable :disable-transitions="false"
             @close="handleClose(tag)">{{ tag }}</el-tag>
             <el-input
@@ -216,23 +216,23 @@ onMounted(() => {
               @blur="handleInputConfirm"
               style="width: 100px;"
             />
-            <el-button v-else class="button-new-tag" size="small" @click="showInput">新增</el-button>
+            <el-button v-else class="button-new-tag" size="small" @click="showInput">{{ $t("CommTableEdit.comm_edit") }}</el-button>
         </el-form-item>
-        <el-form-item label="生成报警">
+        <el-form-item :label="t('Analytics.ana_generate_alarm')">
           <el-switch v-model="classifierForm.generateAlarm"></el-switch>
         </el-form-item>
-        <el-form-item label="报警类别索引">
+        <el-form-item :label="t('Analytics.ana_alarm_class_index')">
           <el-checkbox-group v-model="classifierForm.alarmClassIndex">
             <el-checkbox v-for="(item, index) in classifierForm.txtList" :key="index" :label="Number(index) + 1" name="type">{{ item }}</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
-        <el-form-item label="语言">
+        <el-form-item :label="t('Login.login_lang')">
           <el-select v-model="classifierForm.language" style="width: 300px;">
-            <el-option label="中文" value="zh"></el-option>
-            <el-option label="英文" value="en"></el-option>
+            <el-option :label="t('Login.login_chinese')" value="zh"></el-option>
+            <el-option :label="t('Login.login_english')" value="en"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item :label="'目标对象'" prop="resource">
+        <el-form-item :label="t('Analytics.ana_obj_class_list')" prop="resource">
           <el-checkbox-group class="checkboxgroup" v-model="classifierForm.objClassList"
             @change="handleCheckedObjChange">
             <el-checkbox v-for="(value, i) in objClassList" :key="i" :label="value">
@@ -241,46 +241,46 @@ onMounted(() => {
           </el-checkbox-group>
         </el-form-item>
         <el-form-item label=" ">
-          <el-button size="small" style="width: 60px; height: 30px;" @click="goback">取消</el-button>
-          <el-button size="small" type="primary" style="width: 60px; height: 30px;" @click="onSubmit">确认</el-button>
+          <el-button size="small" style="width: 60px; height: 30px;" @click="goback">{{ t('CommTableEdit.comm_cancel') }}</el-button>
+          <el-button size="small" type="primary" style="width: 60px; height: 30px;" @click="onSubmit">{{ t('CommTableEdit.comm_ok') }}</el-button>
         </el-form-item>
       </el-form>
     </div>
     <div v-if="!visible" class="classifier-header">
-      <el-button type="primary" size="small" @click="Opeartion('add')">添加</el-button>
-      <el-button size="small" @click="delAll">删除</el-button>
+      <el-button type="primary" size="small" @click="Opeartion('add')">{{ t('CommTableEdit.comm_add') }}</el-button>
+      <el-button size="small" @click="delAll">{{ t('CommTableEdit.comm_delete') }}</el-button>
     </div>
     <el-table v-if="!visible" :data="tableData" height="760" @selection-change="selectChange" style="width: 100%;">
       <el-table-column type="selection" width="55" align="center"></el-table-column>
-      <el-table-column label="序号" type="index" width="120" align="center"></el-table-column>
-      <el-table-column label="名称" prop="name" align="center"></el-table-column>
-      <el-table-column label="文本列表" width="400" align="center">
+      <el-table-column :label="t('CommTableEdit.comm_table_serial_number')" type="index" width="120" align="center"></el-table-column>
+      <el-table-column :label="t('CommTableEdit.comm_table_name')" prop="name" align="center"></el-table-column>
+      <el-table-column :label="t('Analytics.ana_txt_list')" width="400" align="center">
         <template #default="{ row }">
           <el-tag v-for="(item, index) in row.txtList" :key="index" type="info" size="small">{{ item }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="生成报警" width="120" align="center">
+      <el-table-column :label="t('Analytics.ana_generate_alarm')" width="120" align="center">
         <template #default="{ row }">
           <el-switch v-model="row.generateAlarm" disabled></el-switch>
         </template>
       </el-table-column>
-      <el-table-column label="报警类别索引" align="center">
+      <el-table-column :label="t('Analytics.ana_alarm_class_index')" align="center">
         <template #default="{ row }">
           <el-tag v-for="(item, index) in row.alarmClassIndex" :key="index" type="info">{{ item }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="语言" prop="language" width="100" align="center"></el-table-column>
-      <el-table-column label="目标对象" width="200" align="center">
+      <el-table-column :label="t('Login.login_lang')" prop="language" width="100" align="center"></el-table-column>
+      <el-table-column :label="t('Analytics.ana_obj_class_list')" width="200" align="center">
         <template #default="{ row }">
           <el-tag v-for="(item, index) in row.objClassList" :key="index" type="info">
             <i :class="'iconfont icon-' + item" style="font-size: 20;" :title="item"></i>
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200" align="center">
+      <el-table-column :label="t('CommTableEdit.comm_operational')" width="200" align="center">
         <template #default="{ row }">
-          <el-button type="text" @click="Opeartion('edit', row)">编辑</el-button>
-          <el-button type="text" @click="delRow(row)">删除</el-button>
+          <el-button type="text" @click="Opeartion('edit', row)">{{ t('CommTableEdit.comm_edit') }}</el-button>
+          <el-button type="text" @click="delRow(row)">{{ t('CommTableEdit.comm_delete') }}</el-button>
         </template>
       </el-table-column>
     </el-table>

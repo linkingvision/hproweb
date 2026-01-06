@@ -204,7 +204,7 @@ const router = createRouter({
       path: 'Analytics',
       name: 'Analytics',
       component: Analytics,
-      redirect: '/Analytics/AnaSetting/InferServerSetting',
+      redirect: '/Analytics/AnaSetting/Rules',
       meta: {
         title: '/Analytics',
         name: 'Router.router_analytics',
@@ -215,7 +215,7 @@ const router = createRouter({
         path: 'AnaSetting',
         name: 'AnaSetting',
         component: AnaSetting,
-        redirect: '/Analytics/AnaSetting/InferServerSetting',
+        redirect: '/Analytics/AnaSetting/Rules',
         meta: {
           title: '/Analytics/AnaSetting',
           name: 'System.sys_setting',
@@ -223,26 +223,26 @@ const router = createRouter({
           type: 'Operator'
         },
         children: [{
-        //   path: 'Rules',
-        //   name: 'Rules',
-        //   component: Rules,
-        //   meta: {
-        //     title:'/Analytics/AnaSetting/Rules',
-        //     name: 'Rules',
-        //     icon: '',
-        //     type: 'Operator'
-        //   }
-        // }, {
-        //   path: 'EventSearch',
-        //   name: 'EventSearch',
-        //   component: EventSearch,
-        //   meta: {
-        //     title:'/Analytics/AnaSetting/EventSearch',
-        //     name: 'EventSearch',
-        //     icon: '',
-        //     type: 'Operator'
-        //   }
-        // }, {
+          path: 'Rules',
+          name: 'Rules',
+          component: Rules,
+          meta: {
+            title:'/Analytics/AnaSetting/Rules',
+            name: 'Rules',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'EventSearch',
+          name: 'EventSearch',
+          component: EventSearch,
+          meta: {
+            title:'/Analytics/AnaSetting/EventSearch',
+            name: 'EventSearch',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
           path: 'InferServerSetting',
           name: 'InferServerSetting',
           component: InferServerSetting,
@@ -262,16 +262,16 @@ const router = createRouter({
             icon: '',
             type: 'Operator'
           }
-        // }, {
-        //   path: 'Classifier',
-        //   name: 'Classifier',
-        //   component: Classifier,
-        //   meta: {
-        //     title: '/Analytics/AnaSetting/Classifier',
-        //     name: 'Classifier',
-        //     icon: '',
-        //     type: 'Operator'
-        //   }
+        }, {
+          path: 'Classifier',
+          name: 'Classifier',
+          component: Classifier,
+          meta: {
+            title: '/Analytics/AnaSetting/Classifier',
+            name: 'Classifier',
+            icon: '',
+            type: 'Operator'
+          }
         }]
       }]
     }, {
