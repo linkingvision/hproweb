@@ -302,9 +302,30 @@ const initGridLayout = ():void => {
   gridListener.layoutLoadedFromCacheHandler = async (event: CustomEvent<any>) => {
     console.log('layoutLoadedFromCacheHandler =>', event.detail)
     await nextTick()
+    
+    // 等待设备树数据加载完成的辅助函数
+    const waitForDeviceData = async (maxRetries = 10, delay = 500) => {
+      for (let i = 0; i < maxRetries; i++) {
+        if (channelData.value && channelData.value.length > 0) {
+          return true;
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      return false;
+    };
+    
+    // 等待设备树数据加载完成
+    const deviceDataReady = await waitForDeviceData();
+    if (!deviceDataReady) {
+      console.warn('Device tree data not ready, skipping playing status update');
+    }
+    
     event.detail.forEach((item: any) => {
       item.forEach((row: any) => {
         if (row && row.camera) {
+          // 根据token查找对应的设备树节点ID
+          const nodeId = deviceDataReady ? findNodeIdByToken(row.camera.token) : null;
+          
           const conf = {
             videoid: row.camera.videoid,
             protocol: window.location.protocol,
@@ -317,6 +338,7 @@ const initGridLayout = ():void => {
             label: row.camera.label,
             liveVideoType: store.liveviewrtc,
             recording: row.camera.recording,
+            playingId: nodeId, // 添加playingId，用于关闭时更新设备树状态
             onPlaybackModeChange: (mode: string) => {
               console.log('onPlaybackModeChange =>', mode);
               if (mode == 'live') {
@@ -338,6 +360,14 @@ const initGridLayout = ():void => {
           PlayingArr.value.push(UPlayer);
           PlayBackArr.value.push(UPlayer);
           isPlaying.value = true;
+          
+          // 更新播放状态
+          if (nodeId) {
+            updatePlayingStatus('add', nodeId);
+            console.log('Auto-play: Updated playing status for node:', nodeId, 'token:', row.camera.token);
+          } else {
+            console.warn('Auto-play: Could not find node for token:', row.camera.token);
+          }
         }
       })
       UPlayerList.value.playAll();
@@ -640,6 +670,7 @@ const DoManualRecordStart = async (id: string, recEnable: boolean) => {
 }
 // 关闭单个单元格
 const closePlayContainer = (id: string) => {
+  console.log('closePlayContainer id =>', id)
   if (!UPlayerList.value) return;
   if (PlayingArr.value.length == 0) return;
   const vid = id.slice(1);
@@ -660,7 +691,18 @@ const closePlayContainer = (id: string) => {
       isLiveview.value = true;
       isPlaying.value = false;
     }
-    updatePlayingStatus('del', currentSDK.conf.playingId)
+    // 更新播放状态：优先使用playingId，如果为空则根据token查找
+    let nodeIdToRemove = currentSDK.conf.playingId;
+    if (!nodeIdToRemove && currentSDK.conf.token) {
+      nodeIdToRemove = findNodeIdByToken(currentSDK.conf.token);
+      console.log('closePlayContainer: playingId not found, using token to find nodeId:', nodeIdToRemove);
+    }
+    
+    if (nodeIdToRemove) {
+      updatePlayingStatus('del', nodeIdToRemove);
+    } else {
+      console.warn('closePlayContainer: Could not find nodeId to remove playing status for token:', currentSDK.conf.token);
+    }
     // 触发树的重新渲染以更新播放状态显示
     nextTick(() => {
       if (treeRef.value) {
@@ -778,7 +820,11 @@ const dragOver = (event: any) => {
 
 // 拖动结束，放置到指定位置
 const dropTarget = async (event: any) => {
-  if (!isDrag.value && !drag.value.viewId || !isDrag.value && !drag.value.videoid) return;
+  if (!isDrag.value && !drag.value.viewId || !isDrag.value && !drag.value.videoid) {
+    GridManager.value.hideLines()
+    GridManager.value.highlightCells([]);
+    return;
+  };
   // const container: Element | null = document.getElementById('video_hed');
   // const rect: any = container?.getBoundingClientRect();
   if (drag.value.videoid) {
@@ -809,8 +855,6 @@ const dropTarget = async (event: any) => {
     }
     GridManager.value.claimCellByCoordinates(conf);
     isDrag.value = false;
-    GridManager.value.hideLines()
-    GridManager.value.highlightCells([]);
 
     const UPlayer = new UPlayerSDKClass(conf.id, drag.value)
     UPlayerList.value.addPlayer(UPlayer);
@@ -824,17 +868,16 @@ const dropTarget = async (event: any) => {
     srcView(drag.value.viewId);
     // GridManager.value.claimCellByCoordinates(conf);
     isDrag.value = false;
-    GridManager.value.hideLines()
-    GridManager.value.highlightCells([]);
     updatePlayingStatus('add', drag.value.playingId)
   } else if (drag.value.mapId) {
     // 暂时不实现map的播放逻辑，但更新播放状态用于显示
     console.log('Map dropped, but playback not implemented yet');
     isDrag.value = false;
-    GridManager.value.hideLines()
-    GridManager.value.highlightCells([]);
     updatePlayingStatus('add', drag.value.playingId)
   }
+
+  GridManager.value.hideLines()
+  GridManager.value.highlightCells([]);
   
   // 触发树的重新渲染以更新播放状态显示
   nextTick(() => {
@@ -853,7 +896,6 @@ const srcView = async (viewId: string) => {
     const result = res.data.result;
     const layoutData = transformViewToGrid(result.layout, result.viewEntity)
     console.log('srcView =>', layoutData);
-    // localStorage.removeItem('hpro-view-layout');
     localStorage.setItem('hpro-view-layout', JSON.stringify(layoutData));
     GridManager.value.initialize()
     await nextTick();
@@ -887,63 +929,195 @@ const transformViewToGrid = (layoutData: any, viewEntities: any) => {
     Array.from({ length: maxCol }, () => ({}))
   )
 
+  // 用于跟踪已处理的单元格
+  const processedCells = new Set();
+  // 先处理合并单元格，确保合并单元格先处理
+  const sortedLayout = [...layout].sort((a: any, b: any) => {
+    if (a.merged && !b.merged) return -1;
+    if (!a.merged && b.merged) return 1;
+    return 0;
+  });
+
   // 转换每个布局单元格
-  layout.forEach((cell: any) => {
+  sortedLayout.forEach((cell: any) => {
     const row = cell.rowStart - 1;
     const col = cell.colStart - 1;
+    const cellKey = `${row}-${col}`;
+    
+    // 如果这个单元格已经被处理过（比如被合并单元格覆盖），则跳过
+    if (processedCells.has(cellKey)) return;
+    
     // 构建位置字符串（如 "h1-1"）
     const posKey = `h${cell.rowStart}-${cell.colStart}`;
     
     // 检查该位置是否有视频
     const hasCamera = positionMap[posKey];
-
-    if (hasCamera) {
-      // 生成唯一的ID和videoID（这里简单处理，实际可能需要更复杂的生成逻辑）
-      const videoId = uuid(8);
-      result[row][col] = {
-        row: row,
-        column: col,
-        rowSpan: cell.merged ? (cell.rowEnd - cell.rowStart) : 1,
-        columnSpan: cell.merged ? (cell.colEnd - cell.colStart) : 1,
-        forceLbm: false,
-        claimed: true,
-        camera: {
-          videoid: videoId,
-          token: hasCamera.token,
-          session: userStore.session, // 这里需要实际的session生成逻辑
-          name: hasCamera.name,
-          label: hasCamera.name,
-          resourceUUID: hasCamera.resourceUUID,
-          recording: hasCamera.recording
-        },
-        id: `G${videoId}`
-      };
+    
+    // 如果是合并单元格
+    if (cell.merged) {
+      const rowSpan = cell.rowEnd - cell.rowStart;
+      const colSpan = cell.colEnd - cell.colStart;
       
-      // 如果是合并单元格，需要标记其他被合并的位置为已占用
-      if (cell.merged) {
-        for (let r = row; r < cell.rowEnd - 1; r++) {
-          for (let c = col; c < cell.colEnd - 1; c++) {
-            if (r !== row || c !== col) {
-              // 被合并的其他单元格设置为null或其他标记
-              result[r][c] = null;
+      // 只有有视频的合并单元格才需要特殊处理
+      if (hasCamera) {
+        const videoId = uuid(8);
+        
+        // 主单元格（合并单元格的起始位置）
+        result[row][col] = {
+          row: row,
+          column: col,
+          rowSpan: rowSpan,
+          columnSpan: colSpan,
+          forceLbm: false,
+          claimed: true,
+          spannedUpon: false,
+          camera: {
+            videoid: videoId,
+            token: hasCamera.token,
+            session: userStore.session,
+            name: hasCamera.name,
+            label: hasCamera.name,
+            resourceUUID: hasCamera.resourceUUID,
+            recording: hasCamera.recording
+          },
+          id: `G${videoId}`
+        };
+        
+        processedCells.add(cellKey);
+        
+        // 处理被合并的其他单元格
+        for (let r = row; r < row + rowSpan; r++) {
+          for (let c = col; c < col + colSpan; c++) {
+            const subCellKey = `${r}-${c}`;
+            if (r === row && c === col) continue; // 跳过主单元格
+            
+            if (r < maxRow && c < maxCol) {
+              result[r][c] = {
+                row: r,
+                column: c,
+                rowSpan: 1,
+                columnSpan: 1,
+                forceLbm: false,
+                claimed: false,
+                spannedUpon: true,
+                camera: null,
+                id: null
+              };
+              processedCells.add(subCellKey);
             }
           }
         }
       }
-    }
-    // 如果没有视频，且该位置没有被标记为null（即不是被合并的其他部分）
-    else if (result[row][col] === undefined || result[row][col] !== null) {
-      result[row][col] = {};
-    }
-  })
-  // 清理被合并单元格占用的位置（设置为{}）
-  for (let i = 0; i < result.length; i++) {
-    for (let j = 0; j < result[i].length; j++) {
-      if (result[i][j] === null) {
-        result[i][j] = {};
+      // 如果没有视频的合并单元格，只处理主单元格为{}
+      else {
+        result[row][col] = {};
+        processedCells.add(cellKey);
+        
+        // 被合并的其他单元格保持为{}，不需要特殊处理
+        for (let r = row; r < row + rowSpan; r++) {
+          for (let c = col; c < col + colSpan; c++) {
+            const subCellKey = `${r}-${c}`;
+            if (r !== row || c !== col) {
+              processedCells.add(subCellKey);
+            }
+          }
+        }
+      }
+    } 
+    // 如果是单个单元格
+    else {
+      // 检查这个单元格是否已经被合并单元格覆盖
+      if (!processedCells.has(cellKey)) {
+        if (hasCamera) {
+          const videoId = uuid(8);
+          
+          result[row][col] = {
+            row: row,
+            column: col,
+            rowSpan: 1,
+            columnSpan: 1,
+            forceLbm: false,
+            claimed: true,
+            spannedUpon: false,
+            camera: {
+              videoid: videoId,
+              token: hasCamera.token,
+              session: userStore.session,
+              name: hasCamera.name,
+              label: hasCamera.name,
+              resourceUUID: hasCamera.resourceUUID,
+              recording: hasCamera.recording
+            },
+            id: `G${videoId}`
+          };
+        } else {
+          // 没有视频的单个单元格保持为{}
+          result[row][col] = {};
+        }
+        
+        processedCells.add(cellKey);
       }
     }
-  }
+  })
+
+  // 转换每个布局单元格
+  // layout.forEach((cell: any) => {
+  //   const row = cell.rowStart - 1;
+  //   const col = cell.colStart - 1;
+  //   // 构建位置字符串（如 "h1-1"）
+  //   const posKey = `h${cell.rowStart}-${cell.colStart}`;
+    
+  //   // 检查该位置是否有视频
+  //   const hasCamera = positionMap[posKey];
+
+  //   if (hasCamera) {
+  //     // 生成唯一的ID和videoID（这里简单处理，实际可能需要更复杂的生成逻辑）
+  //     const videoId = uuid(8);
+  //     result[row][col] = {
+  //       row: row,
+  //       column: col,
+  //       rowSpan: cell.merged ? (cell.rowEnd - cell.rowStart) : 1,
+  //       columnSpan: cell.merged ? (cell.colEnd - cell.colStart) : 1,
+  //       forceLbm: false,
+  //       claimed: true,
+  //       camera: {
+  //         videoid: videoId,
+  //         token: hasCamera.token,
+  //         session: userStore.session, // 这里需要实际的session生成逻辑
+  //         name: hasCamera.name,
+  //         label: hasCamera.name,
+  //         resourceUUID: hasCamera.resourceUUID,
+  //         recording: hasCamera.recording
+  //       },
+  //       id: `G${videoId}`
+  //     };
+      
+  //     // 如果是合并单元格，需要标记其他被合并的位置为已占用
+  //     if (cell.merged) {
+  //       for (let r = row; r < cell.rowEnd - 1; r++) {
+  //         for (let c = col; c < cell.colEnd - 1; c++) {
+  //           if (r !== row || c !== col) {
+  //             // 被合并的其他单元格设置为null或其他标记
+  //             result[r][c] = null;
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  //   // 如果没有视频，且该位置没有被标记为null（即不是被合并的其他部分）
+  //   else if (result[row][col] === undefined || result[row][col] !== null) {
+  //     result[row][col] = {};
+  //   }
+  // })
+
+  // 清理被合并单元格占用的位置（设置为{}）
+  // for (let i = 0; i < result.length; i++) {
+  //   for (let j = 0; j < result[i].length; j++) {
+  //     if (result[i][j] === null) {
+  //       result[i][j] = {};
+  //     }
+  //   }
+  // }
   return result;
 }
 
@@ -1353,6 +1527,12 @@ const resume = () => {
 const Alloffvideo = () => { // 关闭所有视频以及单元格
   if (!UPlayerList.value) return;
   if (PlayingArr.value.length == 0) return;
+  const notPlaybackArr = PlayingArr.value.filter(item => !PlayBackArr.value.includes(item));
+  if (notPlaybackArr && notPlaybackArr.length > 0) {
+    notPlaybackArr.forEach(item => {
+      item.destroy();
+    })
+  }
   PlayingArr.value = [];
   PlayBackArr.value = [];
   UPlayerList.value.destroyAll();
@@ -1366,7 +1546,6 @@ const Alloffvideo = () => { // 关闭所有视频以及单元格
     console.log('关闭', cell)
   }
   GridManager.value.reloadStageConfiguration(cellFactory)
-  // localStorage.removeItem('hpro-view-layout');
 }
 
 const panelFullScreen = (event: any) => { // 全屏展示 / 退出全屏
@@ -1409,6 +1588,26 @@ const getRecordingIcon = (node: TreeNode) => {
 
 const playingIdArr = ref<string[]>([])
 
+// 根据token查找对应的设备树节点ID
+const findNodeIdByToken = (token: string): string | null => {
+  const findInNodes = (nodes: TreeNode[]): string | null => {
+    for (const node of nodes) {
+      // 检查当前节点
+      if (node.data && node.data.token === token) {
+        return node.id;
+      }
+      // 递归检查子节点
+      if (node.children && node.children.length > 0) {
+        const found = findInNodes(node.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+  
+  return findInNodes(channelData.value);
+};
+
 const updatePlayingStatus = (type: string, id: string) => {
   if (!id) return;
   
@@ -1418,6 +1617,7 @@ const updatePlayingStatus = (type: string, id: string) => {
       playingIdArr.value.push(id);
     }
   } else if (type == 'del') {
+    console.log('清楚播放状态 id =>', id)
     // 删除播放状态
     playingIdArr.value = playingIdArr.value.filter(item => item !== id);
   }
