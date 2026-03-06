@@ -586,7 +586,7 @@ const onvifsearch = () => {
 const EventbackCB = (event: any, userdata: any) => {
   const newEvent = JSON.parse(event);
   const existsInOnvif = onvifList.value.some(item => item.strIp === newEvent.strIp);
-  const existsInTableData1 = tableData.value.some(item => item.nType === 'H5_DEV_ONFSTG' && item.strDevIpAddress == newEvent.strIp)
+  const existsInTableData1 = tableData.value.some(item => item.type === 'H5_DEV_ONFSTG' && item.devIP == newEvent.strIp)
   if (!existsInOnvif && !existsInTableData1) {
     const index = onvifList.value.length + 1;
     newEvent.index = index;

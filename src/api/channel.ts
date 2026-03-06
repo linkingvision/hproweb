@@ -22,7 +22,7 @@ export const RecEnableApi = (token: string) => axios({
 })
 
 interface setRecEnableParmas {
-  devUUID: 'string',
+  devUUID: string,
   setting: {
     manualRecEnable: boolean
   }

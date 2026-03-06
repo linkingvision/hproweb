@@ -67,23 +67,23 @@
     <div class="liveview-right">
       <div class="liveview_right_video_hed" id="video_hed" @dragover.prevent="dragOver($event)" @drop="dropTarget($event)">
         
-         <div class="malv" :class="informationshow ? '' : 'malv-hide'" style="position: absolute;">
-            <div class="malv-close" @click="closeInformation">×</div>
-            <div class="malv-left">
-              <div class="information_title">{{ 'Video' }}</div>
-              <div class="information_content" v-for="(a, index) in informationVideo" :key="index">
-                <div class="information_content_left">{{ a.name }}</div>
-                <div class="information_content_right">{{ a.data }}</div>
-              </div>
-            </div>
-            <div class="malv-right">
-              <div class="information_title">{{ 'Audio' }}</div>
-              <div class="information_content" v-for="(a, index) in informationAudio" :key="index">
-                <div class="information_content_left">{{ a.name }}</div>
-                <div class="information_content_right">{{ a.data }}</div>
-              </div>
+        <div class="malv" :class="informationshow ? '' : 'malv-hide'" style="position: absolute;">
+          <div class="malv-close" @click="closeInformation">×</div>
+          <div class="malv-left">
+            <div class="information_title">{{ 'Video' }}</div>
+            <div class="information_content" v-for="(a, index) in informationVideo" :key="index">
+              <div class="information_content_left">{{ a.name }}</div>
+              <div class="information_content_right">{{ a.data }}</div>
             </div>
           </div>
+          <div class="malv-right">
+            <div class="information_title">{{ 'Audio' }}</div>
+            <div class="information_content" v-for="(a, index) in informationAudio" :key="index">
+              <div class="information_content_left">{{ a.name }}</div>
+              <div class="information_content_right">{{ a.data }}</div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="control_area" style="width: 100%;">
         <div class="timeline-box" style="width: 100%; height: 80px; padding: 0; box-sizing: border-box; border: none;">
@@ -96,9 +96,9 @@
               <button class="mr-1"></button>{{ t('CommTableEdit.comm_manual') }}
               <button class="mr-2"></button>{{ t('CommTableEdit.comm_alarm') }}
             </div>
-            <div class="showRecodeType">
-              <i class="iconfont" :class="showRecodeType ? 'icon-zuojiantou' : 'icon-youjiantou'"
-                @click="showRecodeType = !showRecodeType;"></i>
+            <div class="showRecodeType"
+                @click="showRecodeType = !showRecodeType;">
+              <i class="iconfont" :class="showRecodeType ? 'icon-zuojiantou' : 'icon-youjiantou'"></i>
             </div>
           </div>
           <div class="control-center">
@@ -121,7 +121,7 @@
             </div>
           </div>
           
-          <div class="gongge-btns" style="height: 50px; padding-right: 20px; width: 17%; display: flex; justify-content: flex-end; align-items: center;">
+          <div class="gongge-btns" style="height: 50px; padding-right: 20px; width: 20%; display: flex; justify-content: flex-end; align-items: center;">
             <el-button v-if="!isLiveview" class="goto-live" @click="gotoLive" round>{{ t('Monitoring.mon_gotolive') }}</el-button>
             <el-button class="iconfont icon-guanbi2 offAllVideo" @click="Alloffvideo"></el-button>
             <el-button class="iconfont icon-quanping1" @click="panelFullScreen($event)"></el-button>
@@ -213,6 +213,16 @@ interface TreeNode {
   isLeaf?: boolean; // 标记是否为叶子节点
   loaded?: boolean; // 标记是否已加载过子节点
   isDeviceChannel?: boolean; // 标记是否为设备通道（展开设备后的子节点）
+}
+interface gridListenerType {
+  closeCellHandler: null | Function,
+  changeMainSDKHandler: null | Function,
+  recEnableHandler: null | Function,
+  SnapshotHandler: null | Function,
+  InformationHandler: null | Function,
+  ShoutwheatHandler: null | Function,
+  PtzControlShowHandler: null | Function,
+  layoutLoadedFromCacheHandler: null | Function
 }
 
 // const route = useRoute()
@@ -370,8 +380,8 @@ const initGridLayout = ():void => {
           }
         }
       })
-      UPlayerList.value.playAll();
     })
+    UPlayerList.value.playAll();
   }
 
   GridManager.value.addEventListener('closeCell', gridListener.closeCellHandler)
@@ -765,7 +775,7 @@ const handleDragStart = (node: any) => {
       name: node.data.data.name,
       label: node.data.data.name,
       resourceUUID: node.data.data.uuid,
-      liveVideoType: 'WS2',
+      liveVideoType: store.liveviewrtc,
       recording: node.data.data.recording,
       playingId: node.data.id,  // 仅用于设备树显示状态
       onPlaybackModeChange: (mode: string) => {
@@ -823,6 +833,7 @@ const dropTarget = async (event: any) => {
   if (!isDrag.value && !drag.value.viewId || !isDrag.value && !drag.value.videoid) {
     GridManager.value.hideLines()
     GridManager.value.highlightCells([]);
+    isDrag.value = false;
     return;
   };
   // const container: Element | null = document.getElementById('video_hed');
@@ -1312,8 +1323,8 @@ const getDeviceList = async () => {
                 // 将通道数据转换为树节点格式，保持在线状态
                 const channels = ress.data.result.map((channel: any, index: number) => ({
                   id: `channel_${item.data.devId}_${index}`,
-                  label: channel.name || `通道 ${index + 1}`,
-                  name: channel.name || `通道 ${index + 1}`,
+                  label: channel.name || `channel ${index + 1}`,
+                  name: channel.name || `channel ${index + 1}`,
                   token: channel.token,
                   online: channel.online,
                   type: 'device', // 通道也是device类型，但通过isDeviceChannel区分
@@ -1335,14 +1346,14 @@ const getDeviceList = async () => {
                 // 设备没有通道时，删除children属性，这样就不会显示展开图标
                 delete item.children;
                 item.loaded = true;
-                item.isLeaf = true; // 设置为叶子节点
+                item.isLeaf = false; // 设置为叶子节点
               }
             } catch (error) {
               console.error(`加载设备 ${item.data.devId} 的通道失败:`, error);
               // 出错时也要清理占位符
               delete item.children;
               item.loaded = true;
-              item.isLeaf = true;
+              item.isLeaf = false;
             }
           })
         );
@@ -1354,7 +1365,7 @@ const getDeviceList = async () => {
       }
       
       channelData.value = list;
-      // console.log('设备树数据加载完成:', channelData.value);
+      console.log('设备树数据加载完成:', channelData.value);
     }
     // 默认展开所有节点
     expandedKeys.value = getAllKeys(channelData.value);
@@ -1767,17 +1778,6 @@ onBeforeUnmount(() => {
   GridManager.value = null;
 })
 
-// const 
-interface gridListenerType {
-  closeCellHandler: null | Function,
-  changeMainSDKHandler: null | Function,
-  recEnableHandler: null | Function,
-  SnapshotHandler: null | Function,
-  InformationHandler: null | Function,
-  ShoutwheatHandler: null | Function,
-  PtzControlShowHandler: null | Function,
-  layoutLoadedFromCacheHandler: null | Function
-}
 </script>
 
 <style lang="scss" scoped>
@@ -1942,7 +1942,7 @@ interface gridListenerType {
           display: flex;
           align-items: center;
           justify-content: flex-start;
-          width: 17%;
+          width: 20%;
           .recodeType {
             font-size: 14px;
           }

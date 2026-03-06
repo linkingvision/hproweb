@@ -59,7 +59,7 @@ const GetObjPartitions = async () => {
   //     }
   //   })
   // }
-  crumb.value = objList[0].strDevice;
+  crumb.value = objList[0]?.strDevice;
   activeObjPartitions.value = objList[0];
   list.value = objList;
 }
@@ -85,7 +85,7 @@ const delRow = (row: any) => {
     confirmButtonClass: 'warn-confirm-btn',
     inputPlaceholder: t('Configuration.conf_enter_index_del'),
     inputValidator: (value) => {
-      return value === row.nIndex.toString() ? true : t('Configuration.conf_not_match_index');
+      return value === row.obj[0].nIndex.toString() ? true : t('Configuration.conf_not_match_index');
     }
   }).then(async () => {
     const res = await DelObjPartitionApi({
@@ -239,7 +239,7 @@ onMounted(() => {
 				</el-form-item>
       </el-form>
       <div class="disk-list">
-				<div class="disk-item" :class="item.strDevice === addData.strDevice + '\\' ? 'active' : ''"
+				<div class="disk-item" :class="item.strDevice === addData.strDevice ? 'active' : ''"
 					v-for="(item, index) in diskData" :key="index" @click="changeDisk(item)">
 					<div class="top">
 						<span>{{ item.strDevice }} {{ item.strFstype }}</span>

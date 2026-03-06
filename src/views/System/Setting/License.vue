@@ -15,7 +15,7 @@ const pageSize = ref<number>(30);
 const currentPage = ref<number>(1);
 const fileList = ref<any[]>([]);
 
-const headers = {'Content-Type': 'application/octet-stream'}
+// const headers = {'Content-Type': 'application/octet-stream'}
 const uploadUrl = computed(() => {
   return userStore.IPPORT + UpLoadLicUrl + userStore.session;
 })
@@ -96,7 +96,6 @@ const GetLicenseInfo = async () => {
         tableData.value.push(object)
       }
     })
-    console.log(tableData.value)
     total.value = tableData.value.length;
   }
 }
@@ -199,8 +198,7 @@ const beforeUpload = (file: any) => {
   return true;
 }
 const handleSuccess = (response: any, file: any, fileList: any) => {
-  // console.log('版本文件成功 =>', response);
-  if (response.code === 'HPRO_CODE_OK') {
+  if (response.code === 0) {
     ElMessage({
       message: t('System.sys_file_import_success'),
       type: 'success',
@@ -266,8 +264,8 @@ onMounted(() => {
         :before-upload="beforeUpload"
         :on-success="handleSuccess"
         :before-remove="beforeRemove"
-        :headers="headers"
       >
+        <!-- :headers="headers" -->
         <el-button type="primary">{{ t('System.sys_upload_license') }}</el-button>
       </el-upload>
     </div>

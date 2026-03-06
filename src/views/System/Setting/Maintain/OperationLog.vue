@@ -91,7 +91,7 @@ onMounted(() => {
     </div>
     <div class="log-center">
       <el-table :data="tableData.slice((currentPage - 1) * pageSize, currentPage * pageSize)" style="width: 100%;" :height="780">
-        <el-table-column type="index" :label="t('CommTableEdit.comm_table_serial_number')" width="120" align="center"></el-table-column>
+        <el-table-column type="index" label="ID" width="120" align="center"></el-table-column>
         <el-table-column :label="t('Setting.set_user')" width="120" align="center" prop="username"></el-table-column>
         <el-table-column :label="t('System.sys_client_ip')" width="200" align="center" prop="clientIp"></el-table-column>
         <el-table-column :label="t('System.sys_log_level')" width="200" align="center" prop="logLevel"></el-table-column>

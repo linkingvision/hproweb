@@ -86,7 +86,7 @@ const getChannels = async () => {
       }
     })
   }
-  if (props.objPartitions && props.objPartitions.bMount) {
+  if (props.objPartitions && props.objPartitions.bMount && props.objPartitions.chRec) {
     total.value = props.objPartitions.chRec.length;
     chRec.value = props.objPartitions.chRec.slice((currentPage.value -1) * pageSize.value, currentPage.value * pageSize.value);
   }
@@ -159,10 +159,10 @@ onMounted(() => {
 <template>
   <div class="storage-state">
     <div class="statusInfo" v-if="props.router == 'LocalObjStorage' || props.router == 'S3Storage'">
-      <span>状态：</span>
-      <span :style="{color: props.objPartitions.bMount ? '#06D20B' : 'red'}">{{ props.objPartitions.bMount ? '在线' : '离线' }} ● </span>
+      <span>Status：</span>
+      <span :style="{color: props.objPartitions.bMount ? '#06D20B' : 'red'}">{{ props.objPartitions.bMount ? 'Online' : 'Offline' }} ● </span>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <span>起止时间：</span>
+      <span>Time：</span>
       <span>{{ `${props.objPartitions.strStartTime} -- ${props.objPartitions.strEndTime}` }}</span>
     </div>
     <div class="DatePicker">
@@ -176,13 +176,13 @@ onMounted(() => {
         <el-date-picker v-model="activeTime" type="date" placeholder="Pick a date" @change="handleChange"></el-date-picker>
       </div>
       <div class="radio-button">
-        <el-button size="small" :class="{active_button: radio == 'month'}" @click="activeRadio('month')">月</el-button>
+        <el-button size="small" :class="{active_button: radio == 'month'}" @click="activeRadio('month')">Month</el-button>
       </div>
       <div class="radio-button">
-        <el-button size="small" :class="{active_button: radio == 'week'}" @click="activeRadio('week')">周</el-button>
+        <el-button size="small" :class="{active_button: radio == 'week'}" @click="activeRadio('week')">Week</el-button>
       </div>
       <div class="radio-button">
-        <el-button size="small" :class="{active_button: radio == 'date'}" @click="activeRadio('date')">天</el-button>
+        <el-button size="small" :class="{active_button: radio == 'date'}" @click="activeRadio('date')">Day</el-button>
       </div>
     </div>
     <div class="render">

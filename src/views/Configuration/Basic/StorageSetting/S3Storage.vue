@@ -46,13 +46,17 @@ const GetS3Buckets = async () => {
   hasIndex.value = [];
   if (res.status === 200 && res.data.code === 0) {
     console.log('S3Buckets =>', res.data.result.bucket)
-    tableData.value = res.data.result.bucket.map((item: any) => {
-      hasIndex.value.push(item.nIndex)
-      return {
-        ...item,
-        nodeId: nodeId.value
-      }
-    })
+    if (res.data.result.bucket) {
+      tableData.value = res.data.result.bucket.map((item: any) => {
+        hasIndex.value.push(item.nIndex)
+        return {
+          ...item,
+          nodeId: nodeId.value
+        }
+      })
+    } else {
+      tableData.value = [];
+    }
   }
 }
 
