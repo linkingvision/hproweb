@@ -124,3 +124,39 @@ export const DeleteS3BucketApi = (data: DelS3BucketParam) => Axios({
   method: 'DELETE',
   data
 })
+
+interface AddRecordPartitionParam {
+  nodeId: string
+  nIndex: number
+  nMaxSizeInM: number
+  strDevice: string
+  strMountPoint: string
+  strColor: string
+}
+export const AddRecordPartitionApi = (data: AddRecordPartitionParam) => Axios({
+  url: '/uapi/v1/Storage/Add/RecordPartition',
+  method: 'POST',
+  data
+})
+
+interface FormatRecordPartitionParam {
+  nodeId: string
+  strMountPoint: string
+  nIndex: number
+}
+export const FormatRecordPartitionApi = (data: FormatRecordPartitionParam) => Axios({
+  url: '/uapi/v1/Storage/Format/RecordPartition',
+  method: 'POST',
+  data
+})
+
+interface DelRecordPartitionParam {
+  nodeId: string
+  strMountPoint: string
+  nIndex: number
+}
+export const DelRecordPartitionApi = (data: DelRecordPartitionParam) => Axios({
+  url: '/uapi/v1/Storage/RecordPartition',
+  method: 'DELETE',
+  data
+})

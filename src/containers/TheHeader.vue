@@ -46,7 +46,6 @@
           <i class="iconfont icon-androidgengduo"></i>
           <template #dropdown>
             <el-dropdown-menu>
-              <!-- <el-dropdown-item>主题</el-dropdown-item> -->
               <el-dropdown-item @click="aboutVisiable = true">{{ t('Header.header_about') }}</el-dropdown-item>
               <el-dropdown-item @click="logout">{{ t('Login.login_out') }}</el-dropdown-item>
             </el-dropdown-menu>
@@ -82,8 +81,8 @@ acronym.value = userStore.username.charAt(0).toUpperCase();
 
 const title = ref<string>('')
 
-const aboutVisiable = ref<boolean>(false);  // 关于界面弹窗显示 / 隐藏
-const information = ref<string>('') // 版本号
+const aboutVisiable = ref<boolean>(false);  // about-dialog visibility
+const information = ref<string>('') // version string
 
 const handleSelect= (key: string) => {
   router.push(key)

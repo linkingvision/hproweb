@@ -17,7 +17,7 @@ export const formatISOWithOffset = (date = new Date()): string => {
   const minute = pad(date.getMinutes());
   const second = pad(date.getSeconds());
 
-  // 当前时区偏移（分钟 → 小时）
+  // Current timezone offset (minutes to hours)
   const offset = -date.getTimezoneOffset();
   const sign = offset >= 0 ? '+' : '-';
   const offsetHour = pad(Math.floor(Math.abs(offset) / 60));

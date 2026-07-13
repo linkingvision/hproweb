@@ -13,7 +13,7 @@ const service = axios.create({
   }
 })
 
-// http request 拦截器
+// HTTP request interceptor
 service.interceptors.request.use(
   (config) => {
     const store = useUserStore();
@@ -27,12 +27,12 @@ service.interceptors.request.use(
         config.url = config.url + "?session=" + store.session;
       }
     } else {
-      // 使用 router.currentRoute.value 获取当前路由
+      // Get current route via router.currentRoute.value
       const currentRoute = router.currentRoute.value;
       router.replace({
         path: '/login',
         query: {
-          ...currentRoute.query, // 保留原有参数(如 code)
+          ...currentRoute.query, // preserve existing query params (e.g. code)
           redirect: currentRoute.path 
         }
       });
@@ -44,7 +44,7 @@ service.interceptors.request.use(
   }
 )
 
-// http response 拦截器
+// HTTP response interceptor
 service.interceptors.response.use(
   (response: any) => {
     const store = useUserStore();
@@ -73,7 +73,7 @@ service.interceptors.response.use(
             router.replace({
               path: '/login',
               query: {
-                ...currentRoute.query, // 保留原有参数(如 code)
+                ...currentRoute.query, // preserve existing query params (e.g. code)
                 redirect: currentRoute.path
               }
             })

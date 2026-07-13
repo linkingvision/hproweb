@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, onMounted, nextTick, reactive } from 'vue';
+  import { ref, onMounted, nextTick, reactive, watch } from 'vue';
   import { useRouter } from 'vue-router';
   import { useI18n } from 'vue-i18n';
   import { loginApi, LoginSessionApi, UpdateUserApi } from '../api/userApi';
@@ -8,7 +8,7 @@
   import { Base64 } from 'js-base64';
   import { ElMessage } from 'element-plus';
   import $ from 'jquery';
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const form = ref({
     username: '',
     password: '',
@@ -33,11 +33,17 @@
       label: 'English',
       value: 'en'
     },
-    // {
-    //   label: '简体中文',
-    //   value: 'zhchs'
-    // }
+    {
+      label: '繁體中文',
+      value: 'zhcht'
+    }
   ]
+
+  // Sync i18n locale on language change and persist to localStorage
+  watch(() => form.value.lang, (val) => {
+    locale.value = val;
+    localStorage.setItem('lang', val);
+  })
   const pwdDialog = ref<boolean>(false);
   const router = useRouter();
   const useStore = useUserStore()
@@ -75,7 +81,6 @@
       }
 
       if (result.weak_password) {
-        // console.log('密码为弱密码，需要重新修改')
         pwdDialog.value = true;
         nextTick(() => {
           $('.strPasswd').hide()
@@ -89,7 +94,7 @@
           useStore.setSession(res1.data.result.session)
         }
         ElMessage({
-          message: 'Login success',
+          message: t('Login.login_success'),
           type: 'success'
         })
         if (form.value.checked) {
@@ -111,14 +116,14 @@
       }
     } else {
        ElMessage({
-        message: 'Login failed.',
+        message: t('Login.login_failed'),
         type: 'error'
       })
     }
   }
 
 
-  // 监听重复密码和新密码是否一致
+  // Watch confirm-password vs new-password
   const update = () => {
     var reg1 = new RegExp(/(?=.*[A-Z])/);
     var reg2 = new RegExp(/(?=.*[a-z])/);
@@ -233,7 +238,7 @@
     }
   }
 
-  // 监听新密码输入框的值
+  // Watch new-password input
   const confirmpassword = () => {
     if (editform.value.Newpassword !== editform.value.Newpassword1) {
       nextTick(() => {
@@ -296,6 +301,13 @@
   }
 
   onMounted(() => {
+    // Restore previously selected language
+    const savedLang = localStorage.getItem('lang');
+    if (savedLang) {
+      form.value.lang = savedLang;
+      locale.value = savedLang;
+    }
+
     let user = localStorage.getItem('user')
     
     if (user) {
@@ -306,8 +318,7 @@
         form.value.password = Base64.decode(pwd);
         form.value.checked = userData.checked;
       } catch (error) {
-        console.error('解析用户数据失败:', error);
-        // 清理无效数据
+        // Clear invalid data
         localStorage.removeItem('user');
       }
     }
@@ -352,8 +363,8 @@
             :value="item.value"
           ></el-option>
         </el-select>
-        <el-checkbox v-model="form.checked" label="Remember password" style="margin-top: 10px;"></el-checkbox>
-        <div class="login-btn"><el-button type="primary" @click="login">Login</el-button></div>
+        <el-checkbox v-model="form.checked" :label="t('Login.login_remember_pwd')" style="margin-top: 10px;"></el-checkbox>
+        <div class="login-btn"><el-button type="primary" @click="login">{{ t('Login.login_login') }}</el-button></div>
       </div>
     </div>
     <el-dialog v-model="pwdDialog" :title="t('Login.login_change_pwd')" width="40%">

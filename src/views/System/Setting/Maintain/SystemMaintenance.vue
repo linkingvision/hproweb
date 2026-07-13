@@ -31,7 +31,6 @@ const resetService = () => {
   ).then(async () => {
     const res = await ResetServiceApi();
     if (res.status == 200 && res.data.code == 0) {
-      console.log('开始重启')
       const loading = ElLoading.service({
         lock: true,
         text: t('System.sys_restart_long_time'),
@@ -43,7 +42,6 @@ const resetService = () => {
           loading.close()
           clearInterval(timer)
           timer = null;
-          console.log('重启完毕!')
           router.push('/Login')
         }
       }, 2000)
@@ -54,12 +52,12 @@ const configExport = () => {
   const now = new Date();
   const timestamp = [
     now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, '0'), // 月份补零
-    String(now.getDate()).padStart(2, '0'),      // 日期补零
-    String(now.getHours()).padStart(2, '0'),     // 小时补零
-    String(now.getMinutes()).padStart(2, '0'),   // 分钟补零
-    String(now.getSeconds()).padStart(2, '0')    // 秒数补零
-  ].join(''); // 输出示例：20250625141324
+    String(now.getMonth() + 1).padStart(2, '0'), // pad month
+    String(now.getDate()).padStart(2, '0'),      // pad day
+    String(now.getHours()).padStart(2, '0'),     // pad hour
+    String(now.getMinutes()).padStart(2, '0'),   // pad minute
+    String(now.getSeconds()).padStart(2, '0')    // pad second
+  ].join(''); // e.g. 20250625141324
   const url = userStore.IPPORT + ConfigExportUrl + userStore.session;
   const a = document.createElement('a');
   a.href = url;
@@ -85,18 +83,17 @@ const getDbStatus = async (key: string) => {
       clearInterval(timer.value);
       timer.value = null;
       isExport.value = false;
-      console.log('导出完毕');
       
-      // 获取当前时间并格式化为 YYYYMMDDHHmmss
+      // Get current time as YYYYMMDDHHmmss string
       const now = new Date();
       const timestamp = [
         now.getFullYear(),
-        String(now.getMonth() + 1).padStart(2, '0'), // 月份补零
-        String(now.getDate()).padStart(2, '0'),      // 日期补零
-        String(now.getHours()).padStart(2, '0'),     // 小时补零
-        String(now.getMinutes()).padStart(2, '0'),   // 分钟补零
-        String(now.getSeconds()).padStart(2, '0')    // 秒数补零
-      ].join(''); // 输出示例：20250625141324
+        String(now.getMonth() + 1).padStart(2, '0'), // pad month
+        String(now.getDate()).padStart(2, '0'),      // pad day
+        String(now.getHours()).padStart(2, '0'),     // pad hour
+        String(now.getMinutes()).padStart(2, '0'),   // pad minute
+        String(now.getSeconds()).padStart(2, '0')    // pad second
+      ].join(''); // e.g. 20250625141324
 
       const dbDownloadURL = userStore.IPPORT + DBDownloadUrl + userStore.session;
       console.log(dbDownloadURL)
@@ -118,7 +115,6 @@ const handleRemove = () => {}
 const handleExceed = () => {}
 const beforeUpload = () => {}
 const handleSuccess = (response: any, file: File, fileList: any[]) => {
-  console.log('文件上传成功 =>', response);
   if (response.code === 0) {
     ElMessage({
       message: t('System.sys_data_import_success'),

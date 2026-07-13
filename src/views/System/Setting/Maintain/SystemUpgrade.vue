@@ -27,11 +27,11 @@ const GetVersion = async () => {
 const fileList = ref<any[]>([])
 
 const beforeUpload = (file: File) => {
-  // 允许的文件类型
+  // Allowed file types
   const allowedExtensions = ['.bin']
-  // 获取文件拓展名
+  // Get file extension
   const fileExtension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
-  // 检验逻辑
+  // Validation logic
   const isValidType = allowedExtensions.includes(fileExtension);
   if (!isValidType) {
     ElMessage({
@@ -44,7 +44,6 @@ const beforeUpload = (file: File) => {
   return true;
 }
 const handleSuccess = (response: any, file: File, fileList: any[]) => {
-  console.log('版本导入成功! =>', response)
   if (response.code === 0) {
     ElMessage({
       type: 'success',

@@ -22,9 +22,9 @@ interface TreeNode {
   children?: TreeNode[];
   online?: boolean;
   data: any;
-  isLeaf?: boolean; // 标记是否为叶子节点
-  loaded?: boolean; // 标记是否已加载过子节点
-  isDeviceChannel?: boolean; // 标记是否为设备通道（展开设备后的子节点）
+  isLeaf?: boolean; // flag: is leaf node
+  loaded?: boolean; // flag: children already loaded
+  isDeviceChannel?: boolean; // flag: is device channel (child of expanded device)
 }
 
 const { t } = useI18n()
@@ -37,44 +37,43 @@ const tableData = ref<any[]>([])
 const total = ref<number>(0)
 
 const channelData = ref<any>([])
-const originalChannelData = ref<any>([]) // 保存原始数据
+const originalChannelData = ref<any>([]) // store original data
 const props = {
   value: 'id',
   label: 'label',
   children: 'children'
 }
-// 添加加载状态和缓存
+// Loading state and cache
 let isLoading = ref(false);
-let deviceCache = new Map(); // 缓存设备通道数据
+let deviceCache = new Map(); // cache device channel data
 
-// 递归过滤树节点
+// Recursively filter tree nodes
 const filterTreeNodes = (nodes: TreeNode[], filterValue: string): TreeNode[] => {
   if (!filterValue) return nodes;
   
   const filtered: TreeNode[] = [];
   
   for (const node of nodes) {
-    // 如果是设备通道或占位符节点，不参与过滤匹配，但会被保留（当其父设备匹配时）
     if (node.isDeviceChannel || node.id === 'loading') {
       continue;
     }
     
-    // 检查当前节点是否匹配（不区分大小写）
-    // 只对 partition、device、map、view 类型的节点进行匹配
+    // Check if current node matches (case-insensitive)
+    // Only match partition, device, map and view nodes
     const nodeMatches = node.label.toLowerCase().includes(filterValue.toLowerCase());
     
-    // 处理子节点
+    // Process child nodes
     let filteredChildren: TreeNode[] = [];
     if (node.children && node.children.length > 0) {
-      // 如果当前节点是设备且匹配，保留所有通道子节点
+      // Matched device node: keep all channel children
       if (node.type === 'device' && nodeMatches) {
-        // 设备匹配时，保留所有子节点（包括通道）
+        // Device matches: keep all children including channels
         filteredChildren = [...node.children];
       } else {
-        // 递归过滤非通道子节点
+        // Recursively filter non-channel children
         filteredChildren = filterTreeNodes(node.children, filterValue);
         
-        // 如果当前节点是设备且有匹配的子节点，也要保留所有通道
+        // Device with matching children: keep all channels
         if (node.type === 'device' && filteredChildren.length > 0) {
           const channels = node.children.filter(child => child.isDeviceChannel);
           filteredChildren = [...filteredChildren, ...channels];
@@ -82,7 +81,7 @@ const filterTreeNodes = (nodes: TreeNode[], filterValue: string): TreeNode[] => 
       }
     }
     
-    // 如果当前节点匹配或有匹配的子节点，则包含此节点
+    // Include node if it or any descendant matches
     if (nodeMatches || filteredChildren.length > 0) {
       const newNode = { ...node };
       if (filteredChildren.length > 0) {
@@ -98,7 +97,6 @@ const filterTreeNodes = (nodes: TreeNode[], filterValue: string): TreeNode[] => 
 
 const getDeviceList = async () => {
   if (isLoading.value) {
-    // console.log('正在加载中，跳过重复请求');
     return;
   }
   
@@ -108,12 +106,11 @@ const getDeviceList = async () => {
     const res = await GetDevPartitionApi();
     if (res.status == 200 && res.data.code == 0) {
       const result = res.data.result;
-      // 使用扁平化函数，按照优先级排序
+      // Flatten helper, sorted by priority
       const list = flattenRootNodes(result);
       
       originalChannelData.value = list;
       channelData.value = list;
-      // console.log('设备树数据加载完成:', channelData.value);
     }
   } finally {
     isLoading.value = false;
@@ -137,17 +134,17 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
       loaded: false
     };
     
-    // 只有当有实际的子数据时，才设置children属性
+    // Only set children when sub-data exists
     if (hasChildren) {
       partitionNode.children = [];
       
-      // 1. 优先展示children（子分区）
+      // 1. Sub-partitions first
       if (partition.children && partition.children.length > 0) {
         const childrenNodes = transformToTreeData(partition.children);
         partitionNode.children.push(...childrenNodes);
       }
       
-      // 2. 其次展示dev设备
+      // 2. Devices second
       if (partition.dev && partition.dev.length > 0) {
         partition.dev.forEach((device: any) => {
           partitionNode.children!.push({
@@ -156,7 +153,7 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             type: 'device',
             online: device.online,
             data: device,
-            // 添加占位符子节点来显示展开图标
+            // Add placeholder child to show expand icon
             children: [{ id: 'loading', label: 'Loading...', type: 'device', data: null, isLeaf: true }],
             isLeaf: false,
             loaded: false
@@ -164,7 +161,7 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
         });
       }
       
-      // 3. 然后展示map地图 - map是叶子节点，不需要展开图标
+      // 3. Maps — leaf nodes, no expand icon
       if (partition.map && partition.map.length > 0) {
         partition.map.forEach((map: any) => {
           partitionNode.children!.push({
@@ -172,13 +169,13 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             label: map.mapName,
             type: 'map',
             data: map,
-            isLeaf: true, // map是叶子节点
+            isLeaf: true, // map is a leaf node
             loaded: true
           });
         });
       }
       
-      // 4. 最后展示view视图 - view是叶子节点，不需要展开图标
+      // 4. Views — leaf nodes, no expand icon
       if (partition.view && partition.view.length > 0) {
         partition.view.forEach((view: any) => {
           partitionNode.children!.push({
@@ -186,7 +183,7 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             label: view.viewName,
             type: 'view',
             data: view,
-            isLeaf: true, // view是叶子节点
+            isLeaf: true, // view is a leaf node
             loaded: true
           });
         });
@@ -194,24 +191,24 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
       
       partitionNode.loaded = true;
     }
-    // 没有子数据时不设置children属性，这样树组件就不会显示展开图标
+    // No children set when empty — hides tree expand icon
     
     result.push(partitionNode);
   });
   return result;
 }
-// 扁平化根节点，直接展示其内容，按照优先级排序
+// Flatten root node, display contents sorted by priority
 const flattenRootNodes = (partitions: any[]): TreeNode[] => {
   const result: TreeNode[] = [];
   
   partitions.forEach(partition => {
-    // 1. 优先展示children（子分区）
+    // 1. Sub-partitions first
     if (partition.children && partition.children.length > 0) {
       const childrenNodes = transformToTreeData(partition.children);
       result.push(...childrenNodes);
     }
     
-    // 2. 其次展示dev设备
+    // 2. Devices second
     if (partition.dev && partition.dev.length > 0) {
       partition.dev.forEach((device: any) => {
         result.push({
@@ -220,7 +217,7 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           type: 'device',
           online: device.online,
           data: device,
-          // 添加占位符子节点来显示展开图标
+          // Add placeholder child to show expand icon
           children: [{ id: 'loading', label: 'Loading...', type: 'device', data: null, isLeaf: true }],
           isLeaf: false,
           loaded: false
@@ -228,7 +225,7 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
       });
     }
     
-    // 3. 然后展示map地图 - map是叶子节点，不需要展开图标
+    // 3. Maps — leaf nodes, no expand icon
     if (partition.map && partition.map.length > 0) {
       partition.map.forEach((map: any) => {
         result.push({
@@ -236,13 +233,13 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           label: map.mapName,
           type: 'map',
           data: map,
-          isLeaf: true, // map是叶子节点
+          isLeaf: true, // map is a leaf node
           loaded: true
         });
       });
     }
     
-    // 4. 最后展示view视图 - view是叶子节点，不需要展开图标
+    // 4. Views — leaf nodes, no expand icon
     if (partition.view && partition.view.length > 0) {
       partition.view.forEach((view: any) => {
         result.push({
@@ -250,7 +247,7 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           label: view.viewName,
           type: 'view',
           data: view,
-          isLeaf: true, // view是叶子节点
+          isLeaf: true, // view is a leaf node
           loaded: true
         });
       });
@@ -259,11 +256,11 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
   
   return result;
 };
-// 获取节点样式类
+// Get node CSS class
 const getNodeClass = (node: TreeNode) => {
   const classes = ['tree-node'];
   if (node.type === 'device') {
-    // 获取在线状态
+    // Get online status
     const isOnline = node.online !== undefined ? node.online : (node.data && node.data.online);
     
     if (isOnline) {
@@ -274,41 +271,40 @@ const getNodeClass = (node: TreeNode) => {
   }
   return classes.join(' ');
 };
-// 获取节点图标
+// Get node icon
 const getNodeIcon = (node: TreeNode) => {
   switch (node.type) {
     case 'partition':
-      // children节点使用icon-gen
+      // Sub-partition nodes use icon-gen
       return 'icon-gen';
     case 'device':
-      // 如果是设备通道（叶子节点），使用摄像机图标
+      // Channel leaf nodes use camera icon
       if (node.isLeaf || node.isDeviceChannel) {
         return 'icon-shexiangjizaixian';
       }
-      // dev里的设备使用icon-Device
+      // Devices in dev use icon-Device
       return 'icon-Device';
     case 'map':
-      // map里的使用icon-ditu
+      // Map nodes use icon-ditu
       return 'icon-ditu';
     case 'view':
-      // view里的使用icon-shipin
+      // View nodes use icon-shipin
       return 'icon-shitu2';
     default:
       return 'icon-gen';
   }
 };
-// 获取节点颜色
+// Get node colour
 const getNodeColor = (node: TreeNode) => {
   if (node.type === 'device') {
-    // 获取在线状态
+    // Get online status
     const isOnline = node.online !== undefined ? node.online : (node.data && node.data.online);
     return isOnline ? '1' : '0.6';
   }
   return '1';
 };
-// 节点点击事件
+// Node click handler
 const handleNodeClick = (data: TreeNode, node: any) => {
-  // console.log('节点被点击:', data, node.data);
   quitConfig()
   tableData.value = [];
   if (data.isDeviceChannel) {
@@ -325,7 +321,7 @@ const handleNodeClick = (data: TreeNode, node: any) => {
   }
 };
 
-// 懒加载设备通道
+// Lazy-load device channels
 const loadDeviceChannels = async (deviceNode: TreeNode) => {
   if (!deviceNode.data || !deviceNode.data.token) {
     return;
@@ -333,7 +329,7 @@ const loadDeviceChannels = async (deviceNode: TreeNode) => {
 
   const cacheKey = deviceNode.data.token;
   
-  // 检查缓存
+  // Check cache
   if (deviceCache.has(cacheKey)) {
     const cachedData = deviceCache.get(cacheKey);
     if (cachedData.length > 0) {
@@ -341,7 +337,7 @@ const loadDeviceChannels = async (deviceNode: TreeNode) => {
       deviceNode.loaded = true;
       deviceNode.isLeaf = false;
     } else {
-      // 没有通道时，移除children并设置为叶子节点
+      // No channels — remove children and mark as leaf
       delete deviceNode.children;
       deviceNode.loaded = true;
       deviceNode.isLeaf = true;
@@ -352,44 +348,43 @@ const loadDeviceChannels = async (deviceNode: TreeNode) => {
   try {
     const res = await GetDeviceChannels(deviceNode.data.token);
     if (res.status == 200 && res.data.code == 0 && res.data.result.length > 0) {
-      // 将通道数据转换为树节点格式，保持在线状态
+      // Convert channel data to tree nodes, preserving online status
       const channels = res.data.result.map((channel: any, index: number) => ({
         id: `channel_${deviceNode.data.devId}_${index}`,
         label: channel.name || `${t('Common.comm_channel')} ${index + 1}`,
         name: channel.name || `${t('Common.comm_channel')} ${index + 1}`,
         token: channel.token,
         online: channel.online,
-        type: 'device', // 通道也是device类型，但通过isDeviceChannel区分
+        type: 'device', // channels share type=device, differentiated by isDeviceChannel
         data: channel,
         isLeaf: true,
-        isDeviceChannel: true // 标记为设备通道
+        isDeviceChannel: true // mark as device channel
       }));
       
-      // 缓存数据
+      // Cache data
       deviceCache.set(cacheKey, channels);
       
       deviceNode.children = channels;
       deviceNode.loaded = true;
       deviceNode.isLeaf = false;
     } else {
-      // 缓存空结果
+      // Cache empty result
       deviceCache.set(cacheKey, []);
       
-      // 设备没有通道时，移除children并设置为叶子节点
+      // Device has no channels — mark as leaf
       delete deviceNode.children;
       deviceNode.loaded = true;
       deviceNode.isLeaf = true;
     }
   } catch (error) {
-    console.error(`加载设备 ${deviceNode.data.devId} 的通道失败:`, error);
-    // 出错时移除children并设置为叶子节点
+    // On error: remove children and mark as leaf
     delete deviceNode.children;
     deviceNode.loaded = true;
     deviceNode.isLeaf = true;
   }
 };
 
-// 在原始数据中查找并更新节点
+// Find and update node in source data
 const findAndUpdateNode = (nodes: TreeNode[], targetId: string, updatedNode: TreeNode): boolean => {
   if (!nodes || nodes.length === 0) return false;
   
@@ -398,7 +393,7 @@ const findAndUpdateNode = (nodes: TreeNode[], targetId: string, updatedNode: Tre
     if (!currentNode) continue;
     
     if (currentNode.id === targetId) {
-      // 更新节点
+      // Update node
       nodes[i] = { ...currentNode, ...updatedNode };
       return true;
     }
@@ -412,22 +407,21 @@ const findAndUpdateNode = (nodes: TreeNode[], targetId: string, updatedNode: Tre
   return false;
 };
 
-// 节点展开事件
+// Node expand handler
 const handleNodeExpand = async (data: TreeNode, node: any) => {
-  // 如果是通道节点，不处理展开事件
+  // Skip expand handling for channel nodes
   if (data.isDeviceChannel) {
     return;
   }
   tableData.value = [];
-  // console.log('节点展开:', data, node.data);
-  // 如果是设备节点且未加载过子节点，则懒加载通道
+  // Lazy-load channels for unloaded device nodes
   if (data.type === 'device' && !data.loaded) {
     await loadDeviceChannels(data);
     
-    // 更新原始数据中的节点
+    // Update node in source data
     findAndUpdateNode(originalChannelData.value, data.id, data);
     
-    // 手动触发数据更新，避免watch循环
+    // Manually trigger update to avoid watch loop
     const currentFilterText = filterText.value.trim();
     if (currentFilterText) {
       channelData.value = filterTreeNodes(originalChannelData.value, currentFilterText);
@@ -452,14 +446,13 @@ const handleNodeExpand = async (data: TreeNode, node: any) => {
   }
 };
 
-// 节点合并事件
+// Node collapse handler
 const handleNodeCollapse = (data: TreeNode, node: any) => {
-  // 如果是通道节点，不处理合并事件
+  // Skip collapse handling for channel nodes
   if (data.isDeviceChannel) {
     return;
   }
   tableData.value = [];
-  // console.log('节点合并:', data, node);
   if (node.data.children && node.data.children.length > 0) {
     node.data.children.forEach((item: any, index: number) => {
       if (item.type == 'device' && (item.isLeaf || item.isDeviceChannel)) {
@@ -523,7 +516,7 @@ const GetAnalytics = async (channelUUID?: string, bEnable?: boolean, metaEnabled
 
 const anauuid = ref<string>('')
 const vectPect = ref<boolean>(false)
-// 点击表格列表
+// Table row click handler
 const goClick = (row: any, column?: any) => {
   console.log('goCLick row =>', row)
   anauuid.value = row.uuid;
@@ -643,7 +636,7 @@ const AnalyticsSetDraw = (row: any) => {
 
 const startDraw = ref<boolean>(false)
 const draw = ref<any>(null)
-const gotable = ref<any>(false) // 决定规则是新增还是修改
+const gotable = ref<any>(false) // true = edit mode, false = add mode
 
 const startDrawing = ()  => {
   if (draw.value == null) {
@@ -893,7 +886,7 @@ const platformyes = async () => {
     default:
       break;
   }
-  if (gotable.value) {  // gotable 为 true，执行修改逻辑
+  if (gotable.value) {  // gotable true — update
     data.uuid = anauuid.value;
     const res = await UpdateAnalyticsApi(data);
     console.log('UpdateAnalytics =>', res)
@@ -905,7 +898,7 @@ const platformyes = async () => {
       })
       GetAnalytics(currentChannel.value.uuid);
     }
-  } else {  // gotable 为 false，执行新增逻辑
+  } else {  // gotable false — add
     const res = await SetAnalyticsApi(data);
     console.log('SetAnalytics =>', res);
     if (res.status == 200 && res.data.code == 0) {
@@ -942,7 +935,7 @@ const delRow = async (row: any) => {
   }
 }
 
-// 获取录像计划
+// Fetch recording schedule
 const GetRecordingTemplate = async () => {
   const res = await GetRecordingTemplateApi();
   if (res.status == 200 && res.data.code == 0) {
@@ -962,7 +955,7 @@ const GetRecordingTemplate = async () => {
     }
   }
 }
-// 获取人脸库
+// Fetch face library
 const GetFaceLibrary = async () => {
   const res = await GetFaceLibraryApi();
   if (res.status == 200 && res.data.code == 0) {
@@ -1041,11 +1034,11 @@ const ruleConfigBread = async (row: any) => {
   const div = document.getElementById('h5videoRule');
   const canvas = document.getElementById('h5vcanvasRule') as HTMLCanvasElement | null;
   if (!div || !canvas) return;
-  // 获取div的宽高
+  // Get container dimensions
   var divWidth = div?.offsetWidth;
   var divHeight = div?.offsetHeight;
   console.log(divWidth, divHeight)
-  // 将div的宽高赋值给canvas
+  // Set canvas size from container
   canvas.width = divWidth;
   canvas.height = divHeight;
 }
@@ -1058,29 +1051,29 @@ const quitConfig = () => {
   ruleForm.value = {
     name: 'Rule1',
     ruleType: 'USC_ANA_RULE_CONF',
-    time: 60, // 停留时间
-    objectSize: 30, // 检测最小对象大小
-    fps: 0.5, // 帧率
-    schedule: '', // 计划
-    stream: 'main', // 码流
-    priorityLevel: 'Medium',  // 级别
-    faceLibraryId: '',  // 人脸库
-    faceSimilarityThreshold: 60,  // 人脸 相似阈值
-    faceMinimumSize: 40,  // 人脸 最小尺寸
-    lprConfidenceThreshold: 60, // 车牌 相似阈值
-    detType: 'person',  // 人员聚集 检测目标类型
-    threshold: 2, // 人员聚集 报警人数
-    triggerInterval: 10,  // 人员聚集 报警间隔时间
-    lprWidthMin: 60,  // 车牌最小宽度
-    lprHeightMin: 20, // 车牌最小高度
-    lprWidthMax: 180, // 车牌最大宽度
-    lprHeightMax: 60, // 车牌最大高度
-    metaEnabled: true,  // 元数据分析
-    motionDet: false, // 开启移动侦测
-    groudMode: true,  // 地面模式
-    colorDet: true, // 开启颜色检测
-    txtSearch: false, // 文本搜索
-    classifiers: [],  // 分类器
+    time: 60, // dwell time (s)
+    objectSize: 30, // min detectable object size
+    fps: 0.5, // frame rate (fps)
+    schedule: '', // schedule
+    stream: 'main', // stream
+    priorityLevel: 'Medium',  // priority level
+    faceLibraryId: '',  // face library ID
+    faceSimilarityThreshold: 60,  // face similarity threshold
+    faceMinimumSize: 40,  // face min size (px)
+    lprConfidenceThreshold: 60, // LPR confidence threshold
+    detType: 'person',  // crowd detection target type
+    threshold: 2, // crowd alert count
+    triggerInterval: 10,  // crowd alert interval (s)
+    lprWidthMin: 60,  // LPR min width
+    lprHeightMin: 20, // LPR min height
+    lprWidthMax: 180, // LPR max width
+    lprHeightMax: 60, // LPR max height
+    metaEnabled: true,  // enable metadata analytics
+    motionDet: false, // enable motion detection
+    groudMode: true,  // ground mode
+    colorDet: true, // enable colour detection
+    txtSearch: false, // text search
+    classifiers: [],  // classifiers
   }
 }
 const updateObjSize = () => {
@@ -1091,47 +1084,43 @@ const updateObjSize = () => {
 const ruleForm = ref<any>({
   name: 'Rule1',
   ruleType: 'USC_ANA_RULE_CONF',
-  time: 60, // 停留时间
-  objectSize: 30, // 检测最小对象大小
-  fps: 0.5, // 帧率
-  schedule: '', // 计划
-  stream: 'main', // 码流
-  priorityLevel: 'Medium',  // 级别
-  faceLibraryId: '',  // 人脸库
-  faceSimilarityThreshold: 60,  // 人脸 相似阈值
-  faceMinimumSize: 40,  // 人脸 最小尺寸
-  lprConfidenceThreshold: 60, // 车牌 相似阈值
-  detType: 'person',  // 人员聚集 检测目标类型
-  threshold: 2, // 人员聚集 报警人数
-  triggerInterval: 10,  // 人员聚集 报警间隔时间
-  lprWidthMin: 60,  // 车牌最小宽度
-  lprHeightMin: 20, // 车牌最小高度
-  lprWidthMax: 180, // 车牌最大宽度
-  lprHeightMax: 60, // 车牌最大高度
-  metaEnabled: true,  // 元数据分析
-  motionDet: false, // 开启移动侦测
-  groudMode: true,  // 地面模式
-  colorDet: true, // 开启颜色检测
-  txtSearch: false, // 文本搜索
-  classifiers: [],  // 分类器
+  time: 60, // dwell time (s)
+  objectSize: 30, // min detectable object size
+  fps: 0.5, // frame rate (fps)
+  schedule: '', // schedule
+  stream: 'main', // stream
+  priorityLevel: 'Medium',  // priority level
+  faceLibraryId: '',  // face library ID
+  faceSimilarityThreshold: 60,  // face similarity threshold
+  faceMinimumSize: 40,  // face min size (px)
+  lprConfidenceThreshold: 60, // LPR confidence threshold
+  detType: 'person',  // crowd detection target type
+  threshold: 2, // crowd alert count
+  triggerInterval: 10,  // crowd alert interval (s)
+  lprWidthMin: 60,  // LPR min width
+  lprHeightMin: 20, // LPR min height
+  lprWidthMax: 180, // LPR max width
+  lprHeightMax: 60, // LPR max height
+  metaEnabled: true,  // enable metadata analytics
+  motionDet: false, // enable motion detection
+  groudMode: true,  // ground mode
+  colorDet: true, // enable colour detection
+  txtSearch: false, // text search
+  classifiers: [],  // classifiers
 })
 const RuleTypeData = [
-  { label: t('Analytics.ana_general'), value: 'USC_ANA_RULE_CONF', icon: 'icon-changguipeizhi' }, // 常规配置
-  { label: t('Analytics.ana_rule_ppe'), value: 'USC_ANA_RULE_PPE', icon: 'icon-a-Safetyhat' }, // 安全帽检测
-  { label: t('Analytics.ana_rule_miaa'), value: 'USC_ANA_RULE_MIAA', icon: 'icon-quyuruqin' },  // 区域入侵
-  { label: t('Analytics.ana_rule_pefa'), value: 'USC_ANA_RULE_PEFA', icon: 'icon-diedaojiance' }, // 跌倒检测
-  { label: t('Analytics.ana_rule_cral'), value: 'USC_ANA_RULE_CRAL', icon: 'icon-banxianjiance' },  // 绊线检测
-  // { label: "车牌识别", value: '1', icon: 'icon-chepaishibie' },
-  { label: t('Analytics.ana_rule_loit'), value: 'USC_ANA_RULE_LOIT', icon: 'icon-renyuandouliu' },  // 人员逗留
-  // { label: "人脸识别", value: '2', icon: 'icon-face' },
-  { label: t('Analytics.ana_rule_stve'), value: 'USC_ANA_RULE_STVE', icon: 'icon-weifatingche' }, // 违法停车
-  // { label: "工服检测", value: '3', icon: 'icon-gongfujiance' },
-  { label: t('Analytics.ana_rule_vect'), value: 'USC_ANA_RULE_VECT', icon: 'icon-cheliangjishu' },  // 车辆计数
-  // { label: "火焰&烟雾", value: '4', icon: 'icon-huoyanyanwu' },
-  { label: t('Analytics.ana_rule_pect'), value: 'USC_ANA_RULE_PECT', icon: 'icon-renyuanjishu' }, // 人员计数
-  { label: t('Analytics.ana_face_recognition'), value: 'USC_ANA_RULE_FARE', icon: 'icon-renlianshibie1' }, // 人脸识别
-  { label: t('Analytics.ana_lpre'), value: 'USC_ANA_RULE_LPRE', icon: 'icon-chepaishibie' }, // 车牌识别
-  { label: t('Analytics.ana_rule_crod'), value: 'USC_ANA_RULE_CROD', icon: 'icon-renyuanjishu' }, // 人员聚焦
+  { label: t('Analytics.ana_general'), value: 'USC_ANA_RULE_CONF', icon: 'icon-changguipeizhi' }, // general config
+  { label: t('Analytics.ana_rule_ppe'), value: 'USC_ANA_RULE_PPE', icon: 'icon-a-Safetyhat' }, // hardhat detection
+  { label: t('Analytics.ana_rule_miaa'), value: 'USC_ANA_RULE_MIAA', icon: 'icon-quyuruqin' },  // area intrusion
+  { label: t('Analytics.ana_rule_pefa'), value: 'USC_ANA_RULE_PEFA', icon: 'icon-diedaojiance' }, // fall detection
+  { label: t('Analytics.ana_rule_cral'), value: 'USC_ANA_RULE_CRAL', icon: 'icon-banxianjiance' },  // tripwire
+  { label: t('Analytics.ana_rule_loit'), value: 'USC_ANA_RULE_LOIT', icon: 'icon-renyuandouliu' },  // loitering
+  { label: t('Analytics.ana_rule_stve'), value: 'USC_ANA_RULE_STVE', icon: 'icon-weifatingche' }, // illegal parking
+  { label: t('Analytics.ana_rule_vect'), value: 'USC_ANA_RULE_VECT', icon: 'icon-cheliangjishu' },  // vehicle count
+  { label: t('Analytics.ana_rule_pect'), value: 'USC_ANA_RULE_PECT', icon: 'icon-renyuanjishu' }, // person count
+  { label: t('Analytics.ana_face_recognition'), value: 'USC_ANA_RULE_FARE', icon: 'icon-renlianshibie1' }, // face recognition
+  { label: t('Analytics.ana_lpre'), value: 'USC_ANA_RULE_LPRE', icon: 'icon-chepaishibie' }, // LPR
+  { label: t('Analytics.ana_rule_crod'), value: 'USC_ANA_RULE_CROD', icon: 'icon-renyuanjishu' }, // crowd detection
 ]
 const fpsOptions = [{
   value: 0.5,
@@ -1174,7 +1163,7 @@ const direction = ref<string>('AB');
 
 
 
-// 检查类型 选择面板 显示/隐藏
+// Rule-type panel visibility
 const popoverVisible = ref<boolean>(false);
 const handleVisibleChange = (visible: boolean) => {
   if (visible) popoverVisible.value = visible;
@@ -1230,7 +1219,7 @@ const GetClassifierList = async () => {
   }
 }
 
-// 人脸识别-最小尺寸变化
+// Face recognition min-size change handler
 const updateFareSize = (value: any) => {
   const videoDom = document.getElementById('h5videoRule')  as HTMLVideoElement;
   let width = Math.min(ruleForm.value.faceMinimumSize / (videoDom.videoWidth / videoDom.offsetWidth), videoDom.offsetWidth);
@@ -1238,7 +1227,7 @@ const updateFareSize = (value: any) => {
   let height = Math.min(ruleForm.value.faceMinimumSize / (videoDom.videoHeight / videoDom.offsetHeight), videoDom.offsetHeight);
   $(".fareSize").height(height);
 }
-// 监听过滤文本变化
+// Watch filter text changes
 watch(filterText, () => {
   if (filterText.value.trim()) {
     channelData.value = filterTreeNodes(originalChannelData.value, filterText.value.trim());
@@ -1264,7 +1253,6 @@ const activeNames = ['1']
 
 <template>
   <div class="rule-config">
-    <!-- 左侧数据栏 -->
     <div class="rules_left">
       <el-collapse v-model="activeNames">
         <el-collapse-item name="1" id="headswitch">
@@ -1306,7 +1294,6 @@ const activeNames = ['1']
         </el-collapse-item>
       </el-collapse>
     </div>
-    <!-- 右侧表格 -->
     <div v-if="!ruleConfigVisible" class="table_right rule-right">
       <el-table :data="tableData" stripe height="100%" style="width: 100%;">
         <el-table-column prop="index" :label="t('CommTableEdit.comm_table_serial_number')" width="160" align="center"></el-table-column>
@@ -1873,7 +1860,7 @@ const activeNames = ['1']
   }
 }
 
-// 设备树节点样式
+// Device tree node styles
 .tree-node {
   cursor: pointer;
   &.device-online {
@@ -1944,7 +1931,7 @@ const activeNames = ['1']
 </style>
 
 <style lang="scss">
-  // 隐藏规则配置的检查类型样式
+  // Hide rule-config check-type styles
 .ruleTypeSelect {
   display: none !important;
 }

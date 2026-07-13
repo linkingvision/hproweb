@@ -12,9 +12,9 @@ interface TreeNode {
   children?: TreeNode[];
   online?: boolean;
   data: any;
-  isLeaf?: boolean; // 标记是否为叶子节点
-  loaded?: boolean; // 标记是否已加载过子节点
-  isDeviceChannel?: boolean; // 标记是否为设备通道（展开设备后的子节点）
+  isLeaf?: boolean; // flag: is leaf node
+  loaded?: boolean; // flag: children already loaded
+  isDeviceChannel?: boolean; // flag: is device channel (child of expanded device)
 }
 
 const { t } = useI18n()
@@ -22,14 +22,14 @@ const { t } = useI18n()
 const filterText = ref<string>('')
 let activeCollapse = ref<string>('device')
 let treeData = ref<TreeNode[]>([]);
-const expandedKeys = ref<string[]>([]); // 记录展开的节点
+const expandedKeys = ref<string[]>([]); // track expanded nodes
 
 const recordData = ref<any>({
   type: "",
   token: "",
 })
 
-// 转换数据为树形结构
+// Convert flat data to tree structure
 const transformToTreeData = (partitions: any[]): TreeNode[] => {
   const result: TreeNode[] = [];
   
@@ -41,15 +41,15 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
       id: `partition_${partition.devPartitionId}`,
       label: partition.devPartitionName,
       type: 'partition',
-      children: hasChildren ? [] : [{ id: 'placeholder', label: '', type: 'partition', data: null }], // 占位符，让所有节点都显示展开图标
+      children: hasChildren ? [] : [{ id: 'placeholder', label: '', type: 'partition', data: null }], // placeholder so all nodes show expand icon
       data: partition,
-      isLeaf: false, // 初始都不是叶子节点
-      loaded: false // 初始都未加载
+      isLeaf: false, // no node is a leaf initially
+      loaded: false // none loaded initially
     };
     
-    // 如果有实际的子数据，则立即加载
+    // Load immediately if sub-data is available
     if (hasChildren) {
-      // 1. 优先展示children（子分区）
+      // 1. Sub-partitions first
       if (partition.children && partition.children.length > 0) {
         const childrenNodes = transformToTreeData(partition.children);
         partitionNode.children = childrenNodes;
@@ -57,7 +57,7 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
         partitionNode.children = [];
       }
       
-      // 2. 展示dev设备
+      // 2. Device nodes
       if (partition.dev && partition.dev.length > 0) {
         partition.dev.forEach((device: any) => {
           partitionNode.children!.push({
@@ -66,7 +66,7 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             type: 'device',
             online: device.online,
             data: device,
-            children: [{ id: 'placeholder', label: '', type: 'device', data: null }], // 设备也可能有子数据
+            children: [{ id: 'placeholder', label: '', type: 'device', data: null }], // device may have child data
             isLeaf: false,
             loaded: false
           });
@@ -76,7 +76,7 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
       partitionNode.loaded = true;
     }
     
-    // 3. 展示map地图 - 暂时注释，以后需要时再启用
+    // 3. Map nodes — disabled for now
     // if (partition.map && partition.map.length > 0) {
     //   partition.map.forEach((map: any) => {
     //     partitionNode.children!.push({
@@ -88,7 +88,7 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
     //   });
     // }
     
-    // 4. 展示view视图 - 暂时注释，以后需要时再启用
+    // 4. View nodes — disabled for now
     // if (partition.view && partition.view.length > 0) {
     //   partition.view.forEach((view: any) => {
     //     partitionNode.children!.push({
@@ -106,7 +106,7 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
   return result;
 };
 
-// 过滤树数据
+// Filter tree data
 const filteredTreeData = computed(() => {
   if (!filterText.value) return treeData.value;
   
@@ -124,17 +124,17 @@ const filteredTreeData = computed(() => {
   return filterTree(JSON.parse(JSON.stringify(treeData.value)));
 });
 
-// 获取节点图标
+// Get node icon
 const getNodeIcon = (node: TreeNode) => {
   switch (node.type) {
     case 'partition':
       return 'icon-gen';
     case 'device':
-      // 如果是设备通道（展开设备后的子节点），使用摄像机图标
+      // Channel children of a device use the camera icon
       if (node.isDeviceChannel) {
         return 'icon-shexiangjizaixian';
       }
-      // 如果是设备本身，使用设备图标
+      // Device nodes use the device icon
       return 'icon-Device';
     case 'map':
       return 'icon-ditu';
@@ -145,11 +145,11 @@ const getNodeIcon = (node: TreeNode) => {
   }
 };
 
-// 获取节点样式类
+// Get node CSS class
 const getNodeClass = (node: TreeNode) => {
   const classes = ['tree-node'];
   if (node.type === 'device') {
-    // 获取在线状态：优先使用node.online，如果不存在则使用node.data.online
+    // Online status: prefer node.online, fallback to node.data.online
     const isOnline = node.online !== undefined ? node.online : (node.data && node.data.online);
     
     if (isOnline) {
@@ -161,85 +161,85 @@ const getNodeClass = (node: TreeNode) => {
   return classes.join(' ');
 };
 
-// 节点点击事件
+// Node click handler
 const handleNodeClick = (data: TreeNode) => {
   // console.log('Node clicked:', data);
-  // 这里可以添加节点点击的处理逻辑
+  // Add click handling logic here
 };
 
-// 懒加载子节点数据的API调用
+// API call for lazy-loading child data
 const loadChildrenData = async (nodeData: TreeNode): Promise<TreeNode[]> => {
   try {
-    // 这里根据节点类型调用不同的API
+    // Call different APIs by node type
     if (nodeData.type === 'partition') {
-      // 对于分区节点，可能需要调用特定的API获取子分区或设备
-      // 这里使用现有的API作为示例，你可以根据实际需求修改
+      // Partition nodes may need a dedicated API
+      // Example using existing API — adapt as needed
       const res = await GetDevPartitionApi();
       if (res.status === 200 && res.data.code === 0) {
-        // 处理返回的数据，这里需要根据实际API返回格式调整
-        return []; // 返回处理后的子节点数据
+        // Handle response — adjust to actual API format
+        return []; // return processed child nodes
       }
     } else if (nodeData.type === 'device') {
-      // 对于设备节点，可能需要获取设备的通道信息
+      // Device nodes may need channel info
       if (nodeData.data && nodeData.data.token) {
         const res = await GetDeviceChannels( nodeData.data.token );
         if (res.status === 200 && res.data.code === 0) {
-          // 处理设备通道数据
+          // Handle device channel data
           const channels = res.data.result || [];
           return channels.map((channel: any, index: number) => ({
             id: `channel_${nodeData.data.devId}_${index}`,
-            label: channel.name || `通道 ${index + 1}`,
+            label: channel.name || `Channel ${index + 1}`,
             type: 'device' as const,
             data: channel,
-            online: channel.online, // 设置通道的在线状态
+            online: channel.online, // set channel online status
             isLeaf: true,
             loaded: true,
-            isDeviceChannel: true // 标记为设备通道
+            isDeviceChannel: true // mark as device channel
           }));
         }
       }
     }
     return [];
   } catch (error) {
-    console.error('加载子节点数据失败:', error);
     return [];
   }
 };
 
-// 节点展开事件
+// Node expand handler
 const handleNodeExpand = async (data: TreeNode, node: any) => {
-  console.log('Node expanded:', data, node);
+  // Skip placeholder nodes (data.data is null)
+  if (!data.data) return;
+
   recordData.value = {
     type: data.type,
     token: data.data.token,
     name: data.label
   };
-  // 如果已经加载过，直接返回
+  // Return early if already loaded
   if (data.loaded) {
     return;
   }
   
-  // 如果是占位符节点，进行懒加载
+  // Lazy-load on placeholder node expand
   if (data.children && data.children.length === 1 && data.children[0] && data.children[0].id === 'placeholder') {
     try {
       const childrenData = await loadChildrenData(data);
       
       if (childrenData.length > 0) {
-        // 有子数据，替换占位符
+        // Replace placeholder with actual children
         data.children = childrenData;
         data.loaded = true;
       } else {
-        // 没有子数据，标记为叶子节点并清空children
+        // No sub-data — mark as leaf and clear children
         data.children = [];
         data.isLeaf = true;
         data.loaded = true;
       }
       
-      // 强制更新树组件
+      // Force tree component update
       treeData.value = [...treeData.value];
     } catch (error) {
-      console.error('展开节点失败:', error);
-      // 出错时也清空占位符
+      // Clear placeholder on error
       data.children = [];
       data.isLeaf = true;
       data.loaded = true;
@@ -248,24 +248,23 @@ const handleNodeExpand = async (data: TreeNode, node: any) => {
   }
 };
 
-// 节点收起事件
 const handleNodeCollapse = (data: TreeNode, node: any) => {
   // console.log('Node collapsed:', data, node);
-  // 这里可以添加节点收起时的处理逻辑
+  // Add collapse handling logic here
 };
 
-// 扁平化根节点，直接展示其内容
+// Flatten root, display contents directly
 const flattenRootNodes = (partitions: any[]): TreeNode[] => {
   const result: TreeNode[] = [];
   
   partitions.forEach(partition => {
-    // 1. 优先展示children（子分区）
+    // 1. Sub-partitions first
     if (partition.children && partition.children.length > 0) {
       const childrenNodes = transformToTreeData(partition.children);
       result.push(...childrenNodes);
     }
     
-    // 2. 展示dev设备
+    // 2. Device nodes
     if (partition.dev && partition.dev.length > 0) {
       partition.dev.forEach((device: any) => {
         result.push({
@@ -274,14 +273,14 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           type: 'device',
           online: device.online,
           data: device,
-          children: [{ id: 'placeholder', label: '', type: 'device', data: null }], // 添加占位符
+          children: [{ id: 'placeholder', label: '', type: 'device', data: null }], // add placeholder child
           isLeaf: false,
           loaded: false
         });
       });
     }
     
-    // 3. 展示map地图 - 暂时注释，以后需要时再启用
+    // 3. Map nodes — disabled for now
     // if (partition.map && partition.map.length > 0) {
     //   partition.map.forEach((map: any) => {
     //     result.push({
@@ -296,7 +295,7 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
     //   });
     // }
     
-    // 4. 展示view视图 - 暂时注释，以后需要时再启用
+    // 4. View nodes — disabled for now
     // if (partition.view && partition.view.length > 0) {
     //   partition.view.forEach((view: any) => {
     //     result.push({
@@ -318,7 +317,7 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
 const GetDevPartition = async () => {
   const res = await GetDevPartitionApi();
   if (res.status == 200 && res.data.code === 0) {
-    // 使用扁平化函数，不展示根节点
+    // Use flatten helper, skip root
     treeData.value = flattenRootNodes(res.data.result);
     // console.log('TreeData => ', treeData.value);
   }
@@ -464,12 +463,12 @@ onMounted(() => {
       align-items: center;
       width: 100%;
       
-      // 在线设备透明度为1（正常显示）
+      // Online devices: full opacity
       &.device-online {
         opacity: 1;
       }
       
-      // 离线设备透明度为0.6（与节点相同）
+      // Offline devices: 0.6 opacity
       &.device-offline {
         opacity: 0.6;
       }

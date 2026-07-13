@@ -12,16 +12,16 @@ const searchInfo = ref<any>({
   channelName: '',
   ruleTypes: []
 })
-const RuleTypeData = [
-    { label: '安全帽检测', value: 'USC_ANA_RULE_PPE', icon: 'icon-a-Safetyhat' },
-    { label: '区域入侵', value: 'USC_ANA_RULE_MIAA', icon: 'icon-quyuruqin' },
-    { label: '跌倒检测', value: 'USC_ANA_RULE_PEFA', icon: 'icon-diedaojiance' },
-    { label: '绊线检测', value: 'USC_ANA_RULE_CRAL', icon: 'icon-banxianjiance' },
-    { label: '人员逗留', value: 'USC_ANA_RULE_LOIT', icon: 'icon-renyuandouliu' },
-    { label: '违法停车', value: 'USC_ANA_RULE_STVE', icon: 'icon-weifatingche' },
-    { label: '人脸识别', value: 'USC_ANA_RULE_FARE', icon: 'icon-renlianshibie1' },
-    { label: '车牌识别', value: 'USC_ANA_RULE_LPRE', icon: 'icon-chepaishibie' },
-    { label: '人员聚焦', value: 'USC_ANA_RULE_CROD', icon: 'icon-renyuanjishu' },
+const RuleTypeData = [  
+    { label: t('Analytics.ana_rule_ppe'), value: 'USC_ANA_RULE_PPE', icon: 'icon-a-Safetyhat' },
+    { label: t('Analytics.ana_rule_miaa'), value: 'USC_ANA_RULE_MIAA', icon: 'icon-quyuruqin' },
+    { label: t('Analytics.ana_rule_pefa'), value: 'USC_ANA_RULE_PEFA', icon: 'icon-diedaojiance' },
+    { label: t('Analytics.ana_rule_cral'), value: 'USC_ANA_RULE_CRAL', icon: 'icon-banxianjiance' },
+    { label: t('Analytics.ana_rule_loit'), value: 'USC_ANA_RULE_LOIT', icon: 'icon-renyuandouliu' },
+    { label: t('Analytics.ana_rule_stve'), value: 'USC_ANA_RULE_STVE', icon: 'icon-weifatingche' },
+    { label: t('Analytics.ana_face_recognition'), value: 'USC_ANA_RULE_FARE', icon: 'icon-renlianshibie1' },
+    { label: t('Analytics.ana_lpre'), value: 'USC_ANA_RULE_LPRE', icon: 'icon-chepaishibie' },
+    { label: t('Analytics.ana_rule_crod'), value: 'USC_ANA_RULE_CROD', icon: 'icon-renyuanjishu' },
 ]
 const shapeObj: any = {
     "person": "icon-person",
@@ -95,24 +95,24 @@ function getPriorityColor(priority: 'Critical' | 'High' | 'Low' | 'Medium') {
     <!-- {{ t('Analytics.ana_event_search') }} -->
     <div class="search-info">
       <el-form :inline="true" :model="searchInfo">
-        <el-form-item label="开始时间">
+        <el-form-item :label="t('Common.comm_time_start')">
           <el-date-picker
             v-model="searchInfo.beginTime"
             type="datetime"
             placeholder="Select date and time"
           />
         </el-form-item>
-        <el-form-item label="结束时间">
+        <el-form-item :label="t('Common.comm_time_end')">
           <el-date-picker
             v-model="searchInfo.endTime"
             type="datetime"
             placeholder="Select date and time"
           />
         </el-form-item>
-        <el-form-item label="通道名称">
+        <el-form-item :label="t('Common.comm_channel_name')">
           <el-input v-model="searchInfo.channelName" style="width: 240px"/>
         </el-form-item>
-        <el-form-item label="规则类型">
+        <el-form-item :label="t('Analytics.ana_rule_type')">
           <el-select
             v-model="searchInfo.ruleTypes"
             multiple
@@ -124,37 +124,37 @@ function getPriorityColor(priority: 'Critical' | 'High' | 'Low' | 'Medium') {
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button size="small" @click="reset">重置</el-button>
-          <el-button size="small" type="primary" @click="GetAnaEvent">搜索</el-button>
+          <el-button size="small" @click="reset">{{ t('CommTableEdit.comm_reset') }}</el-button>
+          <el-button size="small" type="primary" @click="GetAnaEvent">{{ t('CommTableEdit.comm_search') }}</el-button>
         </el-form-item>
       </el-form>
     </div>
     <div class="tableContainer">
       <el-table :data="tableData" height="760" style="width: 100%;">
-        <el-table-column label="序号" type="index" width="140" align="center"></el-table-column>
-        <el-table-column label="通道名称" prop="channelName" width="140" align="center"></el-table-column>
-        <el-table-column label="级别" prop="priority" width="120" align="center">
+        <el-table-column :label="t('CommTableEdit.comm_table_serial_number')" type="index" width="140" align="center"></el-table-column>
+        <el-table-column :label="t('Common.comm_channel_name')" prop="channelName" width="140" align="center"></el-table-column>
+        <el-table-column :label="t('Analytics.ana_priority')" prop="priority" width="120" align="center">
           <template #default="{ row }">
             <span :style="{ backgroundColor: getPriorityColor(row.priority) }" style="padding: 3px; border-radius: 2px; font-size: 14px;">{{ row.priority }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="规则类型" prop="ruleType" align="center">
+        <el-table-column :label="t('Analytics.ana_rule_type')" prop="ruleType" align="center">
           <template #default="{ row }">
             <span>{{ RuleTypeData.find(item => item.value == row.ruleType)?.label }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="目标" prop="targetType" align="center">
+        <el-table-column :label="t('Analytics.ana_goal')" prop="targetType" align="center">
           <template #default="{ row }">
             <i class="iconfont" :class="shapeObj[row.targetType]" style="font-size: 16px;"></i>
           </template>
         </el-table-column>
-        <el-table-column label="时间" align="center">
+        <el-table-column :label="t('System.sys_time')" align="center">
           <template #default="{ row }">
             <span>{{ formatISOToSlash(row.time) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="事件" prop="anaEvent" align="center"></el-table-column>
-        <el-table-column label="图片" align="center">
+        <el-table-column :label="t('Analytics.ana_event')" prop="anaEvent" align="center"></el-table-column>
+        <el-table-column :label="t('Common.comm_picture')" align="center">
           <template #default="{ row }">
             <img v-if="row.strJpeg" :src="'data:image/jpeg;base64,' + row.strJpeg" height="30" style="cursor: pointer;">
           </template>

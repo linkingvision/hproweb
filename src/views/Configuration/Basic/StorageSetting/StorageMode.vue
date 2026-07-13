@@ -8,13 +8,13 @@ const {t} = useI18n()
 
 const form = ref({
   nodeId: '',
-  mode: ''
+  mode: 'USC_STORAGE_MODE_BLOCK'
 })
 const storageModeList = [
-  // {
-  //   value: 'HPRO_STORAGE_MODE_BLOCK',
-  //   label: t('Router.router_regular_storage')
-  // },
+  {
+    value: 'USC_STORAGE_MODE_BLOCK',
+    label: t('Router.router_regular_storage')
+  },
   {
     value: 'USC_STORAGE_MODE_OBJECT',
     label: t('Router.router_local_obj_storage')
@@ -30,15 +30,16 @@ const Node = async () => {
   if (res.status == 200 && res.data.code == 0) {
     if (res.data.result.list && res.data.result.list.length > 0) {
       form.value.nodeId = res.data.result.list[0].nodeId;
-      GetStorageMode(form.value.nodeId)
+      GetStorageMode(form.value.nodeId);
     }
   }
 }
 
 const GetStorageMode = async (nodeId: string) => {
-  const res = await GetStorageModeApi(nodeId)
+  const res = await GetStorageModeApi(nodeId);
   if (res.status == 200 && res.data.code == 0) {
-    form.value.mode = res.data.result.mode;
+    // Use server value when available, otherwise keep default
+    form.value.mode = res.data.result.mode || 'USC_STORAGE_MODE_BLOCK';
   }
 }
 const onSubmit = async () => {

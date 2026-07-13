@@ -106,7 +106,6 @@ const getAllSearchStorRecords = async (channels: any, concurrency = 5) => {
     )
     return results.filter(result => result != undefined)
   } catch (error) {
-    console.error('请求发生错误：', error)
     return [];
   }
 }
@@ -152,7 +151,7 @@ const getRecordTime = (date: Date) => {
   }
   return { startTime, endTime }
 }
-// 并发控制函数
+// Concurrency control helper
 const concurrentAll = async (tasks: any, concurrency = 5) => {
   const results = [];
   const executing: any = [];
@@ -205,13 +204,13 @@ onMounted(() => {
         <el-date-picker v-model="activeTime" type="date" placeholder="Pick a date" @change="handleChange"></el-date-picker>
       </div>
       <div class="radio-button">
-        <el-button size="small" :class="{active_button: radio == 'month'}" @click="activeRadio('month')">月</el-button>
+        <el-button size="small" :class="{active_button: radio == 'month'}" @click="activeRadio('month')">Month</el-button>
       </div>
       <div class="radio-button">
-        <el-button size="small" :class="{active_button: radio == 'week'}" @click="activeRadio('week')">周</el-button>
+        <el-button size="small" :class="{active_button: radio == 'week'}" @click="activeRadio('week')">Week</el-button>
       </div>
       <div class="radio-button">
-        <el-button size="small" :class="{active_button: radio == 'date'}" @click="activeRadio('date')">天</el-button>
+        <el-button size="small" :class="{active_button: radio == 'date'}" @click="activeRadio('date')">Day</el-button>
       </div>
     </div>
     <div class="render">

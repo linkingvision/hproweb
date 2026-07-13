@@ -26,40 +26,40 @@ export const GetLogApi = (data: GetLogParamType) => axios({
   data
 })
 
-// 系统升级上传文件URL
+// System upgrade file upload URL
 export const UploadUrl = '/uapi/v1/System/Bin/Patcher?session=';
 
-// 获取系统升级状态
+// Get system upgrade status
 export const GetUpgradeStatusApi = () => axios({
   url: '/uapi/v1/System/GetUpgradeStatus',
   method: 'GET'
 })
 
-// 数据库导入地址
+// Database import URL
 export const DBUploadUrl = '/uapi/v1/DB/Import?session=';
 
-// 重启服务器
+// Restart server
 export const ResetServiceApi = () => axios({
   url: '/uapi/v1/System/Restart',
   method: 'GET'
 })
 
-// 配置文件导出
+// Export config file
 export const ConfigExportUrl = '/uapi/v1/Conf/Export?session=';
 
-// 数据库导出
+// Export database
 export const SqlExportApi = (isEvent: boolean) => axios({
   url: '/uapi/v1/DB/Migration/Start?isEvent=' + isEvent,
   method: 'GET'
 })
 
-// 数据库导出进度
+// Database export progress
 export const SetDBStatus = (key: string) => axios({
   url: '/uapi/v1/DB/Migration/Status?key=' + key,
   method: 'GET'
 })
 
-// 数据库下载地址
+// Database download URL
 export const DBDownloadUrl = '/uapi/v1/DB/Download?session=';
 
 export const GetSysConfigApi = (module: string) => axios({

@@ -10,13 +10,13 @@ export const GetDeviceListApi = () => axios({
   method: 'GET',
 })
 
-// 获取设备根目录
+// Get device root partition
 export const GetDevPartitionApi = () => axios({
   url: '/uapi/v1/DevPartition/List?pageSize=100000',
   method: 'GET'
 })
 
-// 获取视频文件
+// Get video file list
 export const GetDevFileApi = () => axios({
   url: '/uapi/v1/Device/DevFileList',
   method: 'GET'

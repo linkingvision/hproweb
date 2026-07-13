@@ -18,7 +18,9 @@ app.use(pinia)
 
 import { useStore } from './store/index.ts'
 const store = useStore()
-i18n.global.locale.value = store.lang;
+// Use persisted language from localStorage, fallback to English
+const savedLang = localStorage.getItem('lang') || 'en';
+i18n.global.locale.value = savedLang;
 app.use(i18n)
 
 app.use(router)

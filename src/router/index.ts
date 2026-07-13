@@ -44,7 +44,7 @@ const router = createRouter({
       console.log('Redirect from /, query:', to.query);
       return {
         path: '/Login',
-        query: to.query // 显示传递参数
+        query: to.query // forward query params
       }
     }
   },{
@@ -53,7 +53,7 @@ const router = createRouter({
     component: Login,
     meta: {
       title: 'login',
-      type: ''  //  不需要鉴权
+      type: ''  // no auth required
     }
   }, {
     path: '/Logout',
@@ -68,7 +68,7 @@ const router = createRouter({
     name: 'Home',
     component: TheContainer,
     meta: {
-      type: 'Administrator' // 是否需要判断是否登录，这里是需要判断
+      type: 'Administrator' // requires auth
     },
     children: [{
       path: 'Monitoring',
@@ -79,7 +79,7 @@ const router = createRouter({
         title: '/Monitoring',
         name: 'Router.router_monitoring',
         icon: 'iconfont icon-shexiangji',
-        type: 'Operator'  // 是否需要判断是否登录,这里是需要判断
+        type: 'Operator'  // requires auth
       },
       children: [{
         path: 'View',
@@ -89,7 +89,7 @@ const router = createRouter({
           title: '/Monitoring/View',
           name: 'Router.router_view',
           icon: 'iconfont icon-shitu',
-          type: 'Operator'  // 是否需要判断是否登录,这里是需要判断
+          type: 'Operator'  // requires auth
         }
       }, {
         path: 'Search',
@@ -100,7 +100,7 @@ const router = createRouter({
           title: '/Monitoring/Search',
           name: 'CommTableEdit.comm_search',
           icon: 'iconfont icon-sousuoicon',
-          type: 'Operator'  // 是否需要判断是否登录,这里是需要判断
+          type: 'Operator'  // requires auth
         },
         children: [{
           path: 'RecordInfo',

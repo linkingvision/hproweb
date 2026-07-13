@@ -33,49 +33,49 @@ export const setRecEnableApi = (data: setRecEnableParmas) => axios({
   data
 })
 
-// 获取设备有录像日期
+// Get dates with recordings for device
 export const GetRecordCalendar = (token: string, year: string | number, month: string | number) => axios({
   url: '/api/v1/SearchStorRecordCalendar?token=' + token + '&year=' + year + '&month=' + month,
   method: 'GET'
 })
 
-// 获取设备有录像时间段
+// Get time slots with recordings for device
 export const getSearchStorRecordByTimeApi = (token: string, start: string, end: string) => axios({
   url: '/api/v1/SearchStorRecordByTime?token=' + token + '&start=' + start + '&end=' + end,
   method: 'GET'
 })
 
-// 获取设备码率信息
+// Get device bitrate info
 export const GetInformationDataApi = (token: string) => axios({
   url: '/uapi/v1/GetVidStreamStatus?token=' + token + '&stream=main',
   method: 'GET'
 })
 
-// 获取设备云台预置位查询
+// Get PTZ preset positions for device
 export const GetPresetsApi = (token: string) => axios({
   url: '/uapi/v1/GetPresets?token=' + token,
   method: 'GET'
 })
 
-// 云台预置位跳转
+// Jump to PTZ preset position
 export const PresetJumpApi = (ptzToken: string, presetToken: string, speed: number) => axios({
   url: '/uapi/v1/Ptz?token=' + ptzToken + '&action=preset&preset=' + presetToken + '&speed=' + speed,
   method: 'GET'
 })
 
-// 云台预置位设置
+// Set PTZ preset position
 export const SetPresetApi = (ptzToken: string, inputVal: string, presetToken: string) => axios({
   url: '/uapi/v1/SetPreset?token=' + ptzToken + '&presetname=' + inputVal + '&presettoken=' + presetToken,
   method: 'GET'
 })
 
-// 云台控制
+// PTZ control
 export const PtzApi = (ptzToken: string, action: string, speed: number) => axios({
   url: '/uapi/v1/Ptz?token=' + ptzToken + '&action=' + action + '&speed=' + speed,
   method: 'GET'
 })
 
-// 视图查询
+// View query
 export const GetViewApi = (id: string) => axios({
   url: '/uapi/v1/View/' + id,
   method: 'GET'

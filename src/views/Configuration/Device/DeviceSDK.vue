@@ -84,8 +84,8 @@ const addFileTreeRef = ref();
 
 const addHandleCheck = (data: any, info: any) => {
   const currentKey = data.devPartitionId;
-  addTreeRef.value.setCheckedKeys([]);  // 先取消所有节点的选中
-  addTreeRef.value.setCheckedKeys([currentKey]) // 再仅选中当前节点
+  addTreeRef.value.setCheckedKeys([]);  // deselect all first
+  addTreeRef.value.setCheckedKeys([currentKey]) // then select only current node
   addForm.value.devPartitionId = currentKey;
   addForm.value.devPartitionName = data.devPartitionName;
 }
@@ -97,7 +97,6 @@ const filterMethod = (query: string, node: any) => {
 }
 const addFileHandleCheck = () => {
   const checkedNodes = addFileTreeRef.value.getCheckedNodes();
-  console.log('选中的File节点 =>', checkedNodes)
   let url = '';
   let name = '';
   checkedNodes.forEach((item: any) => {
@@ -120,12 +119,9 @@ const filterMethod2 = (value: any, data: any) => {
 
 const GetDeviceList = async () => {
   const res = await GetDeviceListApi()
-  // console.log(res)
   if (res.status == 200 && res.data.code == 0) {
-    if (res.data.result.list && res.data.result.list.length) {
-      tableData.value = res.data.result.list;
-      total.value = res.data.result.list.length
-    }
+    tableData.value = res.data.result.list ?? [];
+    total.value = tableData.value.length;
     Refresh()
   }
 }
@@ -147,7 +143,7 @@ const DevFile = async () => {
     const srcGroup: any = { children: [] };
     if (!result) return;
     for (let i = 0; i < result.length; i++) {
-      srcGroup.Url = '视频列表';
+      srcGroup.Url = 'Video List';
       srcGroup.id = i;
       let url = {
         Url: result[i],
@@ -181,8 +177,8 @@ const addOnSubmit = async () => {
     token: '',
     user: 'admin',
     password: 'admin12345',
-    ip: '192.168.100.1',
-    port: '80',
+    ip: addForm.value.ip,       // keep last entered IP
+    port: addForm.value.port,   // keep last entered port
     audio: true,
     sandbox: false,
     maxchannel: 0,
@@ -364,8 +360,8 @@ const filterMethod3 = (query: string, node: any) => {
 }
 const editHandleCheck = (data: any, info: any) => {
   const currentKey = data.devPartitionId;
-  editTreeRef.value.setCheckedKeys([]);  // 先取消所有节点的选中
-  editTreeRef.value.setCheckedKeys([currentKey]) // 再仅选中当前节点
+  editTreeRef.value.setCheckedKeys([]);  // deselect all first
+  editTreeRef.value.setCheckedKeys([currentKey]) // then select only current node
   editForm.value.devPartitionId = currentKey;
   editForm.value.devPartitionName = data.devPartitionName;
 }
@@ -374,7 +370,6 @@ const onQueryChanged4 = () => {
 }
 const editFileHandleCheck = () => {
   const checkedNodes = editFileTreeRef.value.getCheckedNodes();
-  console.log('选中的File节点 =>', checkedNodes)
   let url = '';
   let name = '';
   checkedNodes.forEach((item: any) => {
@@ -467,17 +462,15 @@ const delRow = (id: string) => {
     }
     const res = await DelDeviceApi(params);
     if (res.status == 200 && res.data.code == 0) {
-        ElMessage({
-          message: t('CommTableEdit.comm_delete_successfully'),
-          type: 'success',
-          duration: 2000
-        })
-        GetDeviceList();
+      ElMessage({
+        message: t('CommTableEdit.comm_delete_successfully'),
+        type: 'success',
+        duration: 2000
+      })
+      tableData.value = tableData.value.filter(item => item.devId !== Number(id));
+      total.value = tableData.value.length;
     }
-  }).catch(() => {
-
-  })
-  
+  }).catch(() => {})
 }
 
 const selectRows = ref<number[]>([])
@@ -620,7 +613,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="device-sdk">
-    <!-- 添加表单 -->
     <div v-if="addVisiable && !editVisiable" class="add-device">
       <div class="bread-header">
         <el-breadcrumb :separator-icon="ArrowRight">
@@ -749,7 +741,6 @@ onBeforeUnmount(() => {
         </el-form-item>
       </el-form>
     </div>
-    <!-- 编辑表单 -->
     <div v-if="!addVisiable && editVisiable" class="edit-device">
       <div class="bread-header">
         <el-breadcrumb :separator-icon="ArrowRight">

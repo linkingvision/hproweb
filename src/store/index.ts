@@ -2,26 +2,26 @@ import { defineStore } from "pinia";
 import { ref, computed } from 'vue';
 
 export const useStore = defineStore('main', () =>{
-  // 多语言
+  // i18n locale
   const lang = ref<"en" | "zhchs" | "zhcht" | "pt" | "es">('en');
   function changeLang(newLang: "en" | "zhchs" | "zhcht" | "pt" | "es") {
     lang.value = newLang;
   }
 
-  // 主题
+  // UI theme
   type ThemeType = 'darkblue' | 'c-dark-theme' | false
   const darkMode = ref<ThemeType>('c-dark-theme')
   function setDarkMode(value: ThemeType) {
     darkMode.value = value;
   }
 
-  // 侧边栏导航显示/隐藏
+  // Sidebar visibility
   const sidebarShow = ref<boolean>(false)
   function setSidebarShow(flag: boolean) {
     sidebarShow.value = flag;
   }
 
-  // 版本号
+  // App version
   const version = ref<string>('');
   function setVersion(value: string) {
     version.value = value;

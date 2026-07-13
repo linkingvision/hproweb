@@ -49,13 +49,13 @@ const { t } = useI18n();
 
 const activeIndex = ref<string>('/Monitoring');
 
-// 用 ref 绑定 sidebar 节点
+// Ref for sidebar DOM node
 const sidebarRef = ref<HTMLElement | null>(null)
 
 const handleClickOutside = (e: MouseEvent) => {
   const target = e.target as HTMLElement;
   if (sidebarRef.value && !sidebarRef.value.contains(target)) {
-    store.setSidebarShow(false) // 隐藏侧边栏
+    store.setSidebarShow(false) // hide sidebar
   }
 }
 

@@ -1,18 +1,18 @@
 import axios from '../http';
 
-// 获取归属服务器信息
+// Get work server info
 export const GetNodeApi = () => axios({
   url: '/uapi/v1/WorkServer/List',
   method: 'GET'
 })
 
-// 推理服务配置信息
+// Get inference server config
 export const GetEngineApi = (nodeId: string) => axios({
   url: '/uapi/v1/Analytics/Engine?nodeId=' + nodeId,
   method: 'GET'
 })
 
-// 修改推理服务配置信息
+// Update inference server config
 interface PutEngineData {
   nodeId: string,
   engine: string,
@@ -33,13 +33,13 @@ export const PutEngineApi = (data: PutEngineData) => axios({
   data
 })
 
-// 推理服务器状态
+// Get inference server status
 export const GetEngineStatusApi = (nodeId: string) => axios({
   url: '/uapi/v1/Analytics/Engine/Status?nodeId=' + nodeId,
   method: 'GET'
 })
 
-// 获取时间搜索数据列表
+// Get time-range search data list
 interface AnaEventParams {
   pageIndex: number,
   pageSize: number,
@@ -54,7 +54,7 @@ export const GetAnaEventApi = (data: AnaEventParams) => axios({
   data
 })
 
-// 获取分类器列表
+// Get classifier list
 interface GetClassifierApi {
   pageIndex: number,
   pageSize: number
@@ -65,14 +65,14 @@ export const GetClassifierListApi = (data: GetClassifierApi) => axios({
   data
 })
 
-// 删除分类器
+// Delete classifier
 export const DeleteClassifierApi = (data: {ids: number[]}) => axios({
   url: '/uapi/v1/Classifier/Delete',
   method: 'DELETE',
   data
 })
 
-// 添加分类器
+// Add classifier
 interface addClassifierApi {
   name: string
   txtList: string[] | []
@@ -88,7 +88,7 @@ export const AddClassifierApi = (data: addClassifierApi) => axios({
   data
 })
 
-// 修改分类器
+// Update classifier
 export const UpdateClassifierApi = (data: addClassifierApi) => axios({
   url: '/uapi/v1/Classifier/Update',
   method: 'PUT',

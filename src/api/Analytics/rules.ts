@@ -15,14 +15,14 @@ export const GetFaceLibraryApi = () => axios({
   method: 'GET'
 })
 
-// 新增规则配置
+// Add rule configuration
 export const SetAnalyticsApi = (data: any) => axios({
   url: '/uapi/v1/Analytics',
   method: 'POST',
   data
 })
 
-// 修改规则配置
+// Update rule configuration
 export const UpdateAnalyticsApi = (data: any) => axios({
   url: '/uapi/v1/Analytics',
   method: 'PUT',

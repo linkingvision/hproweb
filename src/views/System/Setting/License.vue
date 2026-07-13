@@ -227,8 +227,7 @@ const copylink = async (value: string) => {
       duration: 1500
     })
   } catch(err) {
-    console.error('复制失败:', err);
-    // 兼容旧浏览器（使用 execCommand）
+    // Fallback for legacy browsers (execCommand)
     const input = document.createElement('input');
     input.value = value;
     document.body.appendChild(input);
@@ -253,7 +252,6 @@ onMounted(() => {
 <template>
   <div class="license">
     <div class="upload-license">
-      <!-- <el-button class="normal">导入授权</el-button> -->
       <el-upload
         class="upload-demo"
         :action="uploadUrl"

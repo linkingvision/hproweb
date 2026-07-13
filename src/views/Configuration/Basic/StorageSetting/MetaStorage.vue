@@ -64,7 +64,7 @@ const submit = async () => {
   console.log('SetMetaStorageApi =>', res)
   if (res.status == 200 && res.data.code == 0) {
     ElMessage({
-      message: '修改成功',
+      message: t('CommTableEdit.comm_modify_success'),
       type: 'success',
       duration: 2000
     })
@@ -79,11 +79,11 @@ const goback = () => {
 
 const CalculateCapacity = (value: any) => {
   if (value) {
-    // 是不是小于1GB, 
+    // Less than 1 GB
     if ((value / 1024) < 1) {
       return (value / 1024).toFixed(1) + "GB";
     } else if ((value / 1024) > 1000) {
-      // 是不是大于1000GB, 
+      // Greater than 1 TB
       return (value / 1024 / 1024).toFixed(0) + "TB";
     } else {
       return (value / 1024).toFixed(0) + "GB";
