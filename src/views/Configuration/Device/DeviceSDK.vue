@@ -84,10 +84,16 @@ const addFileTreeRef = ref();
 
 const addHandleCheck = (data: any, info: any) => {
   const currentKey = data.devPartitionId;
-  addTreeRef.value.setCheckedKeys([]);  // deselect all first
-  addTreeRef.value.setCheckedKeys([currentKey]) // then select only current node
-  addForm.value.devPartitionId = currentKey;
-  addForm.value.devPartitionName = data.devPartitionName;
+  // 已选中该节点则取消，否则单选切换
+  if (addForm.value.devPartitionId == currentKey) {
+    addTreeRef.value.setCheckedKeys([]);
+    addForm.value.devPartitionId = '';
+    addForm.value.devPartitionName = '';
+  } else {
+    addTreeRef.value.setCheckedKeys([currentKey]);
+    addForm.value.devPartitionId = currentKey;
+    addForm.value.devPartitionName = data.devPartitionName;
+  }
 }
 const onQueryChanged = (query: string) => {
   addTreeRef.value!.filter(query)
@@ -162,7 +168,9 @@ const add = () => {
   addForm.value.devPartitionId = devData[0]?.devPartitionId;
   addForm.value.devPartitionName = devData[0]?.devPartitionName;
   nextTick(() => {
-    addTreeRef.value.setCheckedKeys([devData[0]?.devPartitionId || ''])
+    nextTick(() => {
+      addTreeRef.value?.setCheckedKeys([devData[0]?.devPartitionId || ''])
+    })
   })
   
 }
@@ -360,10 +368,16 @@ const filterMethod3 = (query: string, node: any) => {
 }
 const editHandleCheck = (data: any, info: any) => {
   const currentKey = data.devPartitionId;
-  editTreeRef.value.setCheckedKeys([]);  // deselect all first
-  editTreeRef.value.setCheckedKeys([currentKey]) // then select only current node
-  editForm.value.devPartitionId = currentKey;
-  editForm.value.devPartitionName = data.devPartitionName;
+  // 已选中该节点则取消，否则单选切换
+  if (editForm.value.devPartitionId == currentKey) {
+    editTreeRef.value.setCheckedKeys([]);
+    editForm.value.devPartitionId = '';
+    editForm.value.devPartitionName = '';
+  } else {
+    editTreeRef.value.setCheckedKeys([currentKey]);
+    editForm.value.devPartitionId = currentKey;
+    editForm.value.devPartitionName = data.devPartitionName;
+  }
 }
 const onQueryChanged4 = () => {
   editFileTreeRef.value.filter(filterText4.value);
@@ -469,6 +483,7 @@ const delRow = (id: string) => {
       })
       tableData.value = tableData.value.filter(item => item.devId !== Number(id));
       total.value = tableData.value.length;
+      Refresh()
     }
   }).catch(() => {})
 }
@@ -497,6 +512,7 @@ const delAll = () => {
         duration: 2000
       })
       GetDeviceList()
+      Refresh()
     }
   })
 }
@@ -548,7 +564,14 @@ const onvifsearchAdd = () => {
   // addForm.value.token = uuid(4)
   addForm.value.ip = selectOnvif.value.strIp;
   addForm.value.port = selectOnvif.value.strPort;
+  addForm.value.devPartitionId = devData[0]?.devPartitionId;
+  addForm.value.devPartitionName = devData[0]?.devPartitionName;
   addVisiable.value = true;
+  nextTick(() => {
+    nextTick(() => {
+      addTreeRef.value?.setCheckedKeys([devData[0]?.devPartitionId || ''])
+    })
+  })
 }
 const Refresh = () => {
   if (event.value) {
@@ -563,8 +586,12 @@ const onvifsearch = () => {
   const pbconf = {
     callback: EventbackCB
   }
+  // Derive WebSocket protocol from the API URL, not the browser location.
+  // When the backend is HTTPS the WebSocket must use wss://, not ws://.
+  const apiUrl = import.meta.env.VITE_APP_URL as string || ''
+  const protocol = apiUrl.startsWith('https') ? 'https:' : window.location.protocol
   const conf = {
-    protocol: window.location.protocol,
+    protocol,
     host: userStore.WSROOT,
     rootpath: '/',
     apipath: "uapi/v1/h5sonvifsearchapi",
@@ -638,7 +665,7 @@ onBeforeUnmount(() => {
               v-model="addForm.devPartitionName"
               style="width: 100%"
               disabled
-              placeholder="Please input"
+              :placeholder="t('Common.comm_please_input')"
             />
             <div class="tow_node">
               <el-input v-model="filterText1" @input="onQueryChanged" style="width: 100%" :placeholder="t('Common.comm_filtration')" :prefix-icon="Search"></el-input>
@@ -766,7 +793,7 @@ onBeforeUnmount(() => {
               v-model="editForm.devPartitionName"
               style="width: 100%"
               disabled
-              placeholder="Please input"
+              :placeholder="t('Common.comm_please_input')"
             />
             <div class="tow_node">
               <el-input v-model="filterText3" @input="onQueryChanged3" style="width: 100%" :placeholder="t('Common.comm_filtration')" :prefix-icon="Search"></el-input>
@@ -889,7 +916,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <el-table v-if="!addVisiable && !editVisiable"
-      :data="tableData.filter(item => !filterText || item.name.toLowerCase().includes(filterText.toLowerCase())).slice((currentPage - 1) * pageSize, currentPage * pageSize)" 
+      :data="tableData.filter(item => !filterText || item.name.toLowerCase().includes(filterText.toLowerCase())).slice((currentPage - 1) * pageSize, currentPage * pageSize)"
        @selection-change="selectChange" height="100%" style="width: 100%;">
       <el-table-column type="selection" width="55" />
       <el-table-column :label="t('CommTableEdit.comm_table_serial_number')" type="index" align="center" width="120"></el-table-column>
@@ -1020,7 +1047,16 @@ onBeforeUnmount(() => {
 
   :deep(.el-table) {
     flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    .el-table__header-wrapper {
+      flex-shrink: 0;
+    }
     .el-table__body-wrapper {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
       background-color: #181818;
     }
   }

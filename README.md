@@ -1,7 +1,11 @@
 # HPro AI NVR web
 
-![Login](./doc/img/login.png)
 ![Grid View](./doc/img/view.png)
+![AI Event](./doc/img/aievent.png)
+![Storage Config](./doc/img/storage.png)
+![Ai Config ](./doc/img/ai1.png)
+![Ai Crossline ](./doc/img/ai2.png)
+![Ai Zone ](./doc/img/ai3.png)
 Developing with Vue 3 in Vite.
 
 ## Node Version
