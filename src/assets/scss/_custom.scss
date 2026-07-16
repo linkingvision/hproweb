@@ -6,7 +6,6 @@ body.c-dark-theme {
   background-color: #121212;
   color: #fff;
 
-  // 存储状态组件
   .storage-state, .record_status {
     .DatePicker {
       background-color: #2b2b2b;
@@ -34,12 +33,10 @@ body.c-dark-theme {
     }
   }
 
-  // 侧边菜单栏导航
   .sidebar-com {
     background-color: #0c0c0c;
     .el-menu {
       .el-menu-item {
-        // color: #B7B7B7;
         i {
           margin-left: 15%;
           margin-right: 10px;
@@ -58,12 +55,10 @@ body.c-dark-theme {
     }
   }
 
-  // 主页头部组件
   .header-com {
     background-color: #0c0c0c;
   }
 
-  // 元数据存储、图片存储、本地对象存储
   .meta-storage,
   .image-storage,
   .local-object-storage {
@@ -140,9 +135,7 @@ body.c-dark-theme {
 
 
   span, div, i, p, ul, li, h1, h2, h3, h4, h5, h6, input, button, label, li {
-    // color: #fff;
     font-size: 14px;
-    // font-family: PingFang-SC, PingFang-SC;
   }
   .Pagination {
     width: 100%;
@@ -178,14 +171,6 @@ body.c-dark-theme {
       .el-sub-menu__title:hover {
         background-color: #181818;
       }
-      // .el-menu-item:hover {
-      //   background-color: #181818;
-      // }
-      // .is-active {
-      //   background-color: #282D33;
-      //   border-right: 3px solid #0399FE;
-      //   color: #0399FE;
-      // }
     }
     .el-menu-item:hover {
       background-color: #181818;
@@ -211,7 +196,6 @@ body.c-dark-theme {
   }
   .el-select {
     .el-select__wrapper {
-      // background-color: #121212;
       border: 1px solid #4A4A4A;
       box-shadow: none;
     }
@@ -251,10 +235,6 @@ body.c-dark-theme {
   
   .el-input {
     .el-input__wrapper {
-      // background-color: #121212;
-      // border: 1px solid #4A4A4A;
-      // box-shadow: none;
-      
       --el-input-bg-color: #2b2b2b;
       --el-fill-color-blank: #2b2b2b;
       --el-input-border-color: #4A4A4A;
@@ -348,9 +328,6 @@ body.c-dark-theme {
     }
   }
 
-  // .date-picker td.custom_date_class .el-date-table-cell {
-  //   position: relative;
-  // }
   .date-picker .custom_date_class {
     span {
       background: rgba(64, 158, 255, 0.4);
@@ -367,9 +344,7 @@ body.c-dark-theme {
       width: 0;
       height: 0;
       border-style: solid;
-      /* 上三角的大小 */
       border-width: 10px 10px 0 0;
-      /* 上三角颜色，其余透明 */
       border-color: #409eff transparent transparent transparent;
     }
     }
@@ -380,24 +355,11 @@ body.c-dark-theme {
         border-radius: 0px !important;
 
         &:before {
-          /* 上三角颜色，其余透明 */
           border-color: #fff transparent transparent transparent;
         }
       }
     }
   }
-
-  // .date-picker td.custom_date_class .el-date-table-cell::after {
-  //   content: '';
-  //   position: absolute;
-  //   bottom: 4px;
-  //   left: 50%;
-  //   transform: translateX(-50%);
-  //   width: 6px;
-  //   height: 6px;
-  //   background-color: #f56c6c;
-  //   border-radius: 50%;
-  // }
 
   & td,
   & th.is-leaf {
@@ -586,5 +548,36 @@ body.c-dark-theme {
     --el-button-hover-border-color: #3a3a3a;
     --el-button-hover-bg-color: #3a3a3a;
     --el-button-hover-text-color: #fff;
+  }
+
+  // ─── Regular storage edit card ────────────────────────────
+  .RecordContent {
+    background: #2B2B2B;
+
+    .RecordTop {
+      .progress-bar {
+        background-color: #535353;
+      }
+
+      .FoldBtn {
+        background: #3B3B3B;
+      }
+
+      .FunBtn {
+        background: #3B3B3B;
+      }
+    }
+
+    .RecordBottom {
+      .RecordBottom_Container {
+        .record_name {
+          background: #1D1D1D;
+        }
+
+        .record_content {
+          background: #232323;
+        }
+      }
+    }
   }
 }

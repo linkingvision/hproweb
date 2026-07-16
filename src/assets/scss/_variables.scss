@@ -1,9 +1,79 @@
+// Disk card shared styles for meta storage, local object storage, and S3 storage
+.meta-storage,
+.local-object-storage,
+.s3-storage {
+  .disk-item {
+    background-color: #F9F9F9;
+
+    .used {
+      color: #409EFF;
+    }
+
+    :deep(.el-progress-bar__outer) {
+      background-color: rgba(3, 153, 254, 0.14) !important;
+
+      .el-progress-bar__inner {
+        background-color: #0399FE;
+      }
+    }
+  }
+
+  .disk-item.active {
+    background-color: #EDF4FF;
+    border: 1px solid #409EFF;
+  }
+
+  .count {
+    .used {
+      color: #409EFF;
+    }
+  }
+
+  :deep(.el-progress-bar__outer) {
+    background-color: rgba(3, 153, 254, 0.14) !important;
+
+    .el-progress-bar__inner {
+      background-color: #0399FE;
+    }
+  }
+}
+
+// Regular storage — recording partition card
+.RecordContent {
+  background: #F1F2F6;
+
+  .RecordTop {
+    .progress-bar {
+      background-color: #FFFFFF;
+    }
+
+    .FoldBtn {
+      background: #FFFFFF;
+    }
+
+    .FunBtn {
+      background: #FFFFFF;
+    }
+  }
+
+  .RecordBottom {
+    .RecordBottom_Container {
+      .record_name {
+        background: #FFFFFF;
+      }
+
+      .record_content {
+        background: #FFFFFF;
+      }
+    }
+  }
+}
+
 body {
   .c-app {
     width: 100vw;
     height: 100vh;
     position: relative;
-    // 侧边导航
     .sidebar-com {
       .el-menu {
         .el-menu-item.is-active {
@@ -15,11 +85,6 @@ body {
         }
       }
     }
-
-    // 主页头部组件
-    // .header-com {
-      
-    // }
 
     .el-select {
       .el-select__selection {

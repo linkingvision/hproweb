@@ -9,19 +9,16 @@ import StorageState from './components/StorageState.vue'
 const { t } = useI18n();
 
 const tableData = ref<any[]>([]);
+const loading = ref<boolean>(false)
 const addVisiable = ref<boolean>(false)
 const editVisiable = ref<boolean>(false)
 const stateVisible = ref<boolean>(false)
+const nodeList = ref<any[]>([])
+const nodeId = ref<string>('')
+const nodeName = ref<string>('')
+const hasIndex = ref<number[]>([])
+
 const addForm = ref<any>({
-  // part: {
-  //   nIndex: 0,
-  //   strAccessKey: 'bMoLv2fz1sGtmeNgwyCY',
-  //   strSecretKey: 'xvfpS6Ps6Cni0ab8so0obgpn2r0Ryycc7Ye2uy1I',
-  //   strRegionName: 'region-a',
-  //   strBucketName: 'bucket-a',
-  //   strEndpoint: 'http://192.168.100.100:9000/'
-  // },
-  // update: false
   nIndex: 0,
   strAccessKey: 'bMoLv2fz1sGtmeNgwyCY',
   strSecretKey: 'xvfpS6Ps6Cni0ab8so0obgpn2r0Ryycc7Ye2uy1I',
@@ -30,41 +27,52 @@ const addForm = ref<any>({
   strEndpoint: 'http://192.168.100.100:9000/'
 });
 const editForm = ref<any>({});
-const hasIndex = ref<number[]>([])
-const nodeId = ref<string>('')
+const indexDisabled = ref<boolean>(true)
 
 const Node = async () => {
   const res = await GetWorkServerListApi();
   if (res.status == 200 && res.data.code == 0) {
-    nodeId.value = res.data.result.list[0].nodeId;
-    GetS3Buckets();
+    nodeList.value = res.data.result.list;
+    if (res.data.result.list && res.data.result.list.length > 0) {
+      nodeId.value = res.data.result.list[0].nodeId;
+      nodeName.value = res.data.result.list[0].nodeName;
+      GetS3Buckets();
+    }
   }
 }
 
 const GetS3Buckets = async () => {
+  loading.value = true;
   const res = await GetS3BucketsApi(nodeId.value);
   hasIndex.value = [];
   if (res.status === 200 && res.data.code === 0) {
-    console.log('S3Buckets =>', res.data.result.bucket)
     if (res.data.result.bucket) {
       tableData.value = res.data.result.bucket.map((item: any) => {
         hasIndex.value.push(item.nIndex)
         return {
           ...item,
-          nodeId: nodeId.value
+          nodeId: nodeId.value,
+          nodeName: nodeName.value
         }
       })
     } else {
       tableData.value = [];
     }
   }
+  loading.value = false;
 }
 
-const indexDisabled = ref<boolean>(true)
+const nodeChange = () => {
+  const info = nodeList.value.find(item => item.nodeId === nodeId.value)
+  if (info) nodeName.value = info.nodeName;
+  GetS3Buckets();
+}
+
 const add = () => {
   addForm.value.nIndex = findMissingNumber(hasIndex.value)
   addVisiable.value = true;
 }
+
 const addSubmit = async () => {
   addForm.value.nIndex = Number(addForm.value.nIndex)
   addForm.value.nodeId = nodeId.value;
@@ -95,20 +103,10 @@ const addSubmit = async () => {
 }
 
 const edit = (row: any) => {
-  // editForm.value = {
-  //   part: {
-  //     nIndex: row.nIndex,
-  //     strAccessKey: row.strAccessKey,
-  //     strSecretKey: row.strSecretKey,
-  //     strRegionName: row.strRegionName,
-  //     strBucketName: row.strBucketName,
-  //     strEndpoint: row.strEndpoint
-  //   },
-  //   update: true
-  // }
   editForm.value = JSON.parse(JSON.stringify(row))
   editVisiable.value = true;
 }
+
 const editSubmit = async () => {
   editForm.value.nIndex = Number(editForm.value.nIndex)
   const res = await EditS3BucketApi(editForm.value)
@@ -138,8 +136,8 @@ const delRow = (row: any) => {
   }
   ElMessageBox.prompt(t('CommTableEdit.comm_delete_confirm'), t('CommTableEdit.comm_prompt'), {
     confirmButtonText: t('CommTableEdit.comm_ok'),
-    cancelButtonText: t("CommTableEdit.comm_cancel"),
-    icon: h('i', {class: 'iconfont icon-tishi1 warn-tip'}),
+    cancelButtonText: t('CommTableEdit.comm_cancel'),
+    icon: h('i', { class: 'iconfont icon-tishi1 warn-tip' }),
     customClass: 'DeleteConfirm',
     cancelButtonClass: 'warn-cannel-btn',
     confirmButtonClass: 'warn-confirm-btn',
@@ -163,7 +161,7 @@ const delRow = (row: any) => {
         duration: 2000
       })
     }
-  })
+  }).catch(() => { })
 }
 
 const highSetting = () => {
@@ -192,15 +190,16 @@ const goback = (type: string) => {
 }
 
 const findMissingNumber = (arr: number[]) => {
-  if (arr.length == 0) return 1;  // return 1 for empty array
-  const sortedUnique = [...new Set(arr)].sort((a, b) => a-b); // sort and deduplicate
-  for (let i = 1; i <= sortedUnique.length + 1; i++) {  // find first missing positive integer
+  if (arr.length == 0) return 1;
+  const sortedUnique = [...new Set(arr)].sort((a, b) => a - b);
+  for (let i = 1; i <= sortedUnique.length + 1; i++) {
     if (sortedUnique[i - 1] !== i) {
       return i;
     }
   }
   return sortedUnique.length + 1;
 }
+
 onMounted(() => {
   Node()
 })
@@ -208,6 +207,7 @@ onMounted(() => {
 
 <template>
   <div class="s3-storage">
+    <!-- Add -->
     <div v-if="addVisiable && !editVisiable && !stateVisible" class="add-s3">
       <div class="bread-header">
         <el-breadcrumb :separator-icon="ArrowRight">
@@ -220,6 +220,9 @@ onMounted(() => {
         <el-button size="small" class="normal" @click="highSetting">{{ t('Configuration.conf_advanced_features') }}</el-button>
       </div>
       <el-form :model="addForm" label-width="120px" label-position="left" style="margin-left: 10px;">
+        <el-form-item :label="t('Cluster.cluster_server_name')" style="width: 500px;">
+          <el-input v-model="nodeName" disabled></el-input>
+        </el-form-item>
         <el-form-item label="AccessKey" style="width: 500px;">
           <el-input v-model="addForm.strAccessKey"></el-input>
         </el-form-item>
@@ -243,6 +246,8 @@ onMounted(() => {
         </el-form-item>
       </el-form>
     </div>
+
+    <!-- Edit -->
     <div v-if="editVisiable && !addVisiable && !stateVisible" class="edit-s3">
       <div class="bread-header">
         <el-breadcrumb :separator-icon="ArrowRight">
@@ -250,11 +255,13 @@ onMounted(() => {
           <el-breadcrumb-item>{{ $t("CommTableEdit.comm_edit") }}</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
-      <div class="title" style="width: 510px; margin: 20px 0; display: flex; justify-content: space-between;">
+      <div class="title" style="margin: 20px 0;">
         <span style="font-size: 18px;">{{ $t("CommTableEdit.comm_edit") }}</span>
-        <!-- <el-button size="small" class="normal" @click="highSetting">{{ t('Configuration.conf_advanced_features') }}</el-button> -->
       </div>
       <el-form :model="editForm" label-width="120px" label-position="left" style="margin-left: 10px;">
+        <el-form-item :label="t('Cluster.cluster_server_name')" style="width: 500px;">
+          <el-input v-model="nodeName" disabled></el-input>
+        </el-form-item>
         <el-form-item label="AccessKey" style="width: 500px;">
           <el-input v-model="editForm.strAccessKey"></el-input>
         </el-form-item>
@@ -270,15 +277,13 @@ onMounted(() => {
         <el-form-item label="Endpoint" style="width: 500px;">
           <el-input v-model="editForm.strEndpoint"></el-input>
         </el-form-item>
-        <!-- <el-form-item label="Index" style="width: 500px;">
-          <el-input v-model="editForm.nIndex" :disabled="indexDisabled"></el-input>
-        </el-form-item> -->
         <el-form-item style="width: 500px;">
           <el-button type="primary" size="small" @click="editSubmit">{{ $t('CommTableEdit.comm_save') }}</el-button>
         </el-form-item>
       </el-form>
     </div>
 
+    <!-- State detail -->
     <div v-if="stateVisible && !addVisiable && !editVisiable" class="s3-state">
       <div class="bread-header">
         <el-breadcrumb :separator-icon="ArrowRight">
@@ -289,11 +294,31 @@ onMounted(() => {
       <StorageState router="S3Storage" :objPartitions="activeObjPartitions"></StorageState>
     </div>
 
+    <!-- Data list -->
     <div v-if="!addVisiable && !editVisiable && !stateVisible" class="s3-header">
-      <el-button type="primary" size="small" @click="add">{{ t('CommTableEdit.comm_add') }}</el-button>
+      <div class="left">
+        <el-button type="primary" size="small" @click="add">{{ t('CommTableEdit.comm_add') }}</el-button>
+      </div>
+      <div class="right">
+        <span style="margin-right: 10px;">{{ t('SystemInfo.system_server') }}</span>
+        <el-select v-model="nodeId" @change="nodeChange" style="width: 220px;">
+          <el-option
+            v-for="(item, index) in nodeList"
+            :key="index"
+            :label="item.nodeName"
+            :value="item.nodeId"
+          ></el-option>
+        </el-select>
+      </div>
     </div>
-    <el-table v-if="!addVisiable && !editVisiable && !stateVisible" :data="tableData" style="width: 100%;">
-      <el-table-column label="nIndex" prop="nIndex" width="100" align="center"></el-table-column>
+    <el-table
+      v-if="!addVisiable && !editVisiable && !stateVisible"
+      :data="tableData"
+      v-loading="loading"
+      style="width: 100%;"
+    >
+      <el-table-column :label="t('Cluster.cluster_server_name')" prop="nodeName" width="120" align="center"></el-table-column>
+      <el-table-column label="Index" prop="nIndex" width="100" align="center"></el-table-column>
       <el-table-column label="AccessKey" prop="strAccessKey" show-overflow-tooltip width="140" align="center"></el-table-column>
       <el-table-column label="SecretKey" prop="strSecretKey" show-overflow-tooltip width="140" align="center"></el-table-column>
       <el-table-column label="RegionName" prop="strRegionName" width="140" align="center"></el-table-column>
@@ -301,9 +326,8 @@ onMounted(() => {
       <el-table-column label="Endpoint" prop="strEndpoint" align="center"></el-table-column>
       <el-table-column :label="t('Configuration.conf_mount')" width="120" align="center">
         <template #default="{ row }">
-          <!-- <el-switch v-model="row.bMount" disabled></el-switch> -->
-           <span v-if="row.bMount" style="color: #06D20B;">{{ t('CommTableEdit.comm_online') }}</span>
-           <span v-else style="color: #FE1100;">{{ t('CommTableEdit.comm_offline') }}</span>
+          <span v-if="row.bMount" style="color: #06D20B;">{{ t('CommTableEdit.comm_online') }}</span>
+          <span v-else style="color: #FE1100;">{{ t('CommTableEdit.comm_offline') }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="t('Common.comm_time_start')" prop="strStartTime" align="center"></el-table-column>
@@ -323,39 +347,55 @@ onMounted(() => {
 .s3-storage {
   width: 100%;
   height: 100%;
+
   .s3-state {
     width: 100%;
     height: 100%;
     padding: 10px 20px;
     display: flex;
     flex-direction: column;
+
     .bread-header {
       width: 100%;
       height: 50px;
       display: flex;
       align-items: center;
-      // background-color: #aaa;
       border-bottom: 1px solid #313131;
+
       .can-click {
         cursor: pointer;
       }
     }
   }
+
   .s3-header {
-    padding: 10px;
+    height: 40px;
+    width: 100%;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
-  .add-s3, .edit-s3 {
+
+  .add-s3,
+  .edit-s3 {
     padding: 20px;
+
     .bread-header {
       width: 100%;
       height: 40px;
       display: flex;
       align-items: center;
-      // background-color: #aaa;
       border-bottom: 1px solid #313131;
+
       .can-click {
         cursor: pointer;
       }
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
     }
   }
 }

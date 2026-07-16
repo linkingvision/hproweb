@@ -14,10 +14,6 @@
     password: '',
     checked: false,
     lang: 'en',
-    // realm: '',
-    // nonce: '',
-    // nonceKey: '',
-    // digestAlgorithm: []
   })
   const editform = ref({
     strUser: "",
@@ -45,33 +41,18 @@
     localStorage.setItem('lang', val);
   })
   const pwdDialog = ref<boolean>(false);
+  const frequency = ref<number>(0);
+  const lockingdate = ref<number>(0);
   const router = useRouter();
   const useStore = useUserStore()
 
-  // const getNonceData = async () => {
-  //   const res = await GetNonce()
-  //   if (res.status == 200 && res.data.code == 'HPRO_CODE_OK') {
-  //     const result = res.data.result;
-  //     form.value.digestAlgorithm = result.digestAlgorithm;
-  //     form.value.nonce = result.nonce;
-  //     form.value.nonceKey = result.nonceKey;
-  //     form.value.realm = result.realm;
-  //   }
-  // }
-
   const login = async () => {
-    // await getNonceData();
-    // const str = form.value.realm + ':' + form.value.password + ':' + form.value.nonce
-    // const formatPwd = md5(str)
     const formatPwd = md5(form.value.password)
     const params = {
       username: form.value.username,
       password: formatPwd,
-      // digestAlgorithm: form.value.digestAlgorithm[0],
-      // nonceKey: form.value.nonceKey
     }
     const res = await loginApi(params)
-    // console.log('login =>', res)
     if (res.status === 200 && res.data.code === 0) {
       const result = res.data.result
       if (result.access_token) {
@@ -100,7 +81,6 @@
         if (form.value.checked) {
           let random = randomWord(11)
           let encryption = random + Base64.encode(form.value.password);
-          // console.log('editform =>', editform.value)
           const user = {
             username: form.value.username,
             password: encryption,
@@ -115,15 +95,20 @@
         })
       }
     } else {
-       ElMessage({
-        message: t('Login.login_failed'),
-        type: 'error'
-      })
+      if (res.data.result?.remainingCount) {
+        frequency.value = res.data.result.remainingCount;
+        $('#prompt').show();
+        $('#prompt1').hide();
+      } else if (res.data.result?.tLockTimeResidue) {
+        lockingdate.value = Math.ceil(res.data.result.tLockTimeResidue / 60);
+        $('#prompt1').show();
+        $('#prompt').hide();
+      }
+      ElMessage({ message: t('Login.login_failed'), type: 'error' });
     }
   }
 
 
-  // Watch confirm-password vs new-password
   const update = () => {
     var reg1 = new RegExp(/(?=.*[A-Z])/);
     var reg2 = new RegExp(/(?=.*[a-z])/);
@@ -238,7 +223,6 @@
     }
   }
 
-  // Watch new-password input
   const confirmpassword = () => {
     if (editform.value.Newpassword !== editform.value.Newpassword1) {
       nextTick(() => {
@@ -301,6 +285,8 @@
   }
 
   onMounted(() => {
+    $('#prompt').hide();
+    $('#prompt1').hide();
     // Restore previously selected language
     const savedLang = localStorage.getItem('lang');
     if (savedLang) {
@@ -342,8 +328,14 @@
     <div class="login-center">
       <div class="login_title"></div>
       <div class="login-card">
-        <div class="prompt" id="prompt"></div>
-        <div class="prompt" id="prompt1"></div>
+        <div class="prompt" id="prompt">
+          <i class="iconfont icon-ts-caveat"></i>
+          <span>{{ t('Login.login_pwd_remaining') }}{{ frequency }}{{ frequency === 1 ? t('Common.comm_time') : t('Common.comm_times') }}</span>
+        </div>
+        <div class="prompt" id="prompt1">
+          <i class="iconfont icon-ts-caveat"></i>
+          <span>{{ t('Login.login_locked') }}{{ lockingdate }}{{ t('Login.login_locked_unit') }}</span>
+        </div>
         <el-input v-model="form.username" placeholder="Username">
           <template #prefix>
             <i class="iconfont icon-yonghu1"></i>
@@ -429,14 +421,22 @@
     }
     .login-card {
       width: 464px;
-      height: 370px;
+      min-height: 370px;
       background-color: #fff;
       margin-top: 20px;
       padding: 40px 74px;
       border-radius: 4px;
+      .prompt {
+        font-size: 12px;
+        color: rgba(208, 19, 19, 1);
+        margin-bottom: 6px;
+        text-align: center;
+        .iconfont {
+          margin-right: 4px;
+        }
+      }
       .el-input {
         margin-top: 20px;
-        // font-size: 16px;
         border-bottom: 2px solid #D6D8D7;
         :deep(.el-input__wrapper) {
           box-shadow: none;
@@ -470,7 +470,6 @@
       }
       :deep(.el-checkbox__input) {
         background-color: transparent;
-        // border: 1px solid #0399FE;
         .el-checkbox__inner {
           background-color: transparent;
         }

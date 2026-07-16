@@ -84,7 +84,6 @@ const addFileTreeRef = ref();
 
 const addHandleCheck = (data: any, info: any) => {
   const currentKey = data.devPartitionId;
-  // 已选中该节点则取消，否则单选切换
   if (addForm.value.devPartitionId == currentKey) {
     addTreeRef.value.setCheckedKeys([]);
     addForm.value.devPartitionId = '';
@@ -135,7 +134,6 @@ const GetDeviceList = async () => {
 const GetDevPartition = async () => {
   const res = await GetDevPartitionApi();
   if (res.status == 200 && res.data.code === 0) {
-    console.log('GetDevPartition => ', res)
     devData = res.data.result;
   }
 }
@@ -143,7 +141,6 @@ const GetDevPartition = async () => {
 const DevFile = async () => {
   const res = await GetDevFileApi();
   if (res.status == 200 && res.data.code == 0) {
-    // console.log('DevFileList => ', res)
     fileData = [];
     const result = res.data.result;
     const srcGroup: any = { children: [] };
@@ -159,12 +156,10 @@ const DevFile = async () => {
     }
     fileData.push(srcGroup)
   }
-  console.log('fileData =>', fileData)
 }
 
 const add = () => {
   addVisiable.value = true;
-  console.log('add ==>',devData[0]?.devPartitionId)
   addForm.value.devPartitionId = devData[0]?.devPartitionId;
   addForm.value.devPartitionName = devData[0]?.devPartitionName;
   nextTick(() => {
@@ -273,8 +268,6 @@ const addOnSubmit = async () => {
   } else if (addForm.value.Type == 'H5_DEV_FILE') {
     const params = {
       nodeId: encodeURIComponent(addForm.value.nodeId),
-      // setToken: true,
-      // token: addForm.value.token,
       name: addForm.value.name,
       strUrl: addForm.value.DevFile_Url,
       enableAudio: addForm.value.audio,
@@ -336,15 +329,12 @@ const findfileByUrl = (Url: string, data: any): string => {
 const edit = (row: any) => {
   editVisiable.value = true;
   editForm.value = {...row}
-  console.log(editForm.value)
   editForm.value.devPartitionName = findNameById(row.devPartitionId, devData);
   nextTick(() => {
     editTreeRef.value.setCheckedKeys([row.devPartitionId])
   })
   if (row.type === 'H5_DEV_FILE') {
     const checkArr = row.strUrl.split(';')
-    console.log(checkArr)
-    // checkArr.pop();
     var strUrl = '';
     for (let i = 0; i < checkArr.length; i++) {
       strUrl += checkArr[i].substr(checkArr[i].lastIndexOf("\\") + 1) + ';';
@@ -368,7 +358,6 @@ const filterMethod3 = (query: string, node: any) => {
 }
 const editHandleCheck = (data: any, info: any) => {
   const currentKey = data.devPartitionId;
-  // 已选中该节点则取消，否则单选切换
   if (editForm.value.devPartitionId == currentKey) {
     editTreeRef.value.setCheckedKeys([]);
     editForm.value.devPartitionId = '';
@@ -397,22 +386,6 @@ const editFileHandleCheck = () => {
 }
 
 const editOnSubmit = async () => {
-  // const res = await AddDeviceOnfStgApi(editForm.value);
-  // if (res.status == 200 && res.data.code == 'HPRO_CODE_OK') {
-  //   ElMessage({
-  //     message: t('CommTableEdit.comm_modify_success'),
-  //     type: 'success',
-  //     duration: 2000
-  //   })
-  //   goback('edit');
-  //   GetDeviceList();
-  // } else {
-  //   ElMessage({
-  //     message: t('CommTableEdit.comm_modify_failed'),
-  //     type: 'error',
-  //     duration: 2000
-  //   })
-  // }
   const params: editDevice = {
     nodeId: editForm.value.nodeId,
     devId: Number(editForm.value.devId),
@@ -442,7 +415,6 @@ const editOnSubmit = async () => {
   } else if (editForm.value.type == 'H5_DEV_FILE') {
     params.strUrl = editForm.value.DevFile_Url;
   }
-  // console.log(editForm.value.type, '=>>', params);
   const res = await EditDevApi(params);
   if (res.status == 200 && res.data.code == 0) {
      ElMessage({
@@ -500,7 +472,6 @@ const delAll = () => {
       type: 'warning'
     }
   ).then(async () => {
-    console.log(selectRows.value)
     const params = {
       ids: selectRows.value
     }
@@ -522,7 +493,6 @@ const selectChange = (arr: any[]) => {
   arr.forEach(item => {
     selectRows.value.push(item.devId)
   })
-  console.log(selectRows.value)
 }
 
 const handleSizeChange = (val: number) => {
@@ -626,7 +596,6 @@ onMounted(() => {
   GetDeviceList()
   GetDevPartition()
   DevFile();
-  // console.log('devData =>', devData)
 })
 onBeforeUnmount(() => {
   if (event.value) {
@@ -997,14 +966,12 @@ onBeforeUnmount(() => {
       height: 40px;
       display: flex;
       align-items: center;
-      // background-color: #aaa;
       border-bottom: 1px solid #313131;
       .can-click {
         cursor: pointer;
       }
     }
     .form-left, .form-right {
-      // height: 100%;
       display: flex;
       flex-direction: column;
       .form-item-tree {
@@ -1066,6 +1033,9 @@ onBeforeUnmount(() => {
     background-color: #393939;
     display: flex;
     flex-direction: column;
+    :deep(thead .el-table-column--selection .cell) {
+      display: none;
+    }
     .header {
       width: 100%;
       height: 40px;

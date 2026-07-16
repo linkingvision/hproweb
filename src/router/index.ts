@@ -15,6 +15,7 @@ const StorageMode = () => import('@/views/Configuration/Basic/StorageSetting/Sto
 const MetaStorage = () => import('@/views/Configuration/Basic/StorageSetting/MetaStorage.vue')
 const LocalObjectStorage = () => import('@/views/Configuration/Basic/StorageSetting/LocalObjectStorage.vue')
 const S3Storage = () => import('@/views/Configuration/Basic/StorageSetting/S3Storage.vue')
+const RegularStorage = () => import('@/views/Configuration/Basic/StorageSetting/RegularStorage.vue')
 const Device = () => import('@/views/Configuration/Device/Device.vue')
 const DeviceSDK = () => import('@/views/Configuration/Device/DeviceSDK.vue')
 const System = () => import('@/views/System/System.vue')
@@ -79,7 +80,7 @@ const router = createRouter({
         title: '/Monitoring',
         name: 'Router.router_monitoring',
         icon: 'iconfont icon-shexiangji',
-        type: 'Operator'  // requires auth
+        type: 'Operator'
       },
       children: [{
         path: 'View',
@@ -89,7 +90,7 @@ const router = createRouter({
           title: '/Monitoring/View',
           name: 'Router.router_view',
           icon: 'iconfont icon-shitu',
-          type: 'Operator'  // requires auth
+          type: 'Operator'
         }
       }, {
         path: 'Search',
@@ -100,7 +101,7 @@ const router = createRouter({
           title: '/Monitoring/Search',
           name: 'CommTableEdit.comm_search',
           icon: 'iconfont icon-sousuoicon',
-          type: 'Operator'  // requires auth
+          type: 'Operator'
         },
         children: [{
           path: 'RecordInfo',
@@ -143,6 +144,16 @@ const router = createRouter({
           meta: {
             title: '/Configuration/Basic/StorageMode',
             name: 'StorageMode',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'RegularStorage',
+          name: 'RegularStorage',
+          component: RegularStorage,
+          meta: {
+            title: '/Configuration/Basic/RegularStorage',
+            name: 'RegularStorage',
             icon: '',
             type: 'Operator'
           }

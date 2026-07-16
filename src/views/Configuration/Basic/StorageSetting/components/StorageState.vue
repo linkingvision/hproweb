@@ -1,9 +1,10 @@
 
 <script setup lang="ts">
 import { RecordingStatus } from '@/utils/localRecordingStatus.js';
-import { GetDeviceList, GetChannels } from '@/api/channel'
+import { GetChannels } from '@/api/channel'
 import { onMounted, ref, watch } from 'vue';
 import { useStore } from '@/store';
+import { useI18n } from 'vue-i18n';
 
 interface Props {
   objPartitions: any,
@@ -11,12 +12,12 @@ interface Props {
 }
 const props = defineProps<Props>()
 const store = useStore();
+const { t } = useI18n();
 
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(10);
 const total = ref<number>(0);
 
-// const recordingStatus = ref<any>(null);
 const chRecordList = ref<any[]>([]);
 let recordingStatus: any = ref(null);
 const chRec = ref<any[]>([])
@@ -27,19 +28,20 @@ const activeTime = ref<Date>(new Date());
 const startTime = ref<Date | undefined>(undefined);
 const endTime = ref<Date | undefined>(undefined);
 const radio = ref<string>('month')
+
 const activeRadio = (value: string) => {
   radio.value = value;
   const { startTime: start, endTime: end } = getRecordTime(activeTime.value);
   startTime.value = start;
   endTime.value = end;
-  recordingStatus.value.setMode(value, {startTime: startTime.value, endTime: endTime.value});
+  recordingStatus.value.setMode(value, { startTime: startTime.value, endTime: endTime.value });
 }
 
 const handleChange = (value: any) => {
   let { startTime: start, endTime: end } = getRecordTime(value);
   startTime.value = start;
   endTime.value = end;
-  recordingStatus.value.setMode(radio.value, {startTime:start, endTime: end})
+  recordingStatus.value.setMode(radio.value, { startTime: start, endTime: end })
 }
 
 const renderPartition = (date: Date | null) => {
@@ -63,8 +65,6 @@ const renderPartition = (date: Date | null) => {
     backgroundColor: backgroundColor.value,
     labelColor: labelColor.value,
   })
-  console.log('recordingStatus =>', recordingStatus.value);
-  console.log('chRec.value =>', chRec.value)
   recordingStatus.value.StartDrawing(chRec.value);
 }
 
@@ -73,7 +73,7 @@ const getChannels = async () => {
   if (props.objPartitions.chRec && props.objPartitions.chRec.length > 0) {
     props.objPartitions.chRec.map((item: any) => chanNo.push(item.nChan))
   }
-  const res = await GetChannels({chanNo, all: true});
+  const res = await GetChannels({ chanNo, all: true });
   if (res.data.result.length > 0) {
     props.objPartitions.chRec.forEach((item: any) => {
       item.record = [{
@@ -88,7 +88,7 @@ const getChannels = async () => {
   }
   if (props.objPartitions && props.objPartitions.bMount && props.objPartitions.chRec) {
     total.value = props.objPartitions.chRec.length;
-    chRec.value = props.objPartitions.chRec.slice((currentPage.value -1) * pageSize.value, currentPage.value * pageSize.value);
+    chRec.value = props.objPartitions.chRec.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value);
   }
   renderPartition(null)
 }
@@ -119,7 +119,7 @@ const getRecordTime = (date: Date) => {
   return { startTime, endTime }
 }
 
-watch(() =>store.darkMode, (data) => {
+watch(() => store.darkMode, (data) => {
   if (!recordingStatus) {
     return
   }
@@ -135,6 +135,7 @@ watch(() =>store.darkMode, (data) => {
   }
   recordingStatus.setColors({ backgroundColor: backgroundColor.value, labelColor: labelColor.value });
 })
+
 onMounted(() => {
   switch (store.darkMode) {
     case 'c-dark-theme':
@@ -145,49 +146,49 @@ onMounted(() => {
       backgroundColor.value = '#1B2A46';
       labelColor.value = '#06E8EA';
       break;
-
     default:
       backgroundColor.value = '#f0f0f0';
       labelColor.value = '#000';
       break;
   }
   getChannels();
-  console.log('props.objPartitions =>', props.objPartitions)
 })
 </script>
 
 <template>
   <div class="storage-state">
     <div class="statusInfo" v-if="props.router == 'LocalObjStorage' || props.router == 'S3Storage'">
-      <span>Status：</span>
-      <span :style="{color: props.objPartitions.bMount ? '#06D20B' : 'red'}">{{ props.objPartitions.bMount ? 'Online' : 'Offline' }} ● </span>
+      <span>{{ t('Configuration.conf_state') }}：</span>
+      <span :style="{ color: props.objPartitions.bMount ? '#06D20B' : 'red' }">
+        {{ props.objPartitions.bMount ? t('CommTableEdit.comm_online') : t('CommTableEdit.comm_offline') }} ●
+      </span>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <span>Time：</span>
+      <span>{{ t('Common.comm_start_end_time') }}：</span>
       <span>{{ `${props.objPartitions.strStartTime} -- ${props.objPartitions.strEndTime}` }}</span>
     </div>
     <div class="DatePicker">
       <div class="block" v-show="radio == 'month'">
-        <el-date-picker v-model="activeTime" type="month" placeholder="Pick a month" @change="handleChange"></el-date-picker>
+        <el-date-picker v-model="activeTime" type="month" :placeholder="t('Common.comm_month')" @change="handleChange"></el-date-picker>
       </div>
       <div class="block" v-show="radio == 'week'">
-        <el-date-picker v-model="activeTime" type="week" format="[week] ww" placeholder="Pick a week" @change="handleChange"></el-date-picker>
+        <el-date-picker v-model="activeTime" type="week" format="[week] ww" :placeholder="t('CommTime.comm_week')" @change="handleChange"></el-date-picker>
       </div>
       <div class="block" v-show="radio == 'date'">
-        <el-date-picker v-model="activeTime" type="date" placeholder="Pick a date" @change="handleChange"></el-date-picker>
+        <el-date-picker v-model="activeTime" type="date" :placeholder="t('Common.comm_day')" @change="handleChange"></el-date-picker>
       </div>
       <div class="radio-button">
-        <el-button size="small" :class="{active_button: radio == 'month'}" @click="activeRadio('month')">Month</el-button>
+        <el-button size="small" :class="{ active_button: radio == 'month' }" @click="activeRadio('month')">{{ t('Common.comm_month') }}</el-button>
       </div>
       <div class="radio-button">
-        <el-button size="small" :class="{active_button: radio == 'week'}" @click="activeRadio('week')">Week</el-button>
+        <el-button size="small" :class="{ active_button: radio == 'week' }" @click="activeRadio('week')">{{ t('CommTime.comm_week') }}</el-button>
       </div>
       <div class="radio-button">
-        <el-button size="small" :class="{active_button: radio == 'date'}" @click="activeRadio('date')">Day</el-button>
+        <el-button size="small" :class="{ active_button: radio == 'date' }" @click="activeRadio('date')">{{ t('Common.comm_day') }}</el-button>
       </div>
     </div>
     <div class="render">
-			<div id="recording"></div>
-		</div>
+      <div id="recording"></div>
+    </div>
     <div class="pagination-box">
       <el-pagination
         v-model:current-page="currentPage"
@@ -206,26 +207,30 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
+
   .render {
     width: 100%;
     flex: 1;
     overflow: hidden;
   }
-  .DatePicker{
+
+  .DatePicker {
     width: 100%;
     height: 40px;
     display: flex;
     align-items: center;
     margin-bottom: 2px;
-    .block{
+
+    .block {
       margin-left: 10px;
     }
   }
+
   .statusInfo {
     height: 40px;
     line-height: 40px;
-    // padding-left: 10px;
   }
+
   .pagination-box {
     width: 100%;
     padding: 10px 0;

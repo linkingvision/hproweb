@@ -20,7 +20,6 @@ const changeCollapse = () => {
 }
 
 watch(activeIndex, (newVal) => {
-  console.log('activeIndex', newVal)
   $router.push(newVal)
 })
 
@@ -48,6 +47,7 @@ onMounted(() => {
             <span>{{ t('Router.router_storage_setting') }}</span>
           </template>
           <el-menu-item index="/Configuration/Basic/StorageMode">{{ t('Router.router_storage_mode') }}</el-menu-item>
+          <el-menu-item index="/Configuration/Basic/RegularStorage">{{ t('Router.router_regular_storage') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/MetaStorage">{{ t('Router.router_meta_storage') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/LocalObjectStorage">{{ t('Router.router_local_obj_storage') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/S3Storage">{{ t('Router.router_s3_storage') }}</el-menu-item>
@@ -79,7 +79,6 @@ onMounted(() => {
         height: 48px;
         line-height: 48px;
         text-align: center;
-        // background-color: #666;
         cursor: pointer;
         i {
           font-size: 20px;
@@ -93,7 +92,6 @@ onMounted(() => {
     }
   }
   .basic-right {
-    // width: 88.5%;
     flex: 1;
     height: calc(100vh - 30px);
     overflow-y: auto;
@@ -104,8 +102,6 @@ onMounted(() => {
 
 <style lang="scss">
 .el-popper {
-  // background-color: #212121 !important;
-  // border: none !important;
   .el-menu {
     background-color: #212121;
     .el-menu-item {
