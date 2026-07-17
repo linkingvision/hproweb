@@ -5,7 +5,8 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 const Login = () => import('@/containers/Login.vue');
 const TheContainer = () => import('@/containers/TheContainer.vue')
 const Monitoring = () => import('@/views/Monitoring/Monitoring.vue')
-const Liveview = () => import('@/views/Monitoring/Liveview.vue')
+const GridCloudView = () => import('@/views/Monitoring/GridCloudView.vue')
+const ViewPage = () => import('@/views/Monitoring/View.vue')
 const Search = () => import('@/views/Monitoring/search/Search.vue')
 const RecordInfo = () =>import('@/views/Monitoring/search/RecordInfo.vue');
 const Logout = () => import('@/containers/Logout.vue')
@@ -75,7 +76,7 @@ const router = createRouter({
       path: 'Monitoring',
       name: 'Monitoring',
       component: Monitoring,
-      redirect: '/Monitoring/View',
+      redirect: '/Monitoring/GridCloudView',
       meta: {
         title: '/Monitoring',
         name: 'Router.router_monitoring',
@@ -83,13 +84,23 @@ const router = createRouter({
         type: 'Operator'
       },
       children: [{
+        path: 'GridCloudView',
+        name: 'GridCloudView',
+        component: GridCloudView,
+        meta: {
+          title: '/Monitoring/GridCloudView',
+          name: 'Monitoring.mon_grid_cloud_view',
+          icon: 'iconfont icon-wanggeyunshitu',
+          type: 'Operator'
+        }
+      }, {
         path: 'View',
         name: 'View',
-        component: Liveview,
+        component: ViewPage,
         meta: {
           title: '/Monitoring/View',
-          name: 'Router.router_view',
-          icon: 'iconfont icon-shitu',
+          name: 'Monitoring.mon_view',
+          icon: 'iconfont icon-shitu2',
           type: 'Operator'
         }
       }, {

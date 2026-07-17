@@ -230,12 +230,16 @@
     "login_success": "Login successful"
   },
   "Monitoring": {
+    "mon_grid_cloud_view": "Grid Cloud View",
+    "mon_view": "View",
     "mon_gotolive": "Go To Live",
     "mon_rec_info": "Recording Info",
     "mon_start_recording": "Start Recording",
     "mon_start_recording_failed": "Start Recording Failed!",
     "mon_stop_recording": "Stop Recording",
-    "mon_stop_recording_failed": "Stop Recording Failed!"
+    "mon_stop_recording_failed": "Stop Recording Failed!",
+    "mon_live": "Live",
+    "mon_playback": "Playback"
   },
   "Router": {
     "router_analytics": "Analytics",
@@ -252,6 +256,10 @@
     "router_view": "View"
   },
   "Setting": {
+    "set_adding_views": "Add View",
+    "set_deleting_views": "Delete View",
+    "set_view_id": "View ID",
+    "set_view_type": "View Type",
     "set_characters": "Characters",
     "set_confirm_password": "Confirm Password",
     "set_minimum_password_length": "Minimum password length",
@@ -335,5 +343,16 @@
     "system_server": "Server",
     "system_total": "Total",
     "system_units": "Units"
+  },
+  "Liveview": {
+    "live_view": "View",
+    "live_view_name": "View Name",
+    "live_view_layout": "View Layout",
+    "live_new_view": "New View",
+    "live_new_view_layout": "New Layout",
+    "live_row": "Row",
+    "live_column": "Column",
+    "live_customization": "Customization",
+    "live_restore_defaults": "Restore Defaults"
   }
 }

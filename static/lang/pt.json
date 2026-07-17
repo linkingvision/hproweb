@@ -229,12 +229,16 @@
     "login_success": "Login bem-sucedido"
   },
   "Monitoring": {
+    "mon_grid_cloud_view": "Visualização em grade na nuvem",
+    "mon_view": "Visualização",
     "mon_gotolive": "Ir ao vivo",
     "mon_rec_info": "Visão geral do vídeo",
     "mon_start_recording": "Comece a gravar",
     "mon_start_recording_failed": "Falha ao iniciar a gravação!",
     "mon_stop_recording": "Pare de gravar",
-    "mon_stop_recording_failed": "Falha ao parar a gravação!"
+    "mon_stop_recording_failed": "Falha ao parar a gravação!",
+    "mon_live": "Ao vivo",
+    "mon_playback": "Reprodução"
   },
   "Router": {
     "router_analytics": "Análise",
@@ -251,6 +255,10 @@
     "router_view": "Visualizar"
   },
   "Setting": {
+    "set_adding_views": "Adicionar visualização",
+    "set_deleting_views": "Excluir visualização",
+    "set_view_id": "ID da visualização",
+    "set_view_type": "Tipo de visualização",
     "set_characters": "Personagens",
     "set_confirm_password": "Confirme sua senha",
     "set_minimum_password_length": "Comprimento mínimo da senha",
@@ -334,5 +342,16 @@
     "system_server": "Servidor",
     "system_total": "Total",
     "system_units": "Unidades"
+  },
+  "Liveview": {
+    "live_view": "Visualização",
+    "live_view_name": "Nome da visualização",
+    "live_view_layout": "Layout da visualização",
+    "live_new_view": "Nova visualização",
+    "live_new_view_layout": "Novo layout",
+    "live_row": "Linha",
+    "live_column": "Coluna",
+    "live_customization": "Personalização",
+    "live_restore_defaults": "Restaurar padrões"
   }
 }

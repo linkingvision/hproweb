@@ -229,12 +229,16 @@
     "login_success": "Inicio de sesión exitoso"
   },
   "Monitoring": {
+    "mon_grid_cloud_view": "Vista de nube en cuadrícula",
+    "mon_view": "Vista",
     "mon_gotolive": "Ir a vivir",
     "mon_rec_info": "Vista general del video",
     "mon_start_recording": "Empezar a grabar",
     "mon_start_recording_failed": "¡Error al iniciar la grabación!",
     "mon_stop_recording": "dejar de grabar",
-    "mon_stop_recording_failed": "¡Error al detener la grabación!"
+    "mon_stop_recording_failed": "¡Error al detener la grabación!",
+    "mon_live": "En vivo",
+    "mon_playback": "Reproducción"
   },
   "Router": {
     "router_analytics": "Analítica",
@@ -251,6 +255,10 @@
     "router_view": "Vista"
   },
   "Setting": {
+    "set_adding_views": "Agregar vista",
+    "set_deleting_views": "Eliminar vista",
+    "set_view_id": "ID de vista",
+    "set_view_type": "Tipo de vista",
     "set_characters": "Personajes",
     "set_confirm_password": "Confirmar Contraseña",
     "set_minimum_password_length": "Longitud mínima de la contraseña",
@@ -334,5 +342,16 @@
     "system_server": "Servidor",
     "system_total": "Total",
     "system_units": "Unidades"
+  },
+  "Liveview": {
+    "live_view": "Vista",
+    "live_view_name": "Nombre de vista",
+    "live_view_layout": "Diseño de vista",
+    "live_new_view": "Nueva vista",
+    "live_new_view_layout": "Nuevo diseño",
+    "live_row": "Fila",
+    "live_column": "Columna",
+    "live_customization": "Personalización",
+    "live_restore_defaults": "Restaurar predeterminados"
   }
 }

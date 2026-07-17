@@ -230,12 +230,16 @@
     "login_success": "登錄成功"
   },
   "Monitoring": {
+    "mon_grid_cloud_view": "網格雲視圖",
+    "mon_view": "視圖",
     "mon_gotolive": "轉到直播",
     "mon_rec_info": "錄影概覽",
     "mon_start_recording": "開始錄像",
     "mon_start_recording_failed": "開始錄像失敗！",
     "mon_stop_recording": "停止錄像",
-    "mon_stop_recording_failed": "停止錄像失敗！"
+    "mon_stop_recording_failed": "停止錄像失敗！",
+    "mon_live": "實時",
+    "mon_playback": "回放"
   },
   "Router": {
     "router_analytics": "分析",
@@ -252,6 +256,10 @@
     "router_view": "視圖"
   },
   "Setting": {
+    "set_adding_views": "添加視圖",
+    "set_deleting_views": "刪除視圖",
+    "set_view_id": "視圖ID",
+    "set_view_type": "視圖類型",
     "set_characters": "個字符。",
     "set_confirm_password": "確認密碼",
     "set_minimum_password_length": "密碼長度最少",
@@ -335,5 +343,16 @@
     "system_server": "服務器",
     "system_total": "共",
     "system_units": "個"
+  },
+  "Liveview": {
+    "live_view": "視圖",
+    "live_view_name": "視圖名稱",
+    "live_view_layout": "視圖佈局",
+    "live_new_view": "新建視圖",
+    "live_new_view_layout": "新建視圖佈局",
+    "live_row": "行",
+    "live_column": "列",
+    "live_customization": "自定義",
+    "live_restore_defaults": "恢復預設"
   }
 }
