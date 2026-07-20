@@ -76,7 +76,7 @@ const router = createRouter({
       path: 'Monitoring',
       name: 'Monitoring',
       component: Monitoring,
-      redirect: '/Monitoring/GridCloudView',
+      redirect: '/Monitoring/View',
       meta: {
         title: '/Monitoring',
         name: 'Router.router_monitoring',
@@ -91,7 +91,8 @@ const router = createRouter({
           title: '/Monitoring/GridCloudView',
           name: 'Monitoring.mon_grid_cloud_view',
           icon: 'iconfont icon-wanggeyunshitu',
-          type: 'Operator'
+          type: 'Operator',
+          hidden: true
         }
       }, {
         path: 'View',
@@ -100,7 +101,7 @@ const router = createRouter({
         meta: {
           title: '/Monitoring/View',
           name: 'Monitoring.mon_view',
-          icon: 'iconfont icon-shitu2',
+          icon: 'iconfont icon-shitu',
           type: 'Operator'
         }
       }, {

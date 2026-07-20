@@ -45,6 +45,12 @@ export const getSearchStorRecordByTimeApi = (token: string, start: string, end: 
   method: 'GET'
 })
 
+// Get time slots with recordings from device storage（对照uscweb Advancepb.vue）
+export const getSearchDeviceRecordByTimeApi = (token: string, start: string, end: string) => axios({
+  url: '/uapi/v1/SearchDeviceRecordByTime?token=' + token + '&start=' + encodeURIComponent(start) + '&end=' + encodeURIComponent(end) + '&maxlen=86400',
+  method: 'GET'
+})
+
 // Get device bitrate info
 export const GetInformationDataApi = (token: string) => axios({
   url: '/uapi/v1/GetVidStreamStatus?token=' + token + '&stream=main',

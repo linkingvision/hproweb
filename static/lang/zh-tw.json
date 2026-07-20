@@ -112,9 +112,12 @@
     "comm_modify_successfully": "修改成功！"
   },
   "CommTime": {
-    "comm_week": "周",
     "comm_time_start": "開始時間",
-    "comm_time_end": "結束時間"
+    "comm_time_end": "結束時間",
+    "comm_current_time": "當前時間",
+    "comm_last_day": "最近一天",
+    "comm_last_seven_days": "最近7天",
+    "comm_last_month": "最近一個月"
   },
   "Common": {
     "comm_channel": "通道",
@@ -353,6 +356,48 @@
     "live_row": "行",
     "live_column": "列",
     "live_customization": "自定義",
-    "live_restore_defaults": "恢復預設"
+    "live_restore_defaults": "恢復預設",
+    "live_displaying": "正在顯示",
+    "live_playing": "正在播放"
+  },
+  "CommTable": {
+    "comm_bind_ip": "綁定 IP",
+    "comm_connection_type": "連接類型",
+    "comm_external_server": "外置服務",
+    "comm_file_list": "文件列表",
+    "comm_go_to": "前往",
+    "comm_item": "條",
+    "comm_jump": "跳轉",
+    "comm_no_data_available": "暫無數據",
+    "comm_page": "頁",
+    "comm_piece": "張",
+    "comm_substream_url": "輔碼流URL",
+    "comm_table_channo": "通道號",
+    "comm_table_edit": "編輯",
+    "comm_table_ip": "IP地址",
+    "comm_table_name": "名稱",
+    "comm_table_online": "在線狀態",
+    "comm_table_port": "端口",
+    "comm_table_serial_number": "序號",
+    "comm_table_tcp": "TCP",
+    "comm_table_time": "時間",
+    "comm_table_token": "編號",
+    "comm_table_type": "類型",
+    "comm_table_udp": "UDP",
+    "comm_total": "共",
+    "comm_video_list": "視頻列表"
+  },
+  "Playback": {
+    "pb_export": "導出",
+    "pb_schedule": "計劃",
+    "pb_manual": "手動",
+    "pb_alarm": "報警",
+    "pb_task": "任務",
+    "pb_download": "下載",
+    "pb_video_playback": "回放",
+    "pb_device_record": "設備存儲"
+  },
+  "Cascade": {
+    "cascade_central_record": "中心存儲"
   }
 }

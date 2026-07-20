@@ -112,9 +112,12 @@
     "comm_modify_successfully": "¡Modifique con éxito!"
   },
   "CommTime": {
-    "comm_week": "Semana",
     "comm_time_start": "Hora de inicio",
-    "comm_time_end": "Hora de finalización"
+    "comm_time_end": "Hora de fin",
+    "comm_current_time": "Hora actual",
+    "comm_last_day": "Último día",
+    "comm_last_seven_days": "Últimos 7 días",
+    "comm_last_month": "Último mes"
   },
   "Common": {
     "comm_channel": "canal",
@@ -352,6 +355,48 @@
     "live_row": "Fila",
     "live_column": "Columna",
     "live_customization": "Personalización",
-    "live_restore_defaults": "Restaurar predeterminados"
+    "live_restore_defaults": "Restaurar predeterminados",
+    "live_displaying": "Mostrando",
+    "live_playing": "Reproduciendo"
+  },
+  "CommTable": {
+    "comm_bind_ip": "Vincular IP",
+    "comm_connection_type": "Tipo de conexión",
+    "comm_external_server": "Servicio Externo",
+    "comm_file_list": "Lista de archivos",
+    "comm_go_to": "Ir a",
+    "comm_item": "Artículo",
+    "comm_jump": "Saltar",
+    "comm_no_data_available": "No hay datos disponibles",
+    "comm_page": "Página",
+    "comm_piece": "pedazo",
+    "comm_substream_url": "URL de transmisión secundaria",
+    "comm_table_channo": "Número de canal",
+    "comm_table_edit": "Editar",
+    "comm_table_ip": "IP",
+    "comm_table_name": "Nombre",
+    "comm_table_online": "En línea",
+    "comm_table_port": "Puerto",
+    "comm_table_serial_number": "Número de serie",
+    "comm_table_tcp": "TCP",
+    "comm_table_time": "Tiempo",
+    "comm_table_token": "Simbólico",
+    "comm_table_type": "Tipo",
+    "comm_table_udp": "UDP",
+    "comm_total": "Total",
+    "comm_video_list": "Lista de vídeos"
+  },
+  "Playback": {
+    "pb_export": "Exportar",
+    "pb_schedule": "Programado",
+    "pb_manual": "Manual",
+    "pb_alarm": "Alarma",
+    "pb_task": "Tarea",
+    "pb_download": "Descargar",
+    "pb_video_playback": "Reproducción",
+    "pb_device_record": "Registro de dispositivo"
+  },
+  "Cascade": {
+    "cascade_central_record": "registro central"
   }
 }

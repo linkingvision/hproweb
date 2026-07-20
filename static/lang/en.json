@@ -112,9 +112,12 @@
     "comm_modify_successfully": "Modify successfully!"
   },
   "CommTime": {
-    "comm_week": "Week",
-    "comm_time_start": "Start time",
-    "comm_time_end": "End time"
+    "comm_time_start": "Start Time",
+    "comm_time_end": "End Time",
+    "comm_current_time": "Current time",
+    "comm_last_day": "Last day",
+    "comm_last_seven_days": "Last seven days",
+    "comm_last_month": "Last month"
   },
   "Common": {
     "comm_channel": "Channel",
@@ -353,6 +356,48 @@
     "live_row": "Row",
     "live_column": "Column",
     "live_customization": "Customization",
-    "live_restore_defaults": "Restore Defaults"
+    "live_restore_defaults": "Restore Defaults",
+    "live_displaying": "Displaying",
+    "live_playing": "Playing"
+  },
+  "CommTable": {
+    "comm_bind_ip": "Bind IP",
+    "comm_connection_type": "Connection type",
+    "comm_external_server": "External Service",
+    "comm_file_list": "File list",
+    "comm_go_to": "Go to",
+    "comm_item": "Item",
+    "comm_jump": "Jump",
+    "comm_no_data_available": "No data available",
+    "comm_page": "Page",
+    "comm_piece": "piece",
+    "comm_substream_url": "Sub stream url",
+    "comm_table_channo": "Channel ID",
+    "comm_table_edit": "Edit",
+    "comm_table_ip": "IP",
+    "comm_table_name": "Name",
+    "comm_table_online": "Online",
+    "comm_table_port": "Port",
+    "comm_table_serial_number": "Serial number",
+    "comm_table_tcp": "TCP",
+    "comm_table_time": "Time",
+    "comm_table_token": "Token",
+    "comm_table_type": "Type",
+    "comm_table_udp": "UDP",
+    "comm_total": "Total",
+    "comm_video_list": "Video list"
+  },
+  "Playback": {
+    "pb_export": "Export",
+    "pb_schedule": "Schedule",
+    "pb_manual": "Manual",
+    "pb_alarm": "Alarm",
+    "pb_task": "Task",
+    "pb_download": "Download",
+    "pb_video_playback": "Playback",
+    "pb_device_record": "Device record"
+  },
+  "Cascade": {
+    "cascade_central_record": "Central record"
   }
 }

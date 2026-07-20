@@ -76,3 +76,15 @@ export const UpdateSysConfigApi = (data: UpdateSysConfigParams) => axios({
   method: 'PUT',
   data
 })
+
+// ─── User config (per-user preferences, e.g. DefaultStorage) ─────────────
+export const GetUserConfigApi = () => axios({
+  url: '/uapi/v1/UserConfig/Item',
+  method: 'GET'
+})
+
+export const UpdateUserConfigApi = (data: { key: string; value: string }) => axios({
+  url: '/uapi/v1/UserConfig/Item',
+  method: 'PUT',
+  data
+})

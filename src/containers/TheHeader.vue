@@ -61,7 +61,7 @@ import { useStore } from '@/store';
 import { useRouter, useRoute } from 'vue-router';
 import { onMounted, ref, nextTick, onBeforeMount, watch, computed } from 'vue';
 import { KeepAlive } from '@/api/userApi';
-import { GetSystemInfo } from '@/api/system';
+import { GetSystemInfo, GetSysConfigApi, GetUserConfigApi } from '@/api/system';
 import { useUserStore } from '@/store/user';
 import { useI18n } from 'vue-i18n';
 
@@ -124,6 +124,7 @@ const getRouterList = () => {
   RouterList.value = [];
   let routelist = routes();
   for (const k in routelist) {
+    if (routelist[k].meta?.hidden) continue;
     var data = {
       label: t(routelist[k].meta.name),
       name: routelist[k].meta.name,
@@ -160,6 +161,28 @@ const SystemInfo = async () => {
   }
 }
 
+// 从服务端读取存储配置（UserConfig: DefaultStorage；SysConfig: PlaybackShowStorageMode）
+const initStorageConfig = async () => {
+  try {
+    const [userRes, sysRes] = await Promise.all([
+      GetUserConfigApi(),
+      GetSysConfigApi('all'),
+    ])
+    if (userRes.status === 200 && userRes.data.code === 0) {
+      const list: any[] = userRes.data.result?.list ?? userRes.data.result ?? []
+      const item = list.find((i: any) => i.key === 'DefaultStorage')
+      if (item) store.setDefaultStorage(item.value)
+    }
+    if (sysRes.status === 200 && sysRes.data.code === 0) {
+      const list: any[] = sysRes.data.result?.list ?? sysRes.data.result ?? []
+      const item = list.find((i: any) => i.key === 'PlaybackShowStorageMode')
+      if (item) store.setPlaybackShowStorageMode(JSON.parse(item.value))
+    }
+  } catch(e) {
+    console.warn('[initStorageConfig] error', e)
+  }
+}
+
 const path = computed(() => route.fullPath);
 
 watch(path, (newVal) => {
@@ -173,6 +196,7 @@ onMounted(() => {
   getRouterList();
   getAtciveRouter(route.fullPath);
   SystemInfo()
+  initStorageConfig()
 })
 onBeforeMount(() => {
   userStore.setSetIntervalKeepAlive(null);

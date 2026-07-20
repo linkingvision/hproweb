@@ -27,7 +27,7 @@ export const useStore = defineStore('main', () =>{
     version.value = value;
   }
 
-  const liveviewrtc = ref<string>('WS');
+  const liveviewrtc = ref<string>('WS2');
   function setLiveviewrtc(value: string) {
     liveviewrtc.value = value;
   }
@@ -47,6 +47,18 @@ export const useStore = defineStore('main', () =>{
     H264CpuDecode.value = value;
   }
 
+  // 存储类型：'DeviceStorage' | 'CentralStorage'
+  const DefaultStorage = ref<string>('DeviceStorage');
+  function setDefaultStorage(value: string) {
+    DefaultStorage.value = value;
+  }
+
+  // 是否显示存储切换 UI（由服务端系统配置控制）
+  const PlaybackShowStorageMode = ref<boolean>(false);
+  function setPlaybackShowStorageMode(value: boolean) {
+    PlaybackShowStorageMode.value = value;
+  }
+
   return {
     lang,
     changeLang,
@@ -63,7 +75,11 @@ export const useStore = defineStore('main', () =>{
     RBufferTime,
     setRBufferTime,
     H264CpuDecode,
-    setH264CpuDecode
+    setH264CpuDecode,
+    DefaultStorage,
+    setDefaultStorage,
+    PlaybackShowStorageMode,
+    setPlaybackShowStorageMode,
   }
 }, {
   persist: true

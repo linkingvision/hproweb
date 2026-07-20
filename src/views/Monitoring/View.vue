@@ -17,18 +17,28 @@
               <div @click.stop="refreshTree"><i class="iconfont icon-shuaxin"></i></div>
             </div>
           </template>
-          <el-tree-v2 ref="treeRef" :data="treeData" :props="treeProps"
-            :default-expanded-keys="expandedKeys" node-key="id" :height="700"
-            :filter-method="filterTreeNode">
+          <el-tree ref="treeRef" :data="treeData" :props="treeProps"
+            :default-expanded-keys="expandedKeys" node-key="id"
+            :filter-node-method="filterTreeNode"
+            style="overflow:auto;height:calc(100% - 10px);">
             <template #default="{ node, data }">
               <div draggable="true" @dragstart="onDragStart(node)" @click="onNodeClick(data)"
                 class="tree-node" :class="getNodeClass(data)">
-                <i :class="`iconfont ${getNodeIcon(data)}`" style="margin-right:6px;font-size:15px;"></i>
-                <span>{{ node.label }}</span>
-                <span v-if="isNodePlaying(data)" class="node-playing">{{ t('Liveview.live_displaying') }}</span>
+                <span :class="isNodePlaying(data) ? 'node-playing-label' : ''"
+                  style="display:flex;align-items:center;flex:1;overflow:hidden;">
+                  <i :class="`iconfont ${getNodeIcon(data)}`" style="margin-right:6px;font-size:19px;flex-shrink:0;"></i>
+                  <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ node.label }}</span>
+                  <span v-if="data.totalCount !== undefined" style="padding-left:4px;flex-shrink:0;">
+                    {{ data.onlineCount }}/{{ data.totalCount }}
+                  </span>
+                </span>
+                <span v-if="isNodePlaying(data)" class="node-playing">
+                  <span class="dot">●</span>
+                  {{ data.isDeviceChannel ? t('Liveview.live_playing') : t('Liveview.live_displaying') }}
+                </span>
               </div>
             </template>
-          </el-tree-v2>
+          </el-tree>
         </el-collapse-item>
       </el-collapse>
     </div>
@@ -45,8 +55,7 @@
           @dblclick="toggleExpand(cell.id)"
           @drop.prevent="dropOnCell($event, cell.id)"
           @dragover.prevent>
-          <!-- UPlayerSDK injects <video> here dynamically -->
-          <div v-if="getCellCamera(cell.id)" class="cell-label">{{ getCellCamera(cell.id)?.name }}</div>
+          <!-- UPlayerSDK injects <video> here dynamically, name label is rendered by SDK -->
           <button v-if="getCellCamera(cell.id)" class="cell-close" @click.stop="clearCell(cell.id)">×</button>
         </div>
       </div>
@@ -54,6 +63,32 @@
 
       <!-- 时间轴 + 回放控制区（仅回放模式显示） -->
       <div class="control_area" style="width:100%;" v-show="!isLiveview">
+        <!-- 片段导出面板 -->
+        <div v-show="croppingEnabled" class="Cropping">
+          <div class="Cropping_title">
+            <span>{{ t('Playback.pb_export') }}</span>
+            <i class="iconfont icon-guanbixiaoanniu" @click="croppingEnabled = false"></i>
+          </div>
+          <div class="Cropping_content">
+            <el-form label-position="right" label-width="80px" :model="croppingForm">
+              <el-form-item :label="t('CommTable.comm_table_name')">
+                <el-input v-model="croppingForm.label" style="width:250px;" disabled />
+              </el-form-item>
+              <el-form-item :label="t('CommTime.comm_time_start')">
+                <el-date-picker v-model="croppingForm.startTime" type="datetime" size="small"
+                  :clearable="false" :append-to-body="false" style="width:220px;" />
+              </el-form-item>
+              <el-form-item :label="t('CommTime.comm_time_end')">
+                <el-date-picker v-model="croppingForm.endTime" type="datetime" size="small"
+                  :clearable="false" :append-to-body="false" style="width:220px;" />
+              </el-form-item>
+            </el-form>
+          </div>
+          <div style="padding:0 0 10px 45%;display:flex;gap:8px;">
+            <button type="button" style="padding:6px 12px;cursor:pointer;" @click="croppingEnabled = false">{{ t('CommTableEdit.comm_cancel') }}</button>
+            <button type="button" style="padding:6px 12px;background:#0399FE;color:#fff;border:none;cursor:pointer;position:relative;z-index:9999;" @click="() => { console.log('btn clicked'); doExport(); }">{{ t('Playback.pb_export') }}</button>
+          </div>
+        </div>
         <div class="timeline-box" style="width:100%;height:80px;padding:0;box-sizing:border-box;border:none;">
           <svg id="view-timeline-svg"></svg>
         </div>
@@ -69,9 +104,19 @@
               <button class="mr-2"></button>{{ t('CommTableEdit.comm_alarm') }}
             </div>
           </div>
+          <!-- 中心存储 / 设备存储 切换（仅在系统配置开启时显示） -->
+          <div v-if="store.PlaybackShowStorageMode" class="storage-switch">
+            <span
+              :class="store.DefaultStorage === 'CentralStorage' ? 'active' : ''"
+              @click="setStorageCentral">{{ t('Cascade.cascade_central_record') }}</span>
+            <span
+              :class="store.DefaultStorage === 'DeviceStorage' ? 'active' : ''"
+              @click="setStorageDevice">{{ t('Playback.pb_device_record') }}</span>
+          </div>
           <div class="control-center">
             <el-date-picker class="fixed_input" v-model="xzvalue" size="small" @change="onDateChange"
-              :clearable="false" :append-to-body="false" popper-class="date-picker">
+              :clearable="false" :append-to-body="false" popper-class="date-picker"
+              :default-time="new Date(2000, 0, 1, 0, 0, 0)">
             </el-date-picker>
             <el-select v-model="region" size="small" class="ele" popper-class="selectdrop"
               @change="timeSpeed(region)" popper-style="border:0;">
@@ -89,7 +134,10 @@
                 style="width:60%;margin-right:10px;"></el-slider>
             </div>
           </div>
-          <div class="gongge-btns" style="height:50px;padding-right:20px;width:20%;display:flex;justify-content:flex-end;align-items:center;">
+          <div class="gongge-btns" style="height:50px;padding-right:20px;width:20%;display:flex;justify-content:flex-end;align-items:center;gap:8px;">
+            <button v-if="!isLiveview" @click="toggleCropping" style="padding:0;border:none;background:none;font-size:22px;color:#fff;cursor:pointer;">
+              <i class="iconfont icon-jiequ"></i>
+            </button>
             <el-button v-if="!isLiveview" class="goto-live" @click="gotoLive" round>{{ t('Monitoring.mon_gotolive') }}</el-button>
           </div>
         </div>
@@ -106,7 +154,7 @@
             :class="!isLiveview ? 'live' : 'replay'">{{ t('Monitoring.mon_playback') }}</div>
         </div>
         <div class="footer-right" style="padding-right:30px;">
-          <el-button type="button" class="iconfont icon-guanbi2" @click="clearAllPlayers"></el-button>
+          <el-button class="iconfont icon-guanbi2" @click="clearAllPlayers"></el-button>
           <el-popover placement="top" :width="510" trigger="click" popper-class="GongGePopover" v-model:visible="layoutPopoverVisible">
             <div class="LayoutSearch">
               <div class="SearchIcon" v-if="layoutFilter" @click="layoutFilter = false">
@@ -128,7 +176,7 @@
                   <p>{{ group.label }}</p>
                   <div class="PanelBtns">
                     <el-button v-for="k in group.keys" :key="k"
-                      type="button" :class="`iconfont icon-${layoutIconMap[k]}`"
+                      :class="`iconfont icon-${layoutIconMap[k]}`"
                       :title="`${k}画面`"
                       @click="changeLayout(k); layoutPopoverVisible=false">
                     </el-button>
@@ -150,10 +198,10 @@
               </div>
             </div>
             <template #reference>
-              <el-button type="button" class="iconfont icon-gongge" style="margin-top:4px;" @click="loadCustomLayouts"></el-button>
+              <el-button class="iconfont icon-gongge" style="margin-top:4px;" @click="loadCustomLayouts"></el-button>
             </template>
           </el-popover>
-          <el-button type="button" class="iconfont icon-quanping1" @click="toggleFullscreen"></el-button>
+          <el-button class="iconfont icon-quanping1" @click="toggleFullscreen"></el-button>
         </div>
       </div>
     </div>
@@ -248,11 +296,12 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { UPlayerSDK as UPlayerSDKClass, UPlayerList as UPlayerListClass } from '@/assets/js/uplayersdk.esm.js'
+import { UPlayerSDK as UPlayerSDKClass, UPlayerList as UPlayerListClass, H5sPlayerWS2 } from '@/assets/js/uplayersdk.esm.js'
 import { useUserStore } from '@/store/user'
 import { useStore } from '@/store'
 import { GetDevPartitionApi } from '@/api/configuration/device'
-import { GetDeviceChannels } from '@/api/channel'
+import { GetDeviceChannels, getSearchDeviceRecordByTimeApi, getSearchStorRecordByTimeApi } from '@/api/channel'
+import { UpdateUserConfigApi } from '@/api/system'
 import { GetViewApi, CreateViewApi, UpdateViewApi, DeleteViewApi, GetLayoutListApi, CreateLayoutApi, DeleteLayoutApi } from '@/api/view'
 import uuid from '@/assets/js/uuid.js'
 import Gird1 from './Gird1.vue'
@@ -263,13 +312,18 @@ const store = useStore()
 
 // ─── Types ────────────────────────────────────────────────────────────────
 interface GridCell { id: string; rowStart: number; rowEnd: number; colStart: number; colEnd: number; merged: boolean }
-interface CameraConf { token: string; name: string; resourceUUID: string; videoid: string; layoutPosition: string; recording: boolean }
-interface TreeNode { id: string; label: string; type: string; data: any; children?: TreeNode[]; isLeaf?: boolean; isDeviceChannel?: boolean; online?: boolean }
+interface CameraConf { token: string; name: string; resourceUUID: string; videoid: string; layoutPosition: string; recording: boolean; nodeId?: string }
+interface TreeNode { id: string; label: string; type: string; data: any; children?: TreeNode[]; isLeaf?: boolean; isDeviceChannel?: boolean; online?: boolean; onlineCount?: number; totalCount?: number }
 
 // ─── Grid state ────────────────────────────────────────────────────────────
-const LiveplayShow   = ref(false)
+const LiveplayShow   = ref(true)
 const isLiveview     = ref(true)   // true=live, false=playback
-const gridCells      = ref<GridCell[]>([])
+const gridCells      = ref<GridCell[]>([
+  { id:'1-1', rowStart:1, rowEnd:2, colStart:1, colEnd:2, merged:false },
+  { id:'1-2', rowStart:1, rowEnd:2, colStart:2, colEnd:3, merged:false },
+  { id:'2-1', rowStart:2, rowEnd:3, colStart:1, colEnd:2, merged:false },
+  { id:'2-2', rowStart:2, rowEnd:3, colStart:2, colEnd:3, merged:false },
+])
 const layoutType     = ref('2|2')
 const selectedCellId = ref('')
 const expandedCellId = ref('')
@@ -387,15 +441,24 @@ const computeCellStyle = (cell: GridCell) => {
 const changeLayout = (key: string | number) => {
   const def = layoutDefs[String(key)]
   if (!def) return
-  clearAllPlayers()
-  layoutType.value = def.layout
-  gridCells.value = def.cells.map(d => ({
+
+  const newCells = def.cells.map(d => ({
     id: `${d.rowStart}-${d.colStart}`,
     rowStart: d.rowStart, rowEnd: d.rowEnd,
     colStart: d.colStart, colEnd: d.colEnd,
     merged: (d.rowEnd - d.rowStart > 1) || (d.colEnd - d.colStart > 1)
   }))
+  const newCellIds = new Set(newCells.map(c => c.id))
+
+  // 销毁新布局里不存在的格子的播放器（其余格子因 :key="cell.id" 由 Vue 保留 DOM）
+  ;[...cameraMap.value.keys()].forEach(cellId => {
+    if (!newCellIds.has(cellId)) clearCell(cellId)
+  })
+
+  layoutType.value = def.layout
+  gridCells.value = newCells
   LiveplayShow.value = true
+  savePlayingState()
 }
 const applyCustomLayout = (item: any) => {
   if (!item?.setting?.layoutView) return
@@ -446,11 +509,14 @@ const loadTree = async () => {
           type: 'device', data: ch, isLeaf: true, isDeviceChannel: true, online: ch.online
         }))
         deviceCache.set(item.data.token, chs); item.children = chs; item.isLeaf = false
+        item.totalCount = chs.length
+        item.onlineCount = chs.filter((c: any) => c.online).length
       } else { deviceCache.set(item.data.token, []); item.children = undefined; item.isLeaf = true }
     }))
   }
+  const keys = list.filter(n => n.type === 'device' && !n.isDeviceChannel).map(n => n.id)
+  expandedKeys.value = keys
   treeData.value = list
-  expandedKeys.value = list.map(n => n.id)
 }
 
 const refreshTree = () => { deviceCache.clear(); loadTree() }
@@ -509,25 +575,34 @@ const placeCamera = async (cellId: string, ch: any, nodeId?: string) => {
   // Destroy existing player in this cell
   if (playerMap.has(cellId)) { try { playerMap.get(cellId)?.destroy?.() } catch(e){} ; playerMap.delete(cellId) }
   const vidId = uuid(8)
+  const apiProtocol = userStore.IPPORT?.startsWith('https') ? 'https:' : window.location.protocol
   const conf = {
-    videoid: vidId, protocol: window.location.protocol, host: userStore.WSROOT,
+    videoid: vidId, protocol: apiProtocol, host: userStore.WSROOT,
     token: ch.token, session: userStore.session, accessToken: userStore.Access_token,
     name: ch.name ?? ch.label, label: ch.name ?? ch.label,
     resourceUUID: ch.uuid ?? ch.resourceUUID,
     liveVideoType: store.liveviewrtc, recording: ch.recording ?? false,
+    meta: false,
+    serverpb: store.DefaultStorage === 'CentralStorage' ? 'true' : 'false',
   }
-  cameraMap.value.set(cellId, { token: ch.token, name: conf.name, resourceUUID: conf.resourceUUID, videoid: vidId, layoutPosition: `h${cellId}`, recording: conf.recording })
+  cameraMap.value.set(cellId, { token: ch.token, name: conf.name, resourceUUID: conf.resourceUUID, videoid: vidId, layoutPosition: `h${cellId}`, recording: conf.recording, nodeId })
   // Update liveviewViewadd (mirrors uscweb)
   liveviewViewadd.value = liveviewViewadd.value.filter(x => x.strIndex !== `h${cellId}`)
   liveviewViewadd.value.push({ strIndex: `h${cellId}`, token: ch.token, resourceUUID: conf.resourceUUID, profile: 'main' })
   if (nodeId) { if (!playingNodeIds.value.includes(nodeId)) playingNodeIds.value.push(nodeId) }
   await nextTick()
+  const container = document.getElementById('h' + cellId)
+  if (!container) { console.warn('[placeCamera] container h%s not found', cellId); return }
   try {
     const player = new UPlayerSDKClass('h' + cellId, conf)
     playerMap.set(cellId, player)
-    UPlayerList.value?.addPlayer(player)   // register with timeline
     player.play()
-  } catch(e) { console.warn('placeCamera error', e) }
+    // 回放模式下拖入新摄像头：立刻调 moveto 同步到当前回放时间
+    if (!isLiveview.value) {
+      try { player.livePlayer?.moveto(xzvalue.value) } catch(e) {}
+    }
+    savePlayingState()
+  } catch(e) { console.error('[placeCamera] error', e) }
 }
 
 const clearCell = (cellId: string) => {
@@ -535,10 +610,13 @@ const clearCell = (cellId: string) => {
   const cam = cameraMap.value.get(cellId)
   if (cam) {
     liveviewViewadd.value = liveviewViewadd.value.filter(x => x.strIndex !== `h${cellId}`)
-    // Remove from playingNodeIds if no other cell uses same token
+    // 只移除这一格对应的 nodeId（如果同一个 token 在其他格还在播，则保留）
     const stillPlaying = [...cameraMap.value.entries()].some(([id, c]) => id !== cellId && c.token === cam.token)
-    if (!stillPlaying) playingNodeIds.value = playingNodeIds.value.filter(x => !x.startsWith('ch_'))
+    if (!stillPlaying && cam.nodeId) {
+      playingNodeIds.value = playingNodeIds.value.filter(x => x !== cam.nodeId)
+    }
     cameraMap.value.delete(cellId)
+    savePlayingState()
   }
   if (selectedCellId.value === cellId) selectedCellId.value = ''
   if (expandedCellId.value === cellId) expandedCellId.value = ''
@@ -548,8 +626,56 @@ const clearAllPlayers = () => {
   playerMap.forEach(p => { try { p?.destroy?.() } catch(e){} })
   playerMap.clear(); cameraMap.value.clear(); liveviewViewadd.value = []; playingNodeIds.value = []
   selectedCellId.value = ''; expandedCellId.value = ''
-  UPlayerList.value?.destroyAll?.()
+  UPlayerList.value = null   // 丢弃引用，不 destroyAll（player 已在上面 destroy）
   isPlaying.value = false; isLiveview.value = true
+  localStorage.removeItem('hpro-view-state')  // 显式清除（用户点 × 时需要）
+}
+
+// ─── Playing state persistence ────────────────────────────────────────────
+const savePlayingState = () => {
+  const cameras: any[] = []
+  cameraMap.value.forEach((cam, cellId) => {
+    cameras.push({ cellId, token: cam.token, name: cam.name, resourceUUID: cam.resourceUUID, recording: cam.recording, nodeId: cam.nodeId })
+  })
+  if (!cameras.length) {
+    // 没有摄像头时：实时模式才清除key；回放模式保留key以便刷新后恢复
+    if (isLiveview.value) { localStorage.removeItem('hpro-view-state'); return }
+    localStorage.setItem('hpro-view-state', JSON.stringify({
+      layoutType: layoutType.value, gridCells: gridCells.value, isLiveview: false, cameras: [],
+    }))
+    return
+  }
+  localStorage.setItem('hpro-view-state', JSON.stringify({
+    layoutType: layoutType.value,
+    gridCells: gridCells.value,
+    isLiveview: isLiveview.value,
+    cameras,
+  }))
+}
+
+const restorePlayingState = async () => {
+  const raw = localStorage.getItem('hpro-view-state')
+  if (!raw) return
+  try {
+    const state = JSON.parse(raw)
+    if (state.layoutType) layoutType.value = state.layoutType
+    if (state.gridCells?.length) gridCells.value = state.gridCells
+    // 有摄像头时才恢复画面
+    if (state.cameras?.length) {
+      await nextTick()
+      for (const cam of state.cameras) {
+        await placeCamera(cam.cellId, {
+          token: cam.token, name: cam.name,
+          uuid: cam.resourceUUID, resourceUUID: cam.resourceUUID,
+          recording: cam.recording ?? false,
+        }, cam.nodeId)
+      }
+    }
+    // 恢复播放模式（刷新后保持回放/实时状态）
+    if (state.isLiveview === false) {
+      await setLiveMode(false)
+    }
+  } catch(e) { console.warn('restorePlayingState error', e) }
 }
 
 // ─── Cell interaction ─────────────────────────────────────────────────────
@@ -575,9 +701,11 @@ const dropOnCell = async (e: DragEvent, cellId: string) => {
 const loadViewIntoGrid = async (viewId: string | number, nodeId?: string) => {
   const res = await GetViewApi(viewId)
   if (res.status !== 200 || res.data.code !== 0) return
-  clearAllPlayers()
   const result = res.data.result
   currentView.value = result
+
+  // 加载新视图前先清空当前所有播放器
+  clearAllPlayers()
 
   // Determine layout key from layoutType string (e.g. "3|3" → 9 cells)
   const ltStr = result.layout?.setting?.layoutView ? result.layout.layoutType : '2|2'
@@ -596,12 +724,16 @@ const loadViewIntoGrid = async (viewId: string | number, nodeId?: string) => {
 
   // Place cameras from viewEntity
   await nextTick()
+  console.log('[loadView] viewEntity:', result.viewEntity)
   if (result.viewEntity?.length) {
     for (const entity of result.viewEntity) {
+      console.log('[loadView] entity:', entity.entityType, 'Channel:', entity.Channel, 'pos:', entity.layoutPosition)
       if (entity.entityType !== 'USC_VIEW_CAMERA' || !entity.Channel?.token) continue
       // Convert layoutPosition "h1-1" → cellId "1-1"
       const cellId = entity.layoutPosition?.replace(/^h/, '') ?? ''
-      if (!cellId || !gridCells.value.find(c => c.id === cellId)) continue
+      const cellExists = gridCells.value.find(c => c.id === cellId)
+      console.log('[loadView] cellId:', cellId, 'exists:', !!cellExists, 'container:', document.getElementById('h' + cellId))
+      if (!cellId || !cellExists) continue
       await placeCamera(cellId, {
         token: entity.Channel.token, name: entity.Channel.name,
         uuid: entity.resourceUUID, recording: entity.Channel.recording ?? false
@@ -744,32 +876,102 @@ const submitCustomLayout = () => { gird1Ref.value?.getLayoutData() }
 const setLiveMode = async (live: boolean) => {
   isLiveview.value = live
   if (live) {
-    if (UPlayerList.value?.UPlayerSDKList?.length) {
-      const now = new Date()
-      await UPlayerList.value.setAllPosition(now.getTime())
-      UPlayerList.value.playAll()
-    }
+    // 切回实时：先断开 livePlayer 当前连接再重连，确保从回放态正确切回直播
+    playerMap.forEach(player => {
+      try {
+        player.livePlayer?.disconnect?.()
+        player.play()
+      } catch(e) {}
+    })
     isPlaying.value = true
   } else {
-    // 延迟初始化：切到回放时 SVG 已显示，有真实尺寸
+    // 切到回放：初始化 UPlayerList（仅用于时间轴显示），定位到今天零点
     await nextTick()
-    if (!UPlayerList.value) {
-      UPlayerList.value = new UPlayerListClass('#view-timeline-svg')
+    try {
+      if (!UPlayerList.value) {
+        UPlayerList.value = new UPlayerListClass('#view-timeline-svg')
+
+        // 屏蔽 UPlayerList 内部的 SegmentPlayer 路径（SearchObjRecordByTime 不适用）
+        UPlayerList.value.setAllPosition = async () => {}
+        UPlayerList.value.playAll      = () => {}
+
+        // 时间轴拖拽结束 → moveto（对照 uscweb Advancepb.vue mouseup → v1.moveto(timevalue)）
+        UPlayerList.value.timeline?.addEventListener('resume', async (e: CustomEvent) => {
+          const t: Date = e.detail instanceof Date ? e.detail : new Date(e.detail)
+          xzvalue.value = t
+          if (UPlayerList.value?.timeline) {
+            UPlayerList.value.timeline.currentTime = t
+            UPlayerList.value.timeline.updateTimelineView?.()
+          }
+          // 传 ISO 字符串（strMovetoTime 字段名的 str 前缀表示服务端期望字符串格式）
+          const iso = t.toISOString()
+          playerMap.forEach(player => {
+            try { player.livePlayer?.moveto(iso) } catch(err) {}
+          })
+          isPlaying.value = true
+          // 查录像色块
+          await loadRecordingBars(t)
+        })
+
+        // 时间轴拖拽开始 → pause
+        UPlayerList.value.timeline?.addEventListener('pause', () => {
+          isPlaying.value = false
+        })
+      }
+
+      const midnight = new Date()
+      midnight.setHours(0, 0, 0, 0)
+      xzvalue.value = midnight
+      if (UPlayerList.value?.timeline) {
+        UPlayerList.value.timeline.currentTime = midnight
+        UPlayerList.value.timeline.updateTimelineView?.()
+      }
+      // 初始化时加载今天的录像色块
+      await loadRecordingBars(midnight)
+    } catch(e) {
+      console.error('[setLiveMode] playback init error', e)
     }
-    // 重新注册所有当前播放器到时间轴
-    playerMap.forEach(player => {
-      try { UPlayerList.value.addPlayer(player) } catch(e) {}
-    })
+    isPlaying.value = false
   }
+  savePlayingState()
 }
 
-// ─── Playback controls (mirrors GridCloudView) ───────────────────────────
-const onDateChange = () => {
-  if (!UPlayerList.value) return
-  UPlayerList.value.setAllPosition(xzvalue.value.getTime()).then(() => {
-    UPlayerList.value.playAll(xzvalue.value.getTime())
+// ─── 查录像时间段并更新时间轴色块 ────────────────────────────────────────
+const loadRecordingBars = async (date: Date) => {
+  const token = [...cameraMap.value.values()][0]?.token
+  if (!token || !UPlayerList.value?.timeline) return
+  // 查该日 00:00:00 ~ 23:59:59 的录像段（对照 uscweb：start=前一天, end=后一天）
+  const dayStart = new Date(date); dayStart.setHours(0, 0, 0, 0)
+  const dayEnd   = new Date(date); dayEnd.setHours(23, 59, 59, 999)
+  try {
+    const api = store.DefaultStorage === 'CentralStorage'
+      ? getSearchStorRecordByTimeApi(token, dayStart.toISOString(), dayEnd.toISOString())
+      : getSearchDeviceRecordByTimeApi(token, dayStart.toISOString(), dayEnd.toISOString())
+    const res = await api
+    if (res.status === 200 && res.data?.record?.length) {
+      const bars = res.data.record.map((item: any) => ({
+        start: new Date(item.strStartTime ?? item.startTime ?? item.StartTime),
+        end:   new Date(item.strEndTime   ?? item.endTime   ?? item.EndTime),
+      }))
+      UPlayerList.value?.timeline?.setEventBar?.(bars)
+    }
+  } catch(e) { /* 查录像失败不影响播放 */ }
+}
+
+// ─── 日期选择器变更 → moveto（对照 uscweb Advancepb.vue mouseup）─────────
+const onDateChange = async () => {
+  const t = xzvalue.value
+  if (!t) return
+  if (UPlayerList.value?.timeline) {
+    UPlayerList.value.timeline.currentTime = t
+    UPlayerList.value.timeline.updateTimelineView?.()
+  }
+  const iso = t.toISOString()
+  playerMap.forEach(player => {
+    try { player.livePlayer?.moveto(iso) } catch(e) {}
   })
   isPlaying.value = true
+  await loadRecordingBars(t)
 }
 
 const timeSpeed = (speed: string) => {
@@ -778,22 +980,129 @@ const timeSpeed = (speed: string) => {
 }
 
 const resumePlayback = () => {
-  if (!UPlayerList.value?.UPlayerSDKList?.length || isLiveview.value) return
+  if (isLiveview.value) return
   if (isPlaying.value) {
-    UPlayerList.value.pauseAll()
+    // 暂停：对照 uscweb pauseAll
+    playerMap.forEach(player => { try { player.livePlayer?.pause?.() } catch(e) {} })
   } else {
-    UPlayerList.value.playAll()
+    // 继续：对照 uscweb resume
+    playerMap.forEach(player => { try { player.livePlayer?.resume?.() } catch(e) {} })
   }
   isPlaying.value = !isPlaying.value
 }
 
-const gotoLive = async () => {
-  const now = new Date()
-  if (UPlayerList.value) {
-    await UPlayerList.value.setAllPosition(now.getTime())
-    UPlayerList.value.playAll()
+// ─── Segment export (片段导出) ───────────────────────────────────────────
+const croppingEnabled = ref(false)
+const croppingForm = reactive({
+  label: '',
+  token: '',
+  startTime: new Date(new Date().setHours(0, 0, 0, 0)),
+  endTime: new Date(new Date().setHours(0, 30, 0, 0)),
+})
+const croppingWS2List: any[] = []
+
+const toggleCropping = () => {
+  const cellId = selectedCellId.value || [...cameraMap.value.keys()][0]
+  if (!cellId) return
+  const cam = cameraMap.value.get(cellId)
+  if (!cam) return
+  croppingEnabled.value = !croppingEnabled.value
+  if (croppingEnabled.value) {
+    croppingForm.label = cam.name
+    croppingForm.token = cam.token
+    // 默认截取当前时间前后30分钟
+    const base = xzvalue.value ? new Date(xzvalue.value) : new Date()
+    croppingForm.startTime = new Date(base.getTime() - 30 * 60 * 1000)
+    croppingForm.endTime = new Date(base.getTime())
   }
+}
+
+const formatTime = (d: Date) => {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const tz = -d.getTimezoneOffset()
+  const sign = tz >= 0 ? '+' : '-'
+  const tzH = pad(Math.floor(Math.abs(tz) / 60))
+  const tzM = pad(Math.abs(tz) % 60)
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${tzH}:${tzM}`
+}
+
+const doExport = () => {
+  console.log('[doExport] token=%s start=%s end=%s', croppingForm.token, croppingForm.startTime, croppingForm.endTime)
+  if (!croppingForm.token) { console.warn('[doExport] no token'); return }
+  if (croppingForm.endTime <= croppingForm.startTime) {
+    ElMessage.warning('结束时间不能早于开始时间')
+    return
+  }
+  croppingEnabled.value = false
+  const begin = formatTime(new Date(croppingForm.startTime))
+  const end   = formatTime(new Date(croppingForm.endTime))
+  const apiProtocol = userStore.IPPORT?.startsWith('https') ? 'https:' : window.location.protocol
+  const mp4writerconf = {
+    callback: (data: string) => {
+      try {
+        const msg = JSON.parse(data)
+        if (msg.type === 'H5S_MP4_WRITER_CLOSE') ElMessage.success('导出完成')
+        if (msg.type === 'H5S_MP4_WRITER_FAIL') ElMessage.error('导出失败')
+      } catch(e) {}
+    },
+    begintime: begin,
+    endtime: end,
+    mp4writer: 'true',
+    mp4name: `${croppingForm.token}-${begin.replace(/[:\+]/g, '-')}.mp4`,
+    serverpb: store.DefaultStorage === 'CentralStorage' ? 'true' : 'false',
+  }
+  const ws2: any = new H5sPlayerWS2({
+    protocol: apiProtocol,
+    host: userStore.WSROOT,
+    rootpath: '/',
+    token: croppingForm.token,
+    streamprofile: 'main',
+    session: userStore.session,
+    meta: 'false',
+    buffersize: '0',
+    h264cpumode: 'true',
+    consolelog: 'false',
+    mp4writerconf,
+  })
+  ws2.connect()
+  setTimeout(() => { try { ws2.speed('4.0') } catch(e){} }, 1000)
+  croppingWS2List.push(ws2)
+  ElMessage.info('开始导出片段，请稍候…')
+}
+
+
+const gotoLive = async () => {
+  // 对照 uscweb：player.play() 重连直播流
+  playerMap.forEach(player => { try { player.play() } catch(e) {} })
   isLiveview.value = true; isPlaying.value = true
+}
+
+// ─── Storage type switch (CentralStorage / DeviceStorage) ────────────────
+const rebuildPlaybackPlayers = () => {
+  // 切换存储类型后，重建所有格子的播放器（以新的 serverpb 参数生效）
+  if (isLiveview.value) return
+  const entries = [...cameraMap.value.entries()]
+  entries.forEach(([cellId, cam]) => {
+    placeCamera(cellId, {
+      token: cam.token, name: cam.name,
+      uuid: cam.resourceUUID, resourceUUID: cam.resourceUUID,
+      recording: cam.recording,
+    }, cam.nodeId)
+  })
+}
+
+const setStorageCentral = async () => {
+  if (store.DefaultStorage === 'CentralStorage') return
+  store.setDefaultStorage('CentralStorage')
+  try { await UpdateUserConfigApi({ key: 'DefaultStorage', value: 'CentralStorage' }) } catch(e) {}
+  rebuildPlaybackPlayers()
+}
+
+const setStorageDevice = async () => {
+  if (store.DefaultStorage === 'DeviceStorage') return
+  store.setDefaultStorage('DeviceStorage')
+  try { await UpdateUserConfigApi({ key: 'DefaultStorage', value: 'DeviceStorage' }) } catch(e) {}
+  rebuildPlaybackPlayers()
 }
 
 // ─── Fullscreen ───────────────────────────────────────────────────────────
@@ -810,13 +1119,17 @@ const toggleFullscreen = () => {
 }
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────
-onMounted(() => {
+onMounted(async () => {
   loadTree()
   loadLayoutList()
-  // UPlayerList 延迟初始化，在切换到回放模式时才创建（SVG 需先显示才有尺寸）
-  changeLayout('4')   // 默认4宫格（对照uscweb）
+  await restorePlayingState()
 })
-onBeforeUnmount(() => { clearAllPlayers() })
+onBeforeUnmount(() => {
+  // 只销毁播放器内存，不清 localStorage（下次挂载时 restorePlayingState 可以恢复）
+  playerMap.forEach(p => { try { p?.destroy?.() } catch(e){} })
+  playerMap.clear()
+  UPlayerList.value = null
+})
 </script>
 
 <style lang="scss" scoped>
@@ -832,14 +1145,25 @@ onBeforeUnmount(() => { clearAllPlayers() })
     .fold-btn { font-size: 18px; cursor: pointer; }
   }
   .collapse-title { display: flex; justify-content: space-between; width: 90%; align-items: center; padding-left: 10px; }
-  .tree-node { width: 100%; display: flex; align-items: center; gap: 4px; }
-  .node-playing { color: #00ff00; font-size: 11px; }
+  .tree-node { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .node-playing-label { color: #30d158; }
+  .node-playing {
+    display: flex; align-items: center;
+    font-size: 12px; color: #30d158;
+    padding-left: 4px; padding-right: 8px; flex-shrink: 0;
+    .dot { font-size: 12px; padding-right: 4px; }
+  }
   .device-offline { opacity: 0.6; }
   :deep(.el-collapse) { border: 0;
-    .el-collapse-item__header { background: #303030; border: 0; color: #fff; }
-    .el-collapse-item__wrap { background: transparent; border: 0; }
-    .el-tree { background: transparent;
-      .el-tree-node__content:hover { background: rgba(255,255,255,0.1); }
+    .el-collapse-item__header { background: #303030; border: 0; color: #fff; font-size: 14px; height: 36px; line-height: 36px; }
+    .el-collapse-item__wrap { background: transparent; border: 0;
+      .el-collapse-item__content { padding: 0 10px; }
+    }
+    .el-tree { background: transparent; font-size: 13px;
+      .el-tree-node__content {
+        min-height: 26px; height: auto;
+        &:hover { background: rgba(255,255,255,0.1); }
+      }
     }
   }
 }
@@ -881,6 +1205,17 @@ onBeforeUnmount(() => { clearAllPlayers() })
 // 时间轴控制区 — 完全对照 GridCloudView.vue
 .control_area {
   width: 100%; display: flex; flex-direction: column; flex-shrink: 0;
+  .Cropping {
+    background: #282828; padding: 12px 16px; border-bottom: 1px solid #3a3a3a;
+    .Cropping_title {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px; font-size: 14px; color: #fff;
+      i { cursor: pointer; font-size: 18px; &:hover { color: #0399FE; } }
+    }
+    .Cropping_content { :deep(.el-form-item) { margin-bottom: 8px; } }
+    :deep(.el-input__wrapper), :deep(.el-input__inner) { background: #1e1e1e; color: #fff; }
+    :deep(.fixed_input .el-input__wrapper) { background: #1e1e1e; border: 0; box-shadow: none; }
+  }
   .control_btns {
     flex: 1; width: 100%; background-color: #282828;
     display: flex; align-items: center; justify-content: space-between;
@@ -894,6 +1229,17 @@ onBeforeUnmount(() => { clearAllPlayers() })
       .mr-0 { width:15px; height:15px; border-radius:50px; border:0; margin-right:5px !important; vertical-align:middle; background-color:#31b1ff; }
       .mr-1 { width:15px; height:15px; border-radius:50px; border:0; margin:0 5px; vertical-align:middle; background-color:rgb(60,196,60); }
       .mr-2 { width:15px; height:15px; border-radius:50px; border:0; margin:0 5px; vertical-align:middle; background-color:#ee1011; }
+    }
+    .storage-switch {
+      display: flex; align-items: center; font-size: 13px; color: #ccc;
+      span {
+        padding: 3px 12px; cursor: pointer; border: 1px solid #555;
+        transition: background 0.2s, color 0.2s;
+        &:first-child { border-radius: 12px 0 0 12px; border-right: none; }
+        &:last-child  { border-radius: 0 12px 12px 0; }
+        &.active { background: #0399FE; color: #fff; border-color: #0399FE; }
+        &:not(.active):hover { background: #3a3a3a; }
+      }
     }
     button { padding:0; border:none; background:none; font-size:22px; margin-right:10px; color:#fff; }
     .control-center {

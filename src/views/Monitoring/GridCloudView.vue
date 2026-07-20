@@ -174,9 +174,9 @@
           <el-card>
             <div class="preset_bgc">
               <input type="text" class="preset_input" :value="Pre.strName" />
-              <button type="button" class="iconfont icon-RectangleCopy1"
+              <button class="iconfont icon-RectangleCopy1"
                 @click="preset_jump(Pre.strToken)"></button>
-              <button type="button" class="iconfont icon-icon-test1"
+              <button class="iconfont icon-icon-test1"
                 @click="preset_set(Pre.strToken, $event)"></button>
             </div>
           </el-card>
@@ -335,7 +335,7 @@ const initGridLayout = ():void => {
           
           const conf = {
             videoid: row.camera.videoid,
-            protocol: window.location.protocol,
+            protocol: userStore.IPPORT?.startsWith('https') ? 'https:' : window.location.protocol,
             host: userStore.WSROOT,
             token: row.camera.token,
             session: userStore.session,
@@ -494,7 +494,7 @@ const Shoutwheat = (id: string, audio: boolean) => {
   const sdk = PlayingArr.value.find(item => item.conf.videoid == vid);
   if (!sdk) return;
   const conf = {
-    protocol: window.location.protocol,
+    protocol: userStore.IPPORT?.startsWith('https') ? 'https:' : window.location.protocol,
     host: window.location.host,
     rootpath: '/',
     token: sdk.conf.token,
@@ -758,7 +758,7 @@ const handleDragStart = (node: any) => {
     console.log('handleDragStart channel =>', node.data)
     conf = {
       videoid: uuid(8),
-      protocol: window.location.protocol,
+      protocol: userStore.IPPORT?.startsWith('https') ? 'https:' : window.location.protocol,
       host: userStore.WSROOT,
       token: node.data.data.token,
       session: userStore.session,

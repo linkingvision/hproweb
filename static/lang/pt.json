@@ -112,9 +112,12 @@
     "comm_modify_successfully": "Modifique com sucesso!"
   },
   "CommTime": {
-    "comm_week": "Semana",
     "comm_time_start": "Hora de início",
-    "comm_time_end": "Hora de término"
+    "comm_time_end": "Hora de fim",
+    "comm_current_time": "Hora atual",
+    "comm_last_day": "Último dia",
+    "comm_last_seven_days": "Últimos 7 dias",
+    "comm_last_month": "Último mês"
   },
   "Common": {
     "comm_channel": "canal",
@@ -352,6 +355,48 @@
     "live_row": "Linha",
     "live_column": "Coluna",
     "live_customization": "Personalização",
-    "live_restore_defaults": "Restaurar padrões"
+    "live_restore_defaults": "Restaurar padrões",
+    "live_displaying": "Exibindo",
+    "live_playing": "Reproduzindo"
+  },
+  "CommTable": {
+    "comm_bind_ip": "Vincular IP",
+    "comm_connection_type": "Tipo de conexão",
+    "comm_external_server": "Serviço Externo",
+    "comm_file_list": "Lista de arquivos",
+    "comm_go_to": "Vá para",
+    "comm_item": "Item",
+    "comm_jump": "Pular",
+    "comm_no_data_available": "Não há dados disponíveis",
+    "comm_page": "Página",
+    "comm_piece": "pedaço",
+    "comm_substream_url": "URL da subtransmissão",
+    "comm_table_channo": "Número do Canal",
+    "comm_table_edit": "Editar",
+    "comm_table_ip": "PI",
+    "comm_table_name": "Nome",
+    "comm_table_online": "On-line",
+    "comm_table_port": "Porta",
+    "comm_table_serial_number": "Número de série",
+    "comm_table_tcp": "TCP",
+    "comm_table_time": "Tempo",
+    "comm_table_token": "Símbolo",
+    "comm_table_type": "Tipo",
+    "comm_table_udp": "UDP",
+    "comm_total": "Total",
+    "comm_video_list": "Lista de vídeos"
+  },
+  "Playback": {
+    "pb_export": "Exportar",
+    "pb_schedule": "Agendado",
+    "pb_manual": "Manual",
+    "pb_alarm": "Alarme",
+    "pb_task": "Tarefa",
+    "pb_download": "Download",
+    "pb_video_playback": "Reprodução",
+    "pb_device_record": "Registro do dispositivo"
+  },
+  "Cascade": {
+    "cascade_central_record": "Registro central"
   }
 }
