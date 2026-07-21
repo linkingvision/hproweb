@@ -180,7 +180,6 @@
       <!-- 底部 footer（对照uscweb liveview_footer） -->
       <div class="liveview_footer">
         <div class="BlankPlaceholder"></div>
-        <!-- 实时/回放切换（对照uscweb show-play-replay） -->
         <div class="show-play-replay">
           <div class="changeLiveReplay" @click="setLiveMode(true)"
             :class="isLiveview ? 'live' : 'replay'">{{ t('Monitoring.mon_live') }}</div>
@@ -244,7 +243,7 @@
       <i class="iconfont icon-liebiao"></i>
     </div>
 
-    <!-- 新增视图对话框 -->
+    <!-- Add View Dialog -->
     <el-dialog v-model="addDialogVisible" :title="t('Setting.set_adding_views')" width="420px">
       <el-form :model="viewForm" label-width="90px">
         <el-form-item :label="t('Liveview.live_view_name')"><el-input v-model="viewForm.viewName" /></el-form-item>
