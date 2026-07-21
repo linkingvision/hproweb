@@ -125,6 +125,7 @@
     "comm_device_partition": "Partición del dispositivo",
     "comm_enable": "Permitir",
     "comm_filtration": "Filtro de palabras clave",
+    "comm_logic_partition": "Partición lógica",
     "comm_picture": "Imagen",
     "comm_root": "Raíz",
     "comm_time_current": "Hora actual",
@@ -135,7 +136,11 @@
     "comm_time": " vez",
     "comm_times": " veces",
     "comm_day": "Día",
-    "comm_start_end_time": "Tiempo de inicio y fin"
+    "comm_start_end_time": "Tiempo de inicio y fin",
+    "comm_select_date_time": "Seleccionar Fecha",
+    "comm_width": "Ancho",
+    "comm_height": "Alto",
+    "comm_fps": "FPS"
   },
   "Configuration": {
     "conf_advanced_features": "Características avanzadas",
@@ -233,6 +238,7 @@
   },
   "Monitoring": {
     "mon_grid_cloud_view": "Vista de nube en cuadrícula",
+    "mon_grid_view": "Vista de Cuadrícula",
     "mon_view": "Vista",
     "mon_gotolive": "Ir a vivir",
     "mon_rec_info": "Vista general del video",
@@ -255,7 +261,9 @@
     "router_s3_storage": "almacenamiento S3",
     "router_storage_mode": "Modo de almacenamiento",
     "router_storage_setting": "Configuración de almacenamiento",
-    "router_view": "Vista"
+    "router_view": "Vista",
+    "router_user": "Usuario",
+    "router_user_config": "Config. de usuario"
   },
   "Setting": {
     "set_adding_views": "Agregar vista",
@@ -357,7 +365,17 @@
     "live_customization": "Personalización",
     "live_restore_defaults": "Restaurar predeterminados",
     "live_displaying": "Mostrando",
-    "live_playing": "Reproduciendo"
+    "live_playing": "Reproduciendo",
+    "live_video": "Vídeo",
+    "live_ptz": "PTZ",
+    "live_codec": "Códec",
+    "live_sampleRate": "Frecuencia de muestreo",
+    "live_sampleBit": "Bits de muestra",
+    "live_channels": "Canales"
+  },
+  "CommDev": {
+    "comm_dev_audio": "Audio",
+    "comm_dev_bitrate": "Tasa de bits"
   },
   "CommTable": {
     "comm_bind_ip": "Vincular IP",
@@ -398,5 +416,48 @@
   },
   "Cascade": {
     "cascade_central_record": "registro central"
+  },
+  "Theme": {
+    "theme": "Tema",
+    "theme_white": "Blanco predeterminado",
+    "theme_black": "Negro elegante",
+    "theme_dark_blue": "Azul profundo"
+  },
+  "SetUser": {
+    "set_user_config": "Configuración de usuario",
+    "set_liveview_protocol": "Protocolo en vivo",
+    "set_playback_protocol": "Protocolo de reproducción",
+    "set_buffertime": "Tiempo de búfer",
+    "set_millisecond": "ms",
+    "set_h264_cpu_decode": "Decodificación H264 por CPU",
+    "set_watermark": "Marca de agua",
+    "set_watermark_content": "Contenido de marca de agua",
+    "set_enable_watermark": "Activar",
+    "set_disable_watermark": "Desactivar",
+    "set_rtc_engine": "Motor RTC",
+    "set_display_disable": "Mostrar dispositivos desactivados",
+    "set_image_quality_selection": "Selección de calidad de imagen",
+    "set_web_client_auto-logout_time": "Tiempo de cierre de sesión automático",
+    "set_enable_web_client_auto-logout": "Activar cierre automático",
+    "set_ws_decoder": "Decodificador WS",
+    "set_rtc_decoder": "Decodificador RTC",
+    "set_keep_aspect_ratio": "Mantener relación de aspecto",
+    "set_video_background_color": "Color de fondo del vídeo",
+    "set_map_cluster": "Clúster de mapa",
+    "set_cascade_loading_level": "Nivel de carga en cascada",
+    "set_playback_mode": "Modo de reproducción",
+    "set_default_view": "Vista predeterminada",
+    "set_default_map": "Mapa predeterminado",
+    "set_default_partition": "Partición predeterminada",
+    "set_show": "Mostrar",
+    "set_hide": "Ocultar",
+    "set_ws2_mode_use_https": "El modo WS2 requiere HTTPS",
+    "set_basic_information": "Información básica",
+    "set_edit_avatar": "Editar avatar",
+    "set_select_local_file": "Seleccionar archivo local",
+    "set_support_images": "Compatible con PNG, JPG, JPEG",
+    "set_reset_picture": "Restablecer imagen",
+    "set_edit_avatarsuccessfully": "¡Avatar actualizado con éxito!",
+    "set_edit_avatar_failed": "¡Error al actualizar el avatar!"
   }
 }

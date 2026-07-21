@@ -59,6 +59,49 @@ export const useStore = defineStore('main', () =>{
     PlaybackShowStorageMode.value = value;
   }
 
+  // ─── User config extra fields ─────────────────────────────────────────────
+  const watermarkstring = ref<string>('');
+  function setWatermarkstring(v: string) { watermarkstring.value = v; }
+
+  const watermarktoggle = ref<string>('false');
+  function setWatermarktoggle(v: string) { watermarktoggle.value = v; }
+
+  const devicemarktoggle = ref<string>('true');
+  function setDevicemarktoggle(v: string) { devicemarktoggle.value = v; }
+
+  const elqualitytoggle = ref<string>('true');
+  function setElqualitytoggle(v: string) { elqualitytoggle.value = v; }
+
+  const VideoBackgroundBlack = ref<string>('#222222');
+  function setVideoBackgroundBlack(v: string) { VideoBackgroundBlack.value = v; }
+
+  const VideoBackgroundWhite = ref<string>('#494A4B');
+  function setVideoBackgroundWhite(v: string) { VideoBackgroundWhite.value = v; }
+
+  const VideoBackgroundDarkblue = ref<string>('#202731');
+  function setVideoBackgroundDarkblue(v: string) { VideoBackgroundDarkblue.value = v; }
+
+  const keepAspectRatio = ref<string>('true');
+  function setKeepAspectRatio(v: string) { keepAspectRatio.value = v; }
+
+  const WebclientAutoLogoutTime = ref<string>('180');
+  function setWebclientAutoLogoutTime(v: string) { WebclientAutoLogoutTime.value = v; }
+
+  const WebclientAutoLogoutTimeEnable = ref<string>('false');
+  function setWebclientAutoLogoutTimeEnable(v: string) { WebclientAutoLogoutTimeEnable.value = v; }
+
+  const mapCluster = ref<boolean>(false);
+  function setMapCluster(v: boolean) { mapCluster.value = v; }
+
+  const CascadeLoadingLevel = ref<number>(3);
+  function setCascadeLoadingLevel(v: number) { CascadeLoadingLevel.value = v; }
+
+  const DefaultView = ref<string | number>(1);
+  function setDefaultView(v: string | number) { DefaultView.value = v; }
+
+  const H5sRtcengine = ref<string>('v1');
+  function setH5sRtcengine(v: string) { H5sRtcengine.value = v; }
+
   return {
     lang,
     changeLang,
@@ -80,6 +123,20 @@ export const useStore = defineStore('main', () =>{
     setDefaultStorage,
     PlaybackShowStorageMode,
     setPlaybackShowStorageMode,
+    watermarkstring, setWatermarkstring,
+    watermarktoggle, setWatermarktoggle,
+    devicemarktoggle, setDevicemarktoggle,
+    elqualitytoggle, setElqualitytoggle,
+    VideoBackgroundBlack, setVideoBackgroundBlack,
+    VideoBackgroundWhite, setVideoBackgroundWhite,
+    VideoBackgroundDarkblue, setVideoBackgroundDarkblue,
+    keepAspectRatio, setKeepAspectRatio,
+    WebclientAutoLogoutTime, setWebclientAutoLogoutTime,
+    WebclientAutoLogoutTimeEnable, setWebclientAutoLogoutTimeEnable,
+    mapCluster, setMapCluster,
+    CascadeLoadingLevel, setCascadeLoadingLevel,
+    DefaultView, setDefaultView,
+    H5sRtcengine, setH5sRtcengine,
   }
 }, {
   persist: true

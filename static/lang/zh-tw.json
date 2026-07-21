@@ -125,6 +125,7 @@
     "comm_device_partition": "設備分區",
     "comm_enable": "開啓",
     "comm_filtration": "輸入關鍵字進行過濾",
+    "comm_logic_partition": "邏輯分區",
     "comm_picture": "圖片",
     "comm_please_input": "請輸入",
     "comm_root": "根節點",
@@ -136,7 +137,11 @@
     "comm_time": "次",
     "comm_times": "次",
     "comm_day": "天",
-    "comm_start_end_time": "起止時間"
+    "comm_start_end_time": "起止時間",
+    "comm_select_date_time": "選擇日期",
+    "comm_width": "寬",
+    "comm_height": "高",
+    "comm_fps": "幀率"
   },
   "Configuration": {
     "conf_advanced_features": "高級功能",
@@ -234,6 +239,7 @@
   },
   "Monitoring": {
     "mon_grid_cloud_view": "網格雲視圖",
+    "mon_grid_view": "網格視圖",
     "mon_view": "視圖",
     "mon_gotolive": "轉到直播",
     "mon_rec_info": "錄影概覽",
@@ -256,7 +262,9 @@
     "router_s3_storage": "S3存儲",
     "router_storage_mode": "存儲模式",
     "router_storage_setting": "存儲配置",
-    "router_view": "視圖"
+    "router_view": "視圖",
+    "router_user": "用戶",
+    "router_user_config": "用戶配置"
   },
   "Setting": {
     "set_adding_views": "添加視圖",
@@ -358,7 +366,17 @@
     "live_customization": "自定義",
     "live_restore_defaults": "恢復預設",
     "live_displaying": "正在顯示",
-    "live_playing": "正在播放"
+    "live_playing": "正在播放",
+    "live_video": "視頻",
+    "live_ptz": "云台",
+    "live_codec": "編碼格式",
+    "live_sampleRate": "採樣率",
+    "live_sampleBit": "採樣位",
+    "live_channels": "聲道"
+  },
+  "CommDev": {
+    "comm_dev_audio": "音頻",
+    "comm_dev_bitrate": "碼率"
   },
   "CommTable": {
     "comm_bind_ip": "綁定 IP",
@@ -399,5 +417,48 @@
   },
   "Cascade": {
     "cascade_central_record": "中心存儲"
+  },
+  "Theme": {
+    "theme": "主題",
+    "theme_white": "默認白",
+    "theme_black": "炫酷黑",
+    "theme_dark_blue": "深藍色"
+  },
+  "SetUser": {
+    "set_user_config": "用戶配置",
+    "set_liveview_protocol": "實時協議",
+    "set_playback_protocol": "回放協議",
+    "set_buffertime": "緩衝時間",
+    "set_millisecond": "毫秒",
+    "set_h264_cpu_decode": "H264 CPU解碼",
+    "set_watermark": "水印",
+    "set_watermark_content": "水印內容",
+    "set_enable_watermark": "開啓水印",
+    "set_disable_watermark": "關閉水印",
+    "set_rtc_engine": "RTC引擎",
+    "set_display_disable": "顯示禁用設備",
+    "set_image_quality_selection": "畫質選擇",
+    "set_web_client_auto-logout_time": "自動登出時間",
+    "set_enable_web_client_auto-logout": "啓用自動登出",
+    "set_ws_decoder": "WS解碼器",
+    "set_rtc_decoder": "RTC解碼器",
+    "set_keep_aspect_ratio": "保持寬高比",
+    "set_video_background_color": "視頻背景顏色",
+    "set_map_cluster": "地圖聚合",
+    "set_cascade_loading_level": "級聯加載層級",
+    "set_playback_mode": "回放模式",
+    "set_default_view": "默認視圖",
+    "set_default_map": "默認地圖",
+    "set_default_partition": "默認分區",
+    "set_show": "顯示",
+    "set_hide": "隱藏",
+    "set_ws2_mode_use_https": "WS2模式需要使用HTTPS",
+    "set_basic_information": "基本信息",
+    "set_edit_avatar": "編輯頭像",
+    "set_select_local_file": "選擇本地文件",
+    "set_support_images": "支持PNG、JPG、JPEG格式",
+    "set_reset_picture": "重置圖片",
+    "set_edit_avatarsuccessfully": "頭像修改成功！",
+    "set_edit_avatar_failed": "頭像修改失敗！"
   }
 }

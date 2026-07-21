@@ -6,6 +6,7 @@ const Login = () => import('@/containers/Login.vue');
 const TheContainer = () => import('@/containers/TheContainer.vue')
 const Monitoring = () => import('@/views/Monitoring/Monitoring.vue')
 const GridCloudView = () => import('@/views/Monitoring/GridCloudView.vue')
+const GridView = () => import('@/views/Monitoring/GridView.vue')
 const ViewPage = () => import('@/views/Monitoring/View.vue')
 const Search = () => import('@/views/Monitoring/search/Search.vue')
 const RecordInfo = () =>import('@/views/Monitoring/search/RecordInfo.vue');
@@ -17,6 +18,7 @@ const MetaStorage = () => import('@/views/Configuration/Basic/StorageSetting/Met
 const LocalObjectStorage = () => import('@/views/Configuration/Basic/StorageSetting/LocalObjectStorage.vue')
 const S3Storage = () => import('@/views/Configuration/Basic/StorageSetting/S3Storage.vue')
 const RegularStorage = () => import('@/views/Configuration/Basic/StorageSetting/RegularStorage.vue')
+const UserConfigPage = () => import('@/views/Configuration/Basic/User/UserConfig.vue')
 const Device = () => import('@/views/Configuration/Device/Device.vue')
 const DeviceSDK = () => import('@/views/Configuration/Device/DeviceSDK.vue')
 const System = () => import('@/views/System/System.vue')
@@ -102,6 +104,16 @@ const router = createRouter({
           title: '/Monitoring/View',
           name: 'Monitoring.mon_view',
           icon: 'iconfont icon-shitu',
+          type: 'Operator'
+        }
+      }, {
+        path: 'GridView',
+        name: 'GridView',
+        component: GridView,
+        meta: {
+          title: '/Monitoring/GridView',
+          name: 'Monitoring.mon_grid_view',
+          icon: 'iconfont icon-gongge',
           type: 'Operator'
         }
       }, {
@@ -196,6 +208,16 @@ const router = createRouter({
           meta: {
             title: '/Configuration/Basic/S3Storage',
             name: 'S3Storage',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'User/UserConfig',
+          name: 'UserConfig',
+          component: UserConfigPage,
+          meta: {
+            title: '/Configuration/Basic/User/UserConfig',
+            name: 'Router.router_user_config',
             icon: '',
             type: 'Operator'
           }

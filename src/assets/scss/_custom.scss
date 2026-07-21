@@ -241,6 +241,15 @@ body.c-dark-theme {
       --el-border-color: #4A4A4A;
     }
   }
+  .el-input.is-disabled {
+    .el-input__wrapper {
+      --el-fill-color-light: #2b2b2b;
+      background-color: #2b2b2b !important;
+    }
+    .el-input__inner {
+      -webkit-text-fill-color: #aaa;
+    }
+  }
   .el-form {
     .el-input {
       .el-input__wrapper {

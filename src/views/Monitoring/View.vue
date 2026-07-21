@@ -47,6 +47,24 @@
     <div class="view-right">
       <!-- 视频网格（无顶部工具栏，对照uscweb Liveview） -->
       <div class="liveview_right_video_hed" id="video_hed" v-if="LiveplayShow">
+        <!-- 码率信息浮层（对照 GridView .malv） -->
+        <div class="malv" :class="infoShow ? '' : 'malv-hide'">
+          <div class="malv-close" @click="closeInfo">×</div>
+          <div class="malv-left">
+            <div class="information_title">{{ t('Liveview.live_video') }}</div>
+            <div class="information_content" v-for="(a,i) in infoVideo" :key="i">
+              <div class="information_content_left">{{ a.name }}</div>
+              <div class="information_content_right">{{ a.data }}</div>
+            </div>
+          </div>
+          <div class="malv-right">
+            <div class="information_title">{{ t('CommDev.comm_dev_audio') }}</div>
+            <div class="information_content" v-for="(a,i) in infoAudio" :key="i">
+              <div class="information_content_left">{{ a.name }}</div>
+              <div class="information_content_right">{{ a.data }}</div>
+            </div>
+          </div>
+        </div>
         <div v-for="cell in gridCells" :key="cell.id"
           class="palace" :id="'h'+cell.id"
           :class="{ 'palace-selected': selectedCellId===cell.id, 'palace-expanded': expandedCellId===cell.id }"
@@ -55,7 +73,21 @@
           @dblclick="toggleExpand(cell.id)"
           @drop.prevent="dropOnCell($event, cell.id)"
           @dragover.prevent>
-          <!-- UPlayerSDK injects <video> here dynamically, name label is rendered by SDK -->
+          <!-- UPlayerSDK injects <video> here dynamically -->
+          <!-- 悬浮按钮层（对照 GridView float-layer，鼠标悬停时滑入） -->
+          <div v-if="getCellCamera(cell.id)" class="float-layer">
+            <i class="iconfont icon-xinxi"    @click.stop="showCellInfo(cell.id)"   :title="t('Liveview.live_video')"></i>
+            <i class="iconfont icon-duijiang"
+              :class="audioingCellId===cell.id ? 'audio-active' : ''"
+              @click.stop="doShoutwheat(cell.id)"
+              :title="t('Liveview.live_ptz')"></i>
+            <i class="iconfont icon-kuaizhao" @click.stop="doSnapshot(cell.id)"     :title="t('Liveview.live_snapshot')"></i>
+            <i class="iconfont icon-luzhi"
+              :class="getCellCamera(cell.id)?.recording ? 'rec-active' : ''"
+              @click.stop="doManualRec(cell.id)"
+              :title="t('Liveview.live_record')"></i>
+            <i class="iconfont icon-ptz"      @click.stop="showPtz(cell.id)"        :title="t('Liveview.live_ptz')"></i>
+          </div>
           <button v-if="getCellCamera(cell.id)" class="cell-close" @click.stop="clearCell(cell.id)">×</button>
         </div>
       </div>
@@ -93,28 +125,25 @@
           <svg id="view-timeline-svg"></svg>
         </div>
         <div class="control_btns">
-          <div class="caveat_butt">
-            <!-- 按钮在左，点击后指示项向右展开 -->
-            <div class="showRecodeType" @click="showRecodeType = !showRecodeType">
-              <i class="iconfont" :class="showRecodeType ? 'icon-zuojiantou' : 'icon-youjiantou'"></i>
-            </div>
-            <div class="recodeType" v-if="showRecodeType" style="padding:0 10px;">
-              <button class="mr-0"></button>{{ t('CommTableEdit.comm_schedule') }}
-              <button class="mr-1"></button>{{ t('CommTableEdit.comm_manual') }}
-              <button class="mr-2"></button>{{ t('CommTableEdit.comm_alarm') }}
+          <!-- 最左：中心存储 / 设备存储切换（对照 GridView storage_box） -->
+          <div class="storage_box">
+            <div v-if="store.PlaybackShowStorageMode" class="storage_mode">
+              <div class="CentralStorage"
+                :class="{ active: store.DefaultStorage === 'CentralStorage' }"
+                @click="setStorageCentral">{{ t('Cascade.cascade_central_record') }}</div>
+              <div class="DeviceStorage"
+                :class="{ active: store.DefaultStorage === 'DeviceStorage' }"
+                @click="setStorageDevice">{{ t('Playback.pb_device_record') }}</div>
             </div>
           </div>
-          <!-- 中心存储 / 设备存储 切换（仅在系统配置开启时显示） -->
-          <div v-if="store.PlaybackShowStorageMode" class="storage-switch">
-            <span
-              :class="store.DefaultStorage === 'CentralStorage' ? 'active' : ''"
-              @click="setStorageCentral">{{ t('Cascade.cascade_central_record') }}</span>
-            <span
-              :class="store.DefaultStorage === 'DeviceStorage' ? 'active' : ''"
-              @click="setStorageDevice">{{ t('Playback.pb_device_record') }}</span>
-          </div>
+          <!-- 中：导出 + 日期 + 速度 + 播放/暂停 + 音量 -->
           <div class="control-center">
+            <button class="export-btn" @click="toggleCropping">
+              <i class="iconfont icon-jiequ"></i>
+            </button>
             <el-date-picker class="fixed_input" v-model="xzvalue" size="small" @change="onDateChange"
+              @focus="onDateFocus" @blur="onDateBlur"
+              :cell-class-name="pickerOptions.cellClassName"
               :clearable="false" :append-to-body="false" popper-class="date-picker"
               :default-time="new Date(2000, 0, 1, 0, 0, 0)">
             </el-date-picker>
@@ -134,11 +163,16 @@
                 style="width:60%;margin-right:10px;"></el-slider>
             </div>
           </div>
-          <div class="gongge-btns" style="height:50px;padding-right:20px;width:20%;display:flex;justify-content:flex-end;align-items:center;gap:8px;">
-            <button v-if="!isLiveview" @click="toggleCropping" style="padding:0;border:none;background:none;font-size:22px;color:#fff;cursor:pointer;">
-              <i class="iconfont icon-jiequ"></i>
-            </button>
-            <el-button v-if="!isLiveview" class="goto-live" @click="gotoLive" round>{{ t('Monitoring.mon_gotolive') }}</el-button>
+          <!-- 最右：计划 / 手动 / 报警标识（对照 GridView caveat_butt） -->
+          <div class="caveat_butt">
+            <div class="showRecodeType" @click="showRecodeType = !showRecodeType">
+              <i class="iconfont" :class="showRecodeType ? 'icon-youjiantou' : 'icon-zuojiantou'"></i>
+            </div>
+            <div class="recodeType" v-if="showRecodeType" style="padding:0 10px;">
+              <button class="mr-0"></button>{{ t('CommTableEdit.comm_schedule') }}
+              <button class="mr-1"></button>{{ t('CommTableEdit.comm_manual') }}
+              <button class="mr-2"></button>{{ t('CommTableEdit.comm_alarm') }}
+            </div>
           </div>
         </div>
       </div>
@@ -296,11 +330,11 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { UPlayerSDK as UPlayerSDKClass, UPlayerList as UPlayerListClass, H5sPlayerWS2 } from '@/assets/js/uplayersdk.esm.js'
+import { UPlayerSDK as UPlayerSDKClass, UPlayerList as UPlayerListClass, H5sPlayerWS2, Timeline } from '@/assets/js/uplayersdk.esm.js'
 import { useUserStore } from '@/store/user'
 import { useStore } from '@/store'
 import { GetDevPartitionApi } from '@/api/configuration/device'
-import { GetDeviceChannels, getSearchDeviceRecordByTimeApi, getSearchStorRecordByTimeApi } from '@/api/channel'
+import { GetDeviceChannels, getSearchDeviceRecordByTimeApi, getSearchStorRecordByTimeApi, GetRecordCalendar } from '@/api/channel'
 import { UpdateUserConfigApi } from '@/api/system'
 import { GetViewApi, CreateViewApi, UpdateViewApi, DeleteViewApi, GetLayoutListApi, CreateLayoutApi, DeleteLayoutApi } from '@/api/view'
 import uuid from '@/assets/js/uuid.js'
@@ -329,7 +363,9 @@ const selectedCellId = ref('')
 const expandedCellId = ref('')
 const cameraMap      = ref(new Map<string, CameraConf>())   // cellId → camera
 const playerMap      = new Map<string, any>()               // cellId → UPlayerSDK
-const UPlayerList    = ref<any>(null)                        // timeline / sync playback
+const UPlayerList    = ref<any>(null)                        // 保留字段兼容旧调用（不再使用）
+let   viewTimeline: any = null                               // Timeline 实例（仅回放模式）
+const pbPlayerMap    = new Map<string, any>()               // cellId → { v1: H5sPlayerWS2, conf }
 const isPlaying      = ref(false)
 const xzvalue        = ref<Date>(new Date())
 const region         = ref('1.0')
@@ -342,6 +378,12 @@ const liveviewViewadd = ref<Array<{strIndex:string; token:string; resourceUUID:s
 const playingNodeIds  = ref<string[]>([])
 const showRecodeType  = ref(false)
 const Audioslider     = ref(0)
+const customDateArr   = ref<number[]>([])
+const pickerOptions   = {
+  cellClassName(date: Date) {
+    return customDateArr.value.indexOf(date.getTime()) !== -1 ? 'custom_date_class' : ''
+  }
+}
 
 // 音量变化时应用到所有播放器
 watch(Audioslider, (val) => {
@@ -349,6 +391,7 @@ watch(Audioslider, (val) => {
     try { player?.setVolume?.(val) } catch(e) {}
   })
 })
+
 
 // ─── Tree state ────────────────────────────────────────────────────────────
 const treeRef        = ref<any>(null)
@@ -545,6 +588,56 @@ const isNodePlaying = (n: TreeNode) => playingNodeIds.value.includes(n.id)
 
 // Next-empty-cell cursor for click-to-place (mirrors uscweb selectedCellId cycling)
 const nextCellIndex = ref(0)
+
+// ─── 回放模式下为单个格子构建 H5sPlayerWS2 回放播放器 ────────────────────
+// placeCamera 始终创建实时播放器；拖入/点击后若处于回放模式，调此函数转换
+const buildPbPlayer = async (cellId: string) => {
+  const cam = cameraMap.value.get(cellId)
+  if (!cam) return
+  // 销毁刚创建的实时播放器
+  const live = playerMap.get(cellId)
+  if (live) { try { live.destroy?.() } catch {} ; playerMap.delete(cellId) }
+  // 销毁该格旧的回放播放器（若有）
+  const old = pbPlayerMap.get(cellId)
+  if (old) { try { old.v1?.disconnect(); delete old.v1 } catch {} ; pbPlayerMap.delete(cellId) }
+
+  await nextTick()
+  const d = xzvalue.value instanceof Date ? xzvalue.value : new Date(xzvalue.value ?? Date.now())
+  d.setHours(0, 0, 0, 0)
+  const de = new Date(d); de.setHours(23, 59, 59, 999)
+  const Adswitch = store.DefaultStorage === 'CentralStorage' ? 'true' : 'false'
+  const baseUrl = new URL(userStore.IPPORT || window.location.origin)
+  const vid = cam.videoid
+  const conf: any = {
+    videoid: vid,
+    protocol: baseUrl.protocol, host: userStore.WSROOT,
+    rootpath: '/', token: cam.token, serverpb: Adswitch,
+    pbconf: {
+      begintime: formatTime(d), endtime: formatTime(de),
+      autoplay: 'true', showposter: 'false',
+      callback: pbPlaybackCB, serverpb: Adswitch,
+      userdata: { videoid: vid },
+    },
+    hlsver: 'v1', consolelog: 'false',
+    session: userStore.session, resourceUUID: cam.resourceUUID,
+    name: cam.name,
+  }
+  const container = document.getElementById('h' + cellId)
+  if (container) {
+    container.querySelectorAll('video, canvas').forEach(el => el.remove())
+    const video = document.createElement('video')
+    Object.assign(video.style, { position:'absolute', width:'100%', height:'100%', top:'0', left:'0', display:'block' })
+    video.id = vid; video.controls = false; video.muted = true; video.autoplay = true
+    container.appendChild(video)
+  }
+  const item = { v1: new H5sPlayerWS2(conf), conf }
+  item.v1.connect()
+  pbPlayerMap.set(cellId, item)
+  isPlaying.value = true
+  // 加载/刷新时间轴色块
+  await getViewEventBar(cam.token, d)
+}
+
 const onNodeClick = async (data: TreeNode) => {
   if (data.type === 'view' && data.data?.viewId) {
     await loadViewIntoGrid(data.data.viewId, data.id)
@@ -554,6 +647,8 @@ const onNodeClick = async (data: TreeNode) => {
     const cell = emptyCells[nextCellIndex.value % emptyCells.length]
     nextCellIndex.value++
     await placeCamera(cell.id, data.data, data.id)
+    // 回放模式下自动将刚添加的格子转换为回放播放器
+    if (!isLiveview.value) await buildPbPlayer(cell.id)
   }
 }
 const onDragStart = (node: any) => {
@@ -572,8 +667,16 @@ const getCellCamera = (cellId: string): CameraConf | undefined => cameraMap.valu
 const placeCamera = async (cellId: string, ch: any, nodeId?: string) => {
   if (!LiveplayShow.value) { changeLayout('4') }
   await nextTick()
-  // Destroy existing player in this cell
-  if (playerMap.has(cellId)) { try { playerMap.get(cellId)?.destroy?.() } catch(e){} ; playerMap.delete(cellId) }
+  // 销毁旧播放器
+  if (playerMap.has(cellId)) {
+    try { playerMap.get(cellId)?.destroy?.() } catch(e) {}
+    playerMap.delete(cellId)
+  }
+  // 同步销毁旧回放播放器（若该格子已有）
+  if (pbPlayerMap.has(cellId)) {
+    try { pbPlayerMap.get(cellId)?.v1?.disconnect() } catch {}
+    pbPlayerMap.delete(cellId)
+  }
   const vidId = uuid(8)
   const apiProtocol = userStore.IPPORT?.startsWith('https') ? 'https:' : window.location.protocol
   const conf = {
@@ -586,7 +689,6 @@ const placeCamera = async (cellId: string, ch: any, nodeId?: string) => {
     serverpb: store.DefaultStorage === 'CentralStorage' ? 'true' : 'false',
   }
   cameraMap.value.set(cellId, { token: ch.token, name: conf.name, resourceUUID: conf.resourceUUID, videoid: vidId, layoutPosition: `h${cellId}`, recording: conf.recording, nodeId })
-  // Update liveviewViewadd (mirrors uscweb)
   liveviewViewadd.value = liveviewViewadd.value.filter(x => x.strIndex !== `h${cellId}`)
   liveviewViewadd.value.push({ strIndex: `h${cellId}`, token: ch.token, resourceUUID: conf.resourceUUID, profile: 'main' })
   if (nodeId) { if (!playingNodeIds.value.includes(nodeId)) playingNodeIds.value.push(nodeId) }
@@ -594,23 +696,35 @@ const placeCamera = async (cellId: string, ch: any, nodeId?: string) => {
   const container = document.getElementById('h' + cellId)
   if (!container) { console.warn('[placeCamera] container h%s not found', cellId); return }
   try {
+    // placeCamera 始终以实时模式创建 UPlayerSDKClass 播放器
+    // 若需要回放，调用 setLiveMode(false) 统一重建所有格子的回放播放器
     const player = new UPlayerSDKClass('h' + cellId, conf)
     playerMap.set(cellId, player)
     player.play()
-    // 回放模式下拖入新摄像头：立刻调 moveto 同步到当前回放时间
-    if (!isLiveview.value) {
-      try { player.livePlayer?.moveto(xzvalue.value) } catch(e) {}
-    }
     savePlayingState()
   } catch(e) { console.error('[placeCamera] error', e) }
 }
 
 const clearCell = (cellId: string) => {
-  if (playerMap.has(cellId)) { try { playerMap.get(cellId)?.destroy?.() } catch(e){} ; playerMap.delete(cellId) }
+  const player = playerMap.get(cellId)
+  if (player) {
+    try { player.destroy?.() } catch(e) {}
+    playerMap.delete(cellId)
+  }
+  // 同步清理回放播放器，并移除手动注入的 <video> DOM 元素
+  const pbItem = pbPlayerMap.get(cellId)
+  if (pbItem) {
+    try { pbItem.v1?.disconnect(); delete pbItem.v1 } catch {}
+    pbPlayerMap.delete(cellId)
+  }
+  // 无论实时还是回放，清除容器内残留的 video/canvas 元素
+  const container = document.getElementById('h' + cellId)
+  if (container) {
+    container.querySelectorAll('video, canvas').forEach(el => el.remove())
+  }
   const cam = cameraMap.value.get(cellId)
   if (cam) {
     liveviewViewadd.value = liveviewViewadd.value.filter(x => x.strIndex !== `h${cellId}`)
-    // 只移除这一格对应的 nodeId（如果同一个 token 在其他格还在播，则保留）
     const stillPlaying = [...cameraMap.value.entries()].some(([id, c]) => id !== cellId && c.token === cam.token)
     if (!stillPlaying && cam.nodeId) {
       playingNodeIds.value = playingNodeIds.value.filter(x => x !== cam.nodeId)
@@ -618,17 +732,35 @@ const clearCell = (cellId: string) => {
     cameraMap.value.delete(cellId)
     savePlayingState()
   }
+  // 最后一格关闭后：清除时间轴录像色块，重置播放状态（对照 GridView closePlayContainer）
+  if (cameraMap.value.size === 0) {
+    isPlaying.value = false
+    if (viewTimeline) {
+      viewTimeline.options.name = ''
+      viewTimeline._initEventBarName?.()
+      viewTimeline.updateMotionEvents?.([], null)
+    }
+  }
   if (selectedCellId.value === cellId) selectedCellId.value = ''
   if (expandedCellId.value === cellId) expandedCellId.value = ''
 }
 
 const clearAllPlayers = () => {
   playerMap.forEach(p => { try { p?.destroy?.() } catch(e){} })
-  playerMap.clear(); cameraMap.value.clear(); liveviewViewadd.value = []; playingNodeIds.value = []
+  playerMap.clear()
+  pbPlayerMap.forEach(item => { try { item.v1?.disconnect(); delete item.v1 } catch {} })
+  pbPlayerMap.clear()
+  cameraMap.value.clear(); liveviewViewadd.value = []; playingNodeIds.value = []
   selectedCellId.value = ''; expandedCellId.value = ''
-  UPlayerList.value = null   // 丢弃引用，不 destroyAll（player 已在上面 destroy）
+  UPlayerList.value = null
+  if (viewTimeline) {
+    viewTimeline.removeEventListener?.('resume', () => {})
+    viewTimeline.removeEventListener?.('timelineCurrentTime', () => {})
+    viewTimeline.clearMotionBars?.()
+    viewTimeline = null
+  }
   isPlaying.value = false; isLiveview.value = true
-  localStorage.removeItem('hpro-view-state')  // 显式清除（用户点 × 时需要）
+  localStorage.removeItem('hpro-view-state')
 }
 
 // ─── Playing state persistence ────────────────────────────────────────────
@@ -655,12 +787,20 @@ const savePlayingState = () => {
 
 const restorePlayingState = async () => {
   const raw = localStorage.getItem('hpro-view-state')
-  if (!raw) return
+  if (!raw) {
+    // 无保存状态时应用用户配置的默认视图
+    const defaultView = store.DefaultView
+    if (defaultView && defaultView !== 1) {
+      changeLayout(String(defaultView))
+    }
+    return
+  }
   try {
     const state = JSON.parse(raw)
     if (state.layoutType) layoutType.value = state.layoutType
     if (state.gridCells?.length) gridCells.value = state.gridCells
-    // 有摄像头时才恢复画面
+    // 有摄像头时才恢复画面</thinking>
+
     if (state.cameras?.length) {
       await nextTick()
       for (const cam of state.cameras) {
@@ -691,6 +831,8 @@ const dropOnCell = async (e: DragEvent, cellId: string) => {
   ;(window as any)._viewDrag = null
   if (drag.channel) {
     await placeCamera(cellId, drag.channel, drag.nodeId)
+    // 回放模式下自动将刚添加的格子转换为回放播放器
+    if (!isLiveview.value) await buildPbPlayer(cellId)
   } else if (drag.viewId) {
     await loadViewIntoGrid(drag.viewId, drag.nodeId)
   }
@@ -872,123 +1014,211 @@ const onLayoutData = async (data: { layoutType:string; rows:number; cols:number;
 }
 const submitCustomLayout = () => { gird1Ref.value?.getLayoutData() }
 
-// ─── Live / Playback toggle ───────────────────────────────────────────────
+// ─── Live / Playback toggle（对照 GridView setLiveMode + resetPlayMode）──
 const setLiveMode = async (live: boolean) => {
   isLiveview.value = live
+
   if (live) {
-    // 切回实时：先断开 livePlayer 当前连接再重连，确保从回放态正确切回直播
-    playerMap.forEach(player => {
-      try {
-        player.livePlayer?.disconnect?.()
-        player.play()
-      } catch(e) {}
-    })
-    isPlaying.value = true
-  } else {
-    // 切到回放：初始化 UPlayerList（仅用于时间轴显示），定位到今天零点
-    await nextTick()
-    try {
-      if (!UPlayerList.value) {
-        UPlayerList.value = new UPlayerListClass('#view-timeline-svg')
-
-        // 屏蔽 UPlayerList 内部的 SegmentPlayer 路径（SearchObjRecordByTime 不适用）
-        UPlayerList.value.setAllPosition = async () => {}
-        UPlayerList.value.playAll      = () => {}
-
-        // 时间轴拖拽结束 → moveto（对照 uscweb Advancepb.vue mouseup → v1.moveto(timevalue)）
-        UPlayerList.value.timeline?.addEventListener('resume', async (e: CustomEvent) => {
-          const t: Date = e.detail instanceof Date ? e.detail : new Date(e.detail)
-          xzvalue.value = t
-          if (UPlayerList.value?.timeline) {
-            UPlayerList.value.timeline.currentTime = t
-            UPlayerList.value.timeline.updateTimelineView?.()
-          }
-          // 传 ISO 字符串（strMovetoTime 字段名的 str 前缀表示服务端期望字符串格式）
-          const iso = t.toISOString()
-          playerMap.forEach(player => {
-            try { player.livePlayer?.moveto(iso) } catch(err) {}
-          })
-          isPlaying.value = true
-          // 查录像色块
-          await loadRecordingBars(t)
-        })
-
-        // 时间轴拖拽开始 → pause
-        UPlayerList.value.timeline?.addEventListener('pause', () => {
-          isPlaying.value = false
-        })
-      }
-
-      const midnight = new Date()
-      midnight.setHours(0, 0, 0, 0)
-      xzvalue.value = midnight
-      if (UPlayerList.value?.timeline) {
-        UPlayerList.value.timeline.currentTime = midnight
-        UPlayerList.value.timeline.updateTimelineView?.()
-      }
-      // 初始化时加载今天的录像色块
-      await loadRecordingBars(midnight)
-    } catch(e) {
-      console.error('[setLiveMode] playback init error', e)
+    // ── 切回实时 ──
+    // 销毁回放播放器
+    pbPlayerMap.forEach(item => { try { item.v1?.disconnect(); delete item.v1 } catch {} })
+    pbPlayerMap.clear()
+    // 销毁旧的实时播放器（placeCamera 会重建）
+    playerMap.forEach(p => { try { p?.destroy?.() } catch {} })
+    playerMap.clear()
+    // 用当前 cameraMap 重建所有实时播放器
+    const entries = [...cameraMap.value.entries()]
+    for (const [cellId, cam] of entries) {
+      await placeCamera(cellId, {
+        token: cam.token, name: cam.name,
+        uuid: cam.resourceUUID, resourceUUID: cam.resourceUUID,
+        recording: cam.recording,
+      }, cam.nodeId)
     }
-    isPlaying.value = false
+    // 有画面才设为播放中，无画面保持停止状态
+    if (cameraMap.value.size > 0) isPlaying.value = true
+
+  } else {
+    // ── 切到回放（对照 GridView resetPlayMode）──
+    await nextTick()
+    // 初始化 Timeline（仅一次）
+    if (!viewTimeline) initViewTimeline()
+
+    const d = new Date(); d.setHours(0, 0, 0, 0)
+    const de = new Date(d); de.setHours(23, 59, 59, 999)
+    const st = d.getTime(), et = de.getTime()
+    const Adswitch = store.DefaultStorage === 'CentralStorage' ? 'true' : 'false'
+    xzvalue.value = d
+
+    // 销毁已有实时播放器
+    playerMap.forEach(p => { try { p?.destroy?.() } catch {} })
+    playerMap.clear()
+    // 销毁旧回放播放器
+    pbPlayerMap.forEach(item => { try { item.v1?.disconnect(); delete item.v1 } catch {} })
+    pbPlayerMap.clear()
+
+    await nextTick()
+    const baseUrl = new URL(userStore.IPPORT || window.location.origin)
+
+    for (const [cellId, cam] of cameraMap.value.entries()) {
+      const vid = cam.videoid
+      const conf: any = {
+        videoid: vid,
+        protocol: baseUrl.protocol, host: userStore.WSROOT,
+        rootpath: '/', token: cam.token, serverpb: Adswitch,
+        pbconf: {
+          begintime: formatTime(new Date(st)), endtime: formatTime(new Date(et)),
+          autoplay: 'true', showposter: 'false',
+          callback: pbPlaybackCB, serverpb: Adswitch,
+          userdata: { videoid: vid },
+        },
+        hlsver: 'v1', consolelog: 'false',
+        session: userStore.session, resourceUUID: cam.resourceUUID,
+        name: cam.name,
+      }
+
+      // 清空容器旧内容，注入 <video> 供 H5sPlayerWS2 使用
+      const container = document.getElementById('h' + cellId)
+      if (container) {
+        container.querySelectorAll('video, canvas').forEach(el => el.remove())
+        const video = document.createElement('video')
+        Object.assign(video.style, {
+          position: 'absolute', width: '100%', height: '100%',
+          top: '0', left: '0', display: 'block',
+        })
+        video.id = vid; video.controls = false; video.muted = true; video.autoplay = true
+        container.appendChild(video)
+      }
+
+      const item = { v1: new H5sPlayerWS2(conf), conf }
+      item.v1.connect()
+      pbPlayerMap.set(cellId, item)
+    }
+
+    // 加载今天的录像色块
+    const firstToken = [...cameraMap.value.values()][0]?.token
+    if (firstToken) await getViewEventBar(firstToken, d)
+    // 有画面才设为播放中，无画面保持停止状态
+    if (pbPlayerMap.size > 0) isPlaying.value = true
   }
   savePlayingState()
 }
 
-// ─── 查录像时间段并更新时间轴色块 ────────────────────────────────────────
-const loadRecordingBars = async (date: Date) => {
-  const token = [...cameraMap.value.values()][0]?.token
-  if (!token || !UPlayerList.value?.timeline) return
-  // 查该日 00:00:00 ~ 23:59:59 的录像段（对照 uscweb：start=前一天, end=后一天）
-  const dayStart = new Date(date); dayStart.setHours(0, 0, 0, 0)
-  const dayEnd   = new Date(date); dayEnd.setHours(23, 59, 59, 999)
-  try {
-    const api = store.DefaultStorage === 'CentralStorage'
-      ? getSearchStorRecordByTimeApi(token, dayStart.toISOString(), dayEnd.toISOString())
-      : getSearchDeviceRecordByTimeApi(token, dayStart.toISOString(), dayEnd.toISOString())
-    const res = await api
-    if (res.status === 200 && res.data?.record?.length) {
-      const bars = res.data.record.map((item: any) => ({
-        start: new Date(item.strStartTime ?? item.startTime ?? item.StartTime),
-        end:   new Date(item.strEndTime   ?? item.endTime   ?? item.EndTime),
-      }))
-      UPlayerList.value?.timeline?.setEventBar?.(bars)
-    }
-  } catch(e) { /* 查录像失败不影响播放 */ }
+// ─── Timeline 初始化（对照 GridView initTimeline）────────────────────────
+const initViewTimeline = () => {
+  viewTimeline = new Timeline('#view-timeline-svg', {
+    timelineBackgroundColor: '#343434', singleEvent: true,
+  })
+  // 拖拽时间轴松手 → 所有回放播放器跳转
+  viewTimeline.addEventListener('resume', (e: CustomEvent) => {
+    if (!pbPlayerMap.size) return
+    const t = e.detail ? new Date(e.detail) : new Date()
+    xzvalue.value = t
+    pbPlayerMap.forEach(item => { try { item.v1.moveto(formatTime(t)) } catch {} })
+    const token = [...cameraMap.value.values()][0]?.token
+    if (token) getViewEventBar(token, t)
+    isPlaying.value = true
+  })
+  // 播放器内部时间更新 → 同步日期选择器
+  viewTimeline.addEventListener('timelineCurrentTime', (e: CustomEvent) => {
+    if (e.detail) xzvalue.value = new Date(e.detail)
+  })
 }
 
-// ─── 日期选择器变更 → moveto（对照 uscweb Advancepb.vue mouseup）─────────
+// ─── 回放 callback（对照 GridView playbackCB）────────────────────────────
+const pbPlaybackCB = (event: string, userdata: any) => {
+  const cellId = [...pbPlayerMap.entries()].find(([, v]) => v.conf.videoid === userdata?.videoid)?.[0]
+  if (!cellId || cellId !== (selectedCellId.value || [...pbPlayerMap.keys()][0])) return
+  try {
+    const strTime = JSON.parse(event).strTime
+    if (strTime && strTime !== 'none') {
+      viewTimeline?.setCurrentTime(strTime)
+      xzvalue.value = new Date(strTime)
+    }
+  } catch {}
+}
+
+// ─── 查录像时间段并更新时间轴色块（对照 GridView getEventBar）───────────
+const getViewEventBar = async (token: string, date: Date) => {
+  if (!viewTimeline || !token) return
+  // 对照 GridView：start=前一天 00:00，end=当天 23:59（覆盖时间轴以"现在"为中心的完整可见范围）
+  const end = new Date(date); end.setHours(23, 59, 59, 0)
+  const start = new Date(date); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() - 1)
+  try {
+    const res = store.DefaultStorage === 'CentralStorage'
+      ? await getSearchStorRecordByTimeApi(token, start.toISOString(), end.toISOString())
+      : await getSearchDeviceRecordByTimeApi(token, start.toISOString(), end.toISOString())
+    if (res.status === 200 && res.data?.record) {
+      const name = [...cameraMap.value.values()][0]?.name ?? ''
+      viewTimeline.options.name = name
+      viewTimeline._initEventBarName?.()
+      viewTimeline.updateMotionEvents?.(res.data.record, null)
+    }
+  } catch {}
+}
+
+// ─── 查录像时间段并更新时间轴色块 ────────────────────────────────────────
+/** @deprecated 保留以兼容可能的外部引用，实际改用 getViewEventBar */
+const loadRecordingBars = async (date: Date) => {
+  const token = [...cameraMap.value.values()][0]?.token
+  if (token) await getViewEventBar(token, date)
+}
+
+// ─── 日期选择器变更（对照 GridView onDateChange）────────────────────────
 const onDateChange = async () => {
-  const t = xzvalue.value
-  if (!t) return
-  if (UPlayerList.value?.timeline) {
-    UPlayerList.value.timeline.currentTime = t
-    UPlayerList.value.timeline.updateTimelineView?.()
+  if (!xzvalue.value || !pbPlayerMap.size) return
+  const d = xzvalue.value instanceof Date ? xzvalue.value : new Date(xzvalue.value)
+  const cellId = selectedCellId.value || [...pbPlayerMap.keys()][0]
+  const item = pbPlayerMap.get(cellId)
+  if (item) {
+    item.v1.moveto(formatTime(d))
+    const token = cameraMap.value.get(cellId)?.token
+    if (token) await getViewEventBar(token, d)
   }
-  const iso = t.toISOString()
-  playerMap.forEach(player => {
-    try { player.livePlayer?.moveto(iso) } catch(e) {}
-  })
   isPlaying.value = true
-  await loadRecordingBars(t)
+}
+
+// 日期选择器获焦 → 查询当月有录像的日期并高亮
+const onDateFocus = async () => {
+  await nextTick()
+  const token = [...cameraMap.value.values()][0]?.token
+  if (!token || !xzvalue.value) return
+  const d = xzvalue.value instanceof Date ? xzvalue.value : new Date(xzvalue.value)
+  SearchRecordCalendar(token, d.getFullYear(), d.getMonth() + 1)
+}
+const onDateBlur = () => {}
+
+const SearchRecordCalendar = async (token: string, year: number, month: number) => {
+  customDateArr.value = []
+  try {
+    const res = await GetRecordCalendar(token, year, month)
+    res.data?.record?.forEach((key: any) => {
+      if (key.bHasRec || key.bHasAlarmRec) {
+        // 使用本地时区构造，避免固定 +08:00 偏移
+        customDateArr.value.push(new Date(year, month - 1, key.nDay, 0, 0, 0, 0).getTime())
+      }
+    })
+  } catch {}
 }
 
 const timeSpeed = (speed: string) => {
-  if (isLiveview.value || !UPlayerList.value?.UPlayerSDKList?.length) return
-  UPlayerList.value.setAllPlaybackRate(speed)
+  if (isLiveview.value || !pbPlayerMap.size) return
+  const cellId = selectedCellId.value || [...pbPlayerMap.keys()][0]
+  pbPlayerMap.get(cellId)?.v1?.speed(speed)
 }
 
 const resumePlayback = () => {
-  if (isLiveview.value) return
+  if (isLiveview.value || !pbPlayerMap.size) return
+  const cellId = selectedCellId.value || [...pbPlayerMap.keys()][0]
+  const item = pbPlayerMap.get(cellId)
+  if (!item) return
   if (isPlaying.value) {
-    // 暂停：对照 uscweb pauseAll
-    playerMap.forEach(player => { try { player.livePlayer?.pause?.() } catch(e) {} })
+    item.v1.pause()
+    isPlaying.value = false
   } else {
-    // 继续：对照 uscweb resume
-    playerMap.forEach(player => { try { player.livePlayer?.resume?.() } catch(e) {} })
+    item.v1.resume()
+    isPlaying.value = true
   }
-  isPlaying.value = !isPlaying.value
 }
 
 // ─── Segment export (片段导出) ───────────────────────────────────────────
@@ -1072,23 +1302,15 @@ const doExport = () => {
 
 
 const gotoLive = async () => {
-  // 对照 uscweb：player.play() 重连直播流
-  playerMap.forEach(player => { try { player.play() } catch(e) {} })
-  isLiveview.value = true; isPlaying.value = true
+  // 直接复用 setLiveMode(true) 完成所有清理和重建逻辑
+  await setLiveMode(true)
 }
 
 // ─── Storage type switch (CentralStorage / DeviceStorage) ────────────────
 const rebuildPlaybackPlayers = () => {
-  // 切换存储类型后，重建所有格子的播放器（以新的 serverpb 参数生效）
+  // 切换存储类型后，重新触发回放模式以使新的 serverpb 参数生效
   if (isLiveview.value) return
-  const entries = [...cameraMap.value.entries()]
-  entries.forEach(([cellId, cam]) => {
-    placeCamera(cellId, {
-      token: cam.token, name: cam.name,
-      uuid: cam.resourceUUID, resourceUUID: cam.resourceUUID,
-      recording: cam.recording,
-    }, cam.nodeId)
-  })
+  setLiveMode(false)
 }
 
 const setStorageCentral = async () => {
@@ -1125,10 +1347,16 @@ onMounted(async () => {
   await restorePlayingState()
 })
 onBeforeUnmount(() => {
-  // 只销毁播放器内存，不清 localStorage（下次挂载时 restorePlayingState 可以恢复）
+  // 销毁所有播放器内存，不清 localStorage（下次挂载时 restorePlayingState 可以恢复）
   playerMap.forEach(p => { try { p?.destroy?.() } catch(e){} })
   playerMap.clear()
+  pbPlayerMap.forEach(item => { try { item.v1?.disconnect(); delete item.v1 } catch {} })
+  pbPlayerMap.clear()
   UPlayerList.value = null
+  if (viewTimeline) {
+    viewTimeline.clearMotionBars?.()
+    viewTimeline = null
+  }
 })
 </script>
 
@@ -1219,31 +1447,23 @@ onBeforeUnmount(() => {
   .control_btns {
     flex: 1; width: 100%; background-color: #282828;
     display: flex; align-items: center; justify-content: space-between;
-    .caveat_butt {
-      display: flex; align-items: center; justify-content: flex-start; width: 20%;
-      .recodeType { font-size: 14px; }
-      .showRecodeType {
-        width: 24px; height: 32px; text-align: center; line-height: 32px;
-        border-radius: 4px; margin-right: 10px; background-color: #2f2f2f; cursor: pointer;
+    // 最左：存储切换（对照 GridView storage_box）
+    .storage_box { width: 17%; }
+    .storage_mode {
+      width: 190px; display: flex; height: 24px; margin-left: 10px; border-radius: 12px;
+      .CentralStorage, .DeviceStorage {
+        flex: 1; height: 100%; line-height: 24px; text-align: center;
+        border-radius: 12px; cursor: pointer; font-size: 13px; color: #ccc;
       }
-      .mr-0 { width:15px; height:15px; border-radius:50px; border:0; margin-right:5px !important; vertical-align:middle; background-color:#31b1ff; }
-      .mr-1 { width:15px; height:15px; border-radius:50px; border:0; margin:0 5px; vertical-align:middle; background-color:rgb(60,196,60); }
-      .mr-2 { width:15px; height:15px; border-radius:50px; border:0; margin:0 5px; vertical-align:middle; background-color:#ee1011; }
+      .active { background: #0399FE; color: #fff; }
     }
-    .storage-switch {
-      display: flex; align-items: center; font-size: 13px; color: #ccc;
-      span {
-        padding: 3px 12px; cursor: pointer; border: 1px solid #555;
-        transition: background 0.2s, color 0.2s;
-        &:first-child { border-radius: 12px 0 0 12px; border-right: none; }
-        &:last-child  { border-radius: 0 12px 12px 0; }
-        &.active { background: #0399FE; color: #fff; border-color: #0399FE; }
-        &:not(.active):hover { background: #3a3a3a; }
-      }
-    }
+    // 中：控制按钮组
     button { padding:0; border:none; background:none; font-size:22px; margin-right:10px; color:#fff; }
     .control-center {
       display: flex; align-items: center;
+      .export-btn { font-size: 22px; cursor: pointer; margin-right: 12px; color: #fff;
+        &:hover { color: #0399FE; }
+      }
       .resume-btn i { font-size: 24px; cursor: pointer; }
       :deep(.ele) {
         width:45px; height:24px; border-radius:12px; background-color:#0399FE; margin:0; padding:0; margin-right:10px;
@@ -1255,12 +1475,17 @@ onBeforeUnmount(() => {
         .el-input__wrapper { background-color:#121212; border:0; box-shadow:none; }
       }
     }
-    .gongge-btns {
-      height:50px; padding-right:20px; width:20%; display:flex; justify-content:flex-end; align-items:center;
-      :deep(.goto-live) {
-        font-size:14px; background-color:rgba(141,189,255,0.16); padding:0 20px;
-        span { color:#0399FE; }
+    // 最右：录像类型标识（对照 GridView caveat_butt）
+    .caveat_butt {
+      display: flex; align-items: center; justify-content: flex-end; width: 17%;
+      .recodeType { font-size: 14px; }
+      .showRecodeType {
+        width: 24px; height: 30px; text-align: center; line-height: 30px;
+        border-radius: 4px; cursor: pointer;
       }
+      .mr-0 { width:15px; height:15px; border-radius:50px; border:0; margin-right:5px; vertical-align:middle; background-color:#31b1ff; }
+      .mr-1 { width:15px; height:15px; border-radius:50px; border:0; margin:0 5px; vertical-align:middle; background-color:rgb(60,196,60); }
+      .mr-2 { width:15px; height:15px; border-radius:50px; border:0; margin:0 5px; vertical-align:middle; background-color:#ee1011; }
     }
   }
 }
@@ -1445,5 +1670,15 @@ onBeforeUnmount(() => {
   .x.axis.minor line { stroke: #D8D8D8; }
   .x.axis.minor text { fill: #999999; }
   .domain { display: none; visibility: hidden; }
+}
+
+/* 日历中有录像的日期高亮（非 scoped，作用于 el-date-picker popper） */
+.custom_date_class {
+  color: #0399FE !important;
+  font-weight: bold;
+}
+.custom_date_class .el-date-table-cell__text {
+  background-color: rgba(3, 153, 254, 0.15);
+  border-radius: 50%;
 }
 </style>

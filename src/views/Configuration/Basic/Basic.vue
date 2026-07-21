@@ -37,6 +37,7 @@ onMounted(() => {
       </div>
       <el-menu
         :default-active="activeIndex"
+        :default-openeds="[]"
         class="basic-menu"
         :collapse="isCollapse"
         router
@@ -51,6 +52,13 @@ onMounted(() => {
           <el-menu-item index="/Configuration/Basic/MetaStorage">{{ t('Router.router_meta_storage') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/LocalObjectStorage">{{ t('Router.router_local_obj_storage') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/S3Storage">{{ t('Router.router_s3_storage') }}</el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu index="/Configuration/Basic/User/UserConfig">
+          <template #title>
+            <i class="iconfont icon-yonghu"></i>
+            <span>{{ t('Router.router_user') }}</span>
+          </template>
+          <el-menu-item index="/Configuration/Basic/User/UserConfig">{{ t('Router.router_user_config') }}</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </div>

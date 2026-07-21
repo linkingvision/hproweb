@@ -125,6 +125,7 @@
     "comm_device_partition": "Partição do dispositivo",
     "comm_enable": "Habilitar",
     "comm_filtration": "Filtro de palavras-chave",
+    "comm_logic_partition": "Partição lógica",
     "comm_picture": "Imagem",
     "comm_root": "Raiz",
     "comm_time_current": "Hora atual",
@@ -135,7 +136,11 @@
     "comm_time": " vez",
     "comm_times": " vezes",
     "comm_day": "Dia",
-    "comm_start_end_time": "Hora de início e fim"
+    "comm_start_end_time": "Hora de início e fim",
+    "comm_select_date_time": "Selecionar Data",
+    "comm_width": "Largura",
+    "comm_height": "Altura",
+    "comm_fps": "FPS"
   },
   "Configuration": {
     "conf_advanced_features": "Recursos avançados",
@@ -233,6 +238,7 @@
   },
   "Monitoring": {
     "mon_grid_cloud_view": "Visualização em grade na nuvem",
+    "mon_grid_view": "Visualização em Grade",
     "mon_view": "Visualização",
     "mon_gotolive": "Ir ao vivo",
     "mon_rec_info": "Visão geral do vídeo",
@@ -255,7 +261,9 @@
     "router_s3_storage": "Armazenamento S3",
     "router_storage_mode": "Modo de armazenamento",
     "router_storage_setting": "Configuração de armazenamento",
-    "router_view": "Visualizar"
+    "router_view": "Visualizar",
+    "router_user": "Usuário",
+    "router_user_config": "Config. do usuário"
   },
   "Setting": {
     "set_adding_views": "Adicionar visualização",
@@ -357,7 +365,17 @@
     "live_customization": "Personalização",
     "live_restore_defaults": "Restaurar padrões",
     "live_displaying": "Exibindo",
-    "live_playing": "Reproduzindo"
+    "live_playing": "Reproduzindo",
+    "live_video": "Vídeo",
+    "live_ptz": "PTZ",
+    "live_codec": "Codec",
+    "live_sampleRate": "Taxa de amostragem",
+    "live_sampleBit": "Bits de amostra",
+    "live_channels": "Canais"
+  },
+  "CommDev": {
+    "comm_dev_audio": "Áudio",
+    "comm_dev_bitrate": "Taxa de bits"
   },
   "CommTable": {
     "comm_bind_ip": "Vincular IP",
@@ -398,5 +416,48 @@
   },
   "Cascade": {
     "cascade_central_record": "Registro central"
+  },
+  "Theme": {
+    "theme": "Tema",
+    "theme_white": "Branco padrão",
+    "theme_black": "Preto elegante",
+    "theme_dark_blue": "Azul profundo"
+  },
+  "SetUser": {
+    "set_user_config": "Configuração do usuário",
+    "set_liveview_protocol": "Protocolo ao vivo",
+    "set_playback_protocol": "Protocolo de reprodução",
+    "set_buffertime": "Tempo de buffer",
+    "set_millisecond": "ms",
+    "set_h264_cpu_decode": "Decodificação H264 por CPU",
+    "set_watermark": "Marca d'água",
+    "set_watermark_content": "Conteúdo da marca d'água",
+    "set_enable_watermark": "Ativar",
+    "set_disable_watermark": "Desativar",
+    "set_rtc_engine": "Motor RTC",
+    "set_display_disable": "Exibir dispositivos desativados",
+    "set_image_quality_selection": "Seleção de qualidade de imagem",
+    "set_web_client_auto-logout_time": "Tempo de logout automático",
+    "set_enable_web_client_auto-logout": "Ativar logout automático",
+    "set_ws_decoder": "Decodificador WS",
+    "set_rtc_decoder": "Decodificador RTC",
+    "set_keep_aspect_ratio": "Manter proporção",
+    "set_video_background_color": "Cor de fundo do vídeo",
+    "set_map_cluster": "Cluster de mapa",
+    "set_cascade_loading_level": "Nível de carregamento em cascata",
+    "set_playback_mode": "Modo de reprodução",
+    "set_default_view": "Vista padrão",
+    "set_default_map": "Mapa padrão",
+    "set_default_partition": "Partição padrão",
+    "set_show": "Mostrar",
+    "set_hide": "Ocultar",
+    "set_ws2_mode_use_https": "O modo WS2 requer HTTPS",
+    "set_basic_information": "Informações básicas",
+    "set_edit_avatar": "Editar avatar",
+    "set_select_local_file": "Selecionar arquivo local",
+    "set_support_images": "Suporta PNG, JPG, JPEG",
+    "set_reset_picture": "Redefinir imagem",
+    "set_edit_avatarsuccessfully": "Avatar atualizado com sucesso!",
+    "set_edit_avatar_failed": "Falha ao atualizar avatar!"
   }
 }

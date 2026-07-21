@@ -88,6 +88,8 @@
     "comm_delete_successfully": "Delete Successfully!",
     "comm_detail": "Detail",
     "comm_edit": "Edit",
+    "comm_edit_successfully": "Edit Successfully!",
+    "comm_edit_failed": "Edit Failed!",
     "comm_empty": "Empty",
     "comm_manual": "Manual",
     "comm_modify_failed": "Modify Failed!",
@@ -100,6 +102,9 @@
     "comm_refresh": "Refresh",
     "comm_reset": "Reset",
     "comm_save": "Save",
+    "comm_save_failed": "Save Failed!",
+    "comm_save_successfully": "Saved Successfully!",
+    "comm_set_successfully": "Set Successfully!",
     "comm_schedule": "Schedule",
     "comm_search": "Search",
     "comm_table_ip": "IP",
@@ -122,11 +127,16 @@
   "Common": {
     "comm_channel": "Channel",
     "comm_channel_name": "Channel Name",
+    "comm_description": "Description",
     "comm_device_partition": "Device Partition",
     "comm_enable": "Enable",
     "comm_filtration": "Keywords Filter",
+    "comm_logic_partition": "Logic Partition",
+    "comm_minutes": "min",
     "comm_picture": "Picture",
     "comm_please_input": "Please Input",
+    "comm_please_select": "Please Select",
+    "comm_reset": "Reset",
     "comm_root": "Root",
     "comm_time_current": "Current Time",
     "comm_time_end": "End Time",
@@ -136,7 +146,14 @@
     "comm_time": " time",
     "comm_times": " times",
     "comm_day": "Day",
-    "comm_start_end_time": "Start and end time"
+    "comm_start_end_time": "Start and end time",
+    "comm_about": "About",
+    "comm_delete_confirm": "Are you sure to remove this option?",
+    "comm_prompt": "Prompt",
+    "comm_select_date_time": "Select Date",
+    "comm_width": "Width",
+    "comm_height": "Height",
+    "comm_fps": "FPS"
   },
   "Configuration": {
     "conf_advanced_features": "Advanced Features",
@@ -234,6 +251,7 @@
   },
   "Monitoring": {
     "mon_grid_cloud_view": "Grid Cloud View",
+    "mon_grid_view": "Grid View",
     "mon_view": "View",
     "mon_gotolive": "Go To Live",
     "mon_rec_info": "Recording Info",
@@ -256,7 +274,9 @@
     "router_s3_storage": "S3 Storage",
     "router_storage_mode": "Storage Mode",
     "router_storage_setting": "Storage Setting",
-    "router_view": "View"
+    "router_view": "View",
+    "router_user": "User",
+    "router_user_config": "User Config"
   },
   "Setting": {
     "set_adding_views": "Add View",
@@ -358,7 +378,17 @@
     "live_customization": "Customization",
     "live_restore_defaults": "Restore Defaults",
     "live_displaying": "Displaying",
-    "live_playing": "Playing"
+    "live_playing": "Playing",
+    "live_video": "Video",
+    "live_ptz": "PTZ",
+    "live_codec": "Codec",
+    "live_sampleRate": "Sample Rate",
+    "live_sampleBit": "Sample Bit",
+    "live_channels": "Channels"
+  },
+  "CommDev": {
+    "comm_dev_audio": "Audio",
+    "comm_dev_bitrate": "Bitrate"
   },
   "CommTable": {
     "comm_bind_ip": "Bind IP",
@@ -399,5 +429,48 @@
   },
   "Cascade": {
     "cascade_central_record": "Central record"
+  },
+  "Theme": {
+    "theme": "Theme",
+    "theme_white": "Default White",
+    "theme_black": "Cool Black",
+    "theme_dark_blue": "Deep Blue"
+  },
+  "SetUser": {
+    "set_user_config": "User Config",
+    "set_liveview_protocol": "Live View Protocol",
+    "set_playback_protocol": "Playback Protocol",
+    "set_buffertime": "Buffer Time",
+    "set_millisecond": "ms",
+    "set_h264_cpu_decode": "H264 CPU Decode",
+    "set_watermark": "Watermark",
+    "set_watermark_content": "Watermark Content",
+    "set_enable_watermark": "Enable",
+    "set_disable_watermark": "Disable",
+    "set_rtc_engine": "RTC Engine",
+    "set_display_disable": "Display Disabled Devices",
+    "set_image_quality_selection": "Image Quality Selection",
+    "set_web_client_auto-logout_time": "Auto Logout Time",
+    "set_enable_web_client_auto-logout": "Enable Auto Logout",
+    "set_ws_decoder": "WS Decoder",
+    "set_rtc_decoder": "RTC Decoder",
+    "set_keep_aspect_ratio": "Keep Aspect Ratio",
+    "set_video_background_color": "Video Background Color",
+    "set_map_cluster": "Map Cluster",
+    "set_cascade_loading_level": "Cascade Loading Level",
+    "set_playback_mode": "Playback Mode",
+    "set_default_view": "Default View",
+    "set_default_map": "Default Map",
+    "set_default_partition": "Default Partition",
+    "set_show": "Show",
+    "set_hide": "Hide",
+    "set_ws2_mode_use_https": "WS2 mode requires HTTPS",
+    "set_basic_information": "Basic Information",
+    "set_edit_avatar": "Edit Avatar",
+    "set_select_local_file": "Select Local File",
+    "set_support_images": "Supports PNG, JPG, JPEG",
+    "set_reset_picture": "Reset Picture",
+    "set_edit_avatarsuccessfully": "Avatar updated successfully!",
+    "set_edit_avatar_failed": "Failed to update avatar!"
   }
 }

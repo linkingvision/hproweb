@@ -46,6 +46,7 @@
           <i class="iconfont icon-androidgengduo"></i>
           <template #dropdown>
             <el-dropdown-menu>
+              <el-dropdown-item @click="router.push('/Configuration/Basic/User/UserConfig')">{{ t('SetUser.set_user_config') }}</el-dropdown-item>
               <el-dropdown-item @click="aboutVisiable = true">{{ t('Header.header_about') }}</el-dropdown-item>
               <el-dropdown-item @click="logout">{{ t('Login.login_out') }}</el-dropdown-item>
             </el-dropdown-menu>
@@ -161,7 +162,7 @@ const SystemInfo = async () => {
   }
 }
 
-// 从服务端读取存储配置（UserConfig: DefaultStorage；SysConfig: PlaybackShowStorageMode）
+// 从服务端读取存储配置（UserConfig: DefaultStorage / DefaultView；SysConfig: PlaybackShowStorageMode）
 const initStorageConfig = async () => {
   try {
     const [userRes, sysRes] = await Promise.all([
@@ -170,8 +171,10 @@ const initStorageConfig = async () => {
     ])
     if (userRes.status === 200 && userRes.data.code === 0) {
       const list: any[] = userRes.data.result?.list ?? userRes.data.result ?? []
-      const item = list.find((i: any) => i.key === 'DefaultStorage')
-      if (item) store.setDefaultStorage(item.value)
+      const storageItem = list.find((i: any) => i.key === 'DefaultStorage')
+      if (storageItem) store.setDefaultStorage(storageItem.value)
+      const viewItem = list.find((i: any) => i.key === 'DefaultView')
+      if (viewItem) store.setDefaultView(viewItem.value)
     }
     if (sysRes.status === 200 && sysRes.data.code === 0) {
       const list: any[] = sysRes.data.result?.list ?? sysRes.data.result ?? []
