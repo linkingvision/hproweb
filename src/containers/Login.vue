@@ -91,7 +91,7 @@
           localStorage.setItem('user', JSON.stringify({}))
         }
         router.push({
-          path: '/Monitoring'
+          path: '/Home'
         })
       }
     } else {

@@ -103,8 +103,10 @@ const routes = () => {
   }
 
   const matchedRoutes: any = route.matched
+  if (!matchedRoutes[1]) return []
   title.value = t(matchedRoutes[1].meta.name);
   for (let i = 0; i < matchedRoutes.length; i++) {
+    if (!routes.children) break
     for (let k = 0; k < routes.children.length; k++) {
       if (matchedRoutes[i].name === routes.children[k].name) {
         const HomeChildren = routes.children[k].children
@@ -118,7 +120,7 @@ const routes = () => {
       }
     }
   }
-  return routes.children
+  return routes.children || []
 }
 
 const getRouterList = () => {

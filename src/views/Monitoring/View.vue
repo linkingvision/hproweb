@@ -45,6 +45,9 @@
 
     <!-- ── 右侧 ── -->
     <div class="view-right">
+      <!-- 视频区 + 事件面板横向并排（对照 uscweb liveview_right display:flex row） -->
+      <div class="view-right-body">
+        <div class="view-right-main">
       <!-- 视频网格（无顶部工具栏，对照uscweb Liveview） -->
       <div class="liveview_right_video_hed" id="video_hed" v-if="LiveplayShow">
         <!-- 码率信息浮层（对照 GridView .malv） -->
@@ -73,22 +76,86 @@
           @dblclick="toggleExpand(cell.id)"
           @drop.prevent="dropOnCell($event, cell.id)"
           @dragover.prevent>
-          <!-- UPlayerSDK injects <video> here dynamically -->
-          <!-- 悬浮按钮层（对照 GridView float-layer，鼠标悬停时滑入） -->
-          <div v-if="getCellCamera(cell.id)" class="float-layer">
-            <i class="iconfont icon-xinxi"    @click.stop="showCellInfo(cell.id)"   :title="t('Liveview.live_video')"></i>
-            <i class="iconfont icon-duijiang"
-              :class="audioingCellId===cell.id ? 'audio-active' : ''"
-              @click.stop="doShoutwheat(cell.id)"
-              :title="t('Liveview.live_ptz')"></i>
-            <i class="iconfont icon-kuaizhao" @click.stop="doSnapshot(cell.id)"     :title="t('Liveview.live_snapshot')"></i>
-            <i class="iconfont icon-luzhi"
-              :class="getCellCamera(cell.id)?.recording ? 'rec-active' : ''"
-              @click.stop="doManualRec(cell.id)"
-              :title="t('Liveview.live_record')"></i>
-            <i class="iconfont icon-ptz"      @click.stop="showPtz(cell.id)"        :title="t('Liveview.live_ptz')"></i>
+          <!-- ── 悬浮按钮层（对照 uscweb liveplay_butt）── -->
+          <div v-if="getCellCamera(cell.id)" class="float-layer" @click.stop>
+            <span class="protocol-label">WS2</span>
+            <!-- 2. 音量 -->
+            <i class="iconfont"
+               :class="(cellAudioSliders[cell.id] ?? 0) === 0 ? 'icon-wusheng' : 'icon-shengyinkai'"
+               title="Volume"
+               @click.stop="toggleCellAudio(cell.id)"></i>
+            <!-- 3. 码率信息 -->
+            <i v-if="getCellCamera(cell.id)"
+               class="iconfont icon-yibiao"
+               title="Stream Info"
+               @click.stop="showCellInfo(cell.id)"></i>
+            <!-- 4. 对讲 -->
+            <i v-if="getCellCamera(cell.id)"
+               class="iconfont"
+               :class="audioingCellId === cell.id ? 'icon-yuyinkai audio-active' : 'icon-yuyinguan'"
+               title="Intercom"
+               @click.stop="doShoutwheat(cell.id)"></i>
+            <!-- 5. 截图 -->
+            <i v-if="getCellCamera(cell.id)"
+               class="iconfont icon-zhuapai"
+               title="Screenshot"
+               @click.stop="doSnapshot(cell.id)"></i>
+            <!-- 6. 手动录像 -->
+            <i v-if="getCellCamera(cell.id)"
+               class="iconfont"
+               :class="getCellCamera(cell.id)?.recording ? 'icon-fuwuluxiangzhong rec-active' : 'icon-fuwuluxiang'"
+               title="Record"
+               @click.stop="doManualRec(cell.id)"></i>
+            <!-- 7. PTZ（格数 ≤ 9 显示） -->
+            <i v-if="getCellCamera(cell.id) && gridCells.length <= 9"
+               class="iconfont icon-yuntai"
+               :title="t('Liveview.live_ptz')"
+               @click.stop="showPtz(cell.id)"></i>
+            <!-- 8. 3D 框选放大 -->
+            <i v-if="getCellCamera(cell.id)"
+               class="iconfont icon-fangda6"
+               :class="{ 'expend-active': cell3DZoomId === cell.id }"
+               title="3D Zoom"
+               @click.stop="toggle3DZoom(cell.id)"></i>
+            <!-- 9. 电子放大 -->
+            <i v-if="getCellCamera(cell.id)"
+               class="iconfont"
+               :class="cellEZoomId === cell.id ? 'icon-suoxiao' : 'icon-fangda1'"
+               title="E-Zoom"
+               @click.stop="toggleEZoom(cell.id)"></i>
+            <!-- 10. 单格全屏 -->
+            <i class="iconfont"
+               :class="cellFullscreenId === cell.id ? 'icon-suoxiao' : 'icon-fangda'"
+               title="Fullscreen"
+               @click.stop="toggleCellFullscreen(cell.id)"></i>
+            <!-- 11. 关闭 -->
+            <i v-if="getCellCamera(cell.id)"
+               class="iconfont icon-guanbi"
+               title="Close"
+               @click.stop="clearCell(cell.id)"></i>
           </div>
-          <button v-if="getCellCamera(cell.id)" class="cell-close" @click.stop="clearCell(cell.id)">×</button>
+
+          <!-- 音量滑块面板 -->
+          <div v-if="cellAudioVisible === cell.id" class="cell-audio-slider" @click.stop>
+            <i class="iconfont"
+               :class="(cellAudioSliders[cell.id] ?? 0) === 0 ? 'icon-shengyinguan' : 'icon-shengyinkai'"></i>
+            <el-slider :step="0.1" :show-tooltip="false" :max="1"
+                       :model-value="cellAudioSliders[cell.id] ?? 0"
+                       @update:model-value="(v: number) => setCellVolume(cell.id, v)"
+                       style="flex:1;" />
+          </div>
+
+          <!-- 电子放大画布 -->
+          <canvas :id="'ezoom-h'+cell.id" class="cell-ezoom-canvas"
+                  :class="{ active: cellEZoomId === cell.id }"></canvas>
+
+          <!-- 3D 框选画布 -->
+          <canvas :id="'3dzoom-h'+cell.id" class="cell-3dzoom-canvas"
+                  :class="{ active: cell3DZoomId === cell.id }"
+                  @mousedown.stop="on3DMouseDown(cell.id, $event)"
+                  @mousemove.stop="on3DMouseMove(cell.id, $event)"
+                  @mouseup.stop="on3DMouseUp(cell.id, $event)"
+                  @mouseleave.stop="on3DMouseLeave(cell.id)"></canvas>
         </div>
       </div>
       <div v-else class="video-empty-hint">{{ t('Liveview.live_view') }}</div>
@@ -177,6 +244,76 @@
         </div>
       </div>
 
+      </div><!-- /view-right-main -->
+
+      <!-- ── Event 面板（对照 uscweb Liveview alarm_right_right） ── -->
+      <div v-show="eventPanelShow" class="event-panel-right" style="width:22%;flex-shrink:0;">
+        <div class="alarm_right_right">
+          <div class="alarm_right_right_header">
+            <div>{{ t('Analytics.ana_event') }}</div>
+          </div>
+          <div class="alarm_right_right_body">
+            <div v-for="(item, index) in eventTableData.slice((eventCurrentPage-1)*eventPageSize, eventCurrentPage*eventPageSize)"
+                 :key="index" class="alarm_right_right_content">
+              <!-- 彩色 header：channel名 + 目标类型图标 -->
+              <div class="content_header"
+                   v-if="item.ruleType === 'USC_ANA_RULE_LPRE'"
+                   :style="{ background: eventPriorityGradient1(Math.round((item.confidence??0)*100)) }">
+                <span>{{ item.channelName }}</span>
+                <span :class="'iconfont ' + (eventShapeObj[item.targetType] || '')" style="font-size:20px;"></span>
+              </div>
+              <div class="content_header"
+                   v-else
+                   :style="{ background: eventPriorityGradient(item.priority) }">
+                <span>{{ item.channelName }}</span>
+                <span :class="'iconfont ' + (eventShapeObj[item.targetType] || '')" style="font-size:20px;"></span>
+              </div>
+              <!-- body -->
+              <div class="content_body">
+                <div class="content_body_top">
+                  <el-popover v-if="item.img" placement="right" trigger="hover">
+                    <img :src="'data:image/jpeg;base64,'+item.img" style="max-height:300px;max-width:400px;" alt="" />
+                    <template #reference>
+                      <img :src="'data:image/jpeg;base64,'+item.img" alt=""
+                           style="max-height:100%;max-width:100%;object-fit:contain;cursor:pointer;"
+                           @click="clickEventImg(item)" />
+                    </template>
+                  </el-popover>
+                </div>
+                <div class="content_body_bottom">
+                  <div>
+                    <p class="label" v-if="item.ruleType==='USC_ANA_RULE_FARE'">Name:</p>
+                    <p class="label" v-else-if="item.ruleType==='USC_ANA_RULE_LPRE'">{{ t('Analytics.ana_license_plate') }}:</p>
+                    <p class="label" v-else>{{ t('Analytics.ana_event') }}:</p>
+                    <p class="content"
+                       v-if="item.ruleType==='USC_ANA_RULE_FARE'||item.ruleType==='USC_ANA_RULE_LPRE'"
+                       :style="{ color: eventConfidenceColor(Math.round((item.confidence??0)*100)) }">{{ item.strEntity }}</p>
+                    <p class="content" v-else>{{ item.anaEvent }}</p>
+                    <p class="label">{{ t('CommTable.comm_table_time') }}:</p>
+                    <p class="content">{{ item.time ? item.time.replace('T',' ').split('+')[0].split('.')[0] : '' }}</p>
+                  </div>
+                  <div style="margin-left:10px;flex:1;">
+                    <p class="label">Confidence:</p>
+                    <p :style="{ color: eventConfidenceColor(Math.round((item.confidence??0)*100)) }">
+                      {{ Math.round((item.confidence??0)*100) }}%
+                    </p>
+                    <p class="label">{{ t('Analytics.ana_rule_type') }}:</p>
+                    <p class="content">{{ eventRuleTypes[item.ruleType] || item.ruleType }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="alarm_right_right_footer">
+            <el-pagination layout="prev, pager, next" :pager-count="5"
+                           :page-size="eventPageSize" :total="eventTotal"
+                           :current-page="eventCurrentPage"
+                           @current-change="(v: number) => eventCurrentPage = v" />
+          </div>
+        </div>
+      </div><!-- /event-panel-right -->
+      </div><!-- /view-right-body -->
+
       <!-- 底部 footer（对照uscweb liveview_footer） -->
       <div class="liveview_footer">
         <div class="BlankPlaceholder"></div>
@@ -231,16 +368,65 @@
               </div>
             </div>
             <template #reference>
-              <el-button class="iconfont icon-gongge" style="margin-top:4px;" @click="loadCustomLayouts"></el-button>
+              <el-button class="iconfont icon-gongge" @click="loadCustomLayouts"></el-button>
             </template>
           </el-popover>
           <el-button class="iconfont icon-quanping1" @click="toggleFullscreen"></el-button>
+          <el-button class="iconfont"
+                     :class="eventPanelShow ? 'icon-youjiantou' : 'icon-zuojiantou'"
+                     @click="toggleEventPanel"></el-button>
         </div>
       </div>
     </div>
 
     <div v-if="isTreeFold" class="unfold-btn" @click="toggleTreeFold">
       <i class="iconfont icon-liebiao"></i>
+    </div>
+
+    <!-- PTZ 云台面板（对照 GridView .yuntai，对照 uscweb liveplay_ptz） -->
+    <div class="yuntai" :class="ptzShow ? '' : 'yuntai-hide'">
+      <div class="header">
+        <span>{{ t('Liveview.live_ptz') }}</span>
+        <i class="iconfont icon-zhankai2" @click="closePtz"></i>
+      </div>
+      <div class="controls">
+        <div class="left">
+          <i class="iconfont icon-jujiao2"       @mousedown="ptzAction('focusin')"  @mouseup="ptzAction('stop')"></i>
+          <i class="iconfont icon-jujiao1"       @mousedown="ptzAction('focusout')" @mouseup="ptzAction('stop')"></i>
+          <i class="iconfont icon-guangquanjia"  @mousedown="ptzAction('irisin')"   @mouseup="ptzAction('stop')"></i>
+          <i class="iconfont icon-guangquanjian" @mousedown="ptzAction('irisout')"  @mouseup="ptzAction('stop')"></i>
+          <i class="iconfont icon-light-open"    @mousedown="ptzAction('lighton')"  @mouseup="ptzAction('stop')"></i>
+          <i class="iconfont icon-light-close"   @mousedown="ptzAction('lightoff')" @mouseup="ptzAction('stop')"></i>
+          <i class="iconfont icon-kaiyushua"     @mousedown="ptzAction('wiperon')"  @mouseup="ptzAction('stop')"></i>
+          <i class="iconfont icon-guanyushua"    @mousedown="ptzAction('wiperoff')" @mouseup="ptzAction('stop')"></i>
+        </div>
+        <div class="right">
+          <div class="ptz-item corner"><div class="zs" @mousedown="ptzAction('upleft')"    @mouseup="ptzAction('stop')"><i class="iconfont icon-zuoshang"></i></div></div>
+          <div class="ptz-item shang"               @mousedown="ptzAction('up')"        @mouseup="ptzAction('stop')"><i class="iconfont icon-shang"></i></div>
+          <div class="ptz-item corner"><div class="ys" @mousedown="ptzAction('upright')"   @mouseup="ptzAction('stop')"><i class="iconfont icon-youshang"></i></div></div>
+          <div class="ptz-item zuo"                 @mousedown="ptzAction('left')"      @mouseup="ptzAction('stop')"><i class="iconfont icon-zuo"></i></div>
+          <div class="ptz-item center"></div>
+          <div class="ptz-item you"                 @mousedown="ptzAction('right')"     @mouseup="ptzAction('stop')"><i class="iconfont icon-you"></i></div>
+          <div class="ptz-item corner"><div class="zx" @mousedown="ptzAction('downleft')"  @mouseup="ptzAction('stop')"><i class="iconfont icon-zuoxia"></i></div></div>
+          <div class="ptz-item xia"                 @mousedown="ptzAction('down')"      @mouseup="ptzAction('stop')"><i class="iconfont icon-xia"></i></div>
+          <div class="ptz-item corner"><div class="yx" @mousedown="ptzAction('downright')" @mouseup="ptzAction('stop')"><i class="iconfont icon-youxia"></i></div></div>
+        </div>
+      </div>
+      <div class="ptz-slider">
+        <span>{{ ptzSpeed }}</span>
+        <el-slider v-model="ptzSpeed" :show-tooltip="false" :max="1" :min="0.1" :step="0.1" />
+      </div>
+      <el-timeline>
+        <el-timeline-item placement="top" v-for="pre in presetList" :key="pre.strToken">
+          <el-card>
+            <div class="preset_bgc">
+              <input type="text" class="preset_input" :value="pre.strName" />
+              <button class="iconfont icon-RectangleCopy1" @click="gotoPreset(pre.strToken)"></button>
+              <button class="iconfont icon-icon-test1"     @click="setPreset(pre.strToken,$event)"></button>
+            </div>
+          </el-card>
+        </el-timeline-item>
+      </el-timeline>
     </div>
 
     <!-- Add View Dialog -->
@@ -333,11 +519,18 @@ import { UPlayerSDK as UPlayerSDKClass, UPlayerList as UPlayerListClass, H5sPlay
 import { useUserStore } from '@/store/user'
 import { useStore } from '@/store'
 import { GetDevPartitionApi } from '@/api/configuration/device'
-import { GetDeviceChannels, getSearchDeviceRecordByTimeApi, getSearchStorRecordByTimeApi, GetRecordCalendar } from '@/api/channel'
+import { H5sPlayerAudBack } from '@/assets/js/h5splayer.js'
+import {
+  GetDeviceChannels, getSearchDeviceRecordByTimeApi, getSearchStorRecordByTimeApi, GetRecordCalendar,
+  setRecEnableApi, GetInformationDataApi, GetPresetsApi, PresetJumpApi, SetPresetApi, PtzApi,
+} from '@/api/channel'
 import { UpdateUserConfigApi } from '@/api/system'
 import { GetViewApi, CreateViewApi, UpdateViewApi, DeleteViewApi, GetLayoutListApi, CreateLayoutApi, DeleteLayoutApi } from '@/api/view'
 import uuid from '@/assets/js/uuid.js'
 import Gird1 from './Gird1.vue'
+import { H5jsEvent } from '@/assets/js/h5jsevent.js'
+import { GetAnaEventApi } from '@/api/Analytics/setting'
+import http from '@/api/http'
 
 const { t } = useI18n()
 const userStore = useUserStore()
@@ -378,6 +571,19 @@ const playingNodeIds  = ref<string[]>([])
 const showRecodeType  = ref(false)
 const Audioslider     = ref(0)
 const customDateArr   = ref<number[]>([])
+
+// ─── Float-layer state（对照 GridView）───────────────────────────────────
+const audioingCellId  = ref('')           // 正在对讲的 cellId
+let   audioback: any  = null              // H5sPlayerAudBack 实例
+const infoShow        = ref(false)        // 码率信息面板显隐
+const infoVideo       = ref<any[]>([])    // 码率信息-视频
+const infoAudio       = ref<any[]>([])    // 码率信息-音频
+let   timerRunInfo: any = null            // 码率轮询定时器（对照 GridView）
+const ptzShow         = ref(false)        // PTZ 面板显隐
+const ptzToken        = ref('')           // 当前 PTZ token
+const ptzSpeed        = ref(0.5)          // PTZ 速度
+const presetList      = ref<any[]>([])    // PTZ 预置位列表
+
 const pickerOptions   = {
   cellClassName(date: Date) {
     return customDateArr.value.indexOf(date.getTime()) !== -1 ? 'custom_date_class' : ''
@@ -742,6 +948,8 @@ const clearCell = (cellId: string) => {
   }
   if (selectedCellId.value === cellId) selectedCellId.value = ''
   if (expandedCellId.value === cellId) expandedCellId.value = ''
+  // 清理悬浮按钮的额外状态
+  stopCellExtra(cellId)
 }
 
 const clearAllPlayers = () => {
@@ -798,7 +1006,7 @@ const restorePlayingState = async () => {
     const state = JSON.parse(raw)
     if (state.layoutType) layoutType.value = state.layoutType
     if (state.gridCells?.length) gridCells.value = state.gridCells
-    // 有摄像头时才恢复画面</thinking>
+    // 有摄像头时才恢复画面
 
     if (state.cameras?.length) {
       await nextTick()
@@ -1230,6 +1438,360 @@ const croppingForm = reactive({
 })
 const croppingWS2List: any[] = []
 
+// ─── 悬浮按钮：音量（per-cell）─────────────────────────────────────────────
+const cellAudioSliders  = reactive<Record<string, number>>({})
+const cellAudioVisible  = ref('')
+
+const toggleCellAudio = (cellId: string) => {
+  if (cellAudioVisible.value === cellId) {
+    cellAudioVisible.value = ''
+  } else {
+    if (!(cellId in cellAudioSliders)) cellAudioSliders[cellId] = 0
+    cellAudioVisible.value = cellId
+  }
+}
+
+const setCellVolume = (cellId: string, val: number) => {
+  cellAudioSliders[cellId] = val
+  try { playerMap.get(cellId)?.setVolume?.(val) } catch {}
+}
+
+// ─── 悬浮按钮：3D 框选放大 ──────────────────────────────────────────────────
+const cell3DZoomId    = ref('')
+interface ZoomRect { drawing: boolean; x0: number; y0: number; x1: number; y1: number }
+const cell3DZoomState = reactive<Record<string, ZoomRect>>({})
+
+const toggle3DZoom = (cellId: string) => {
+  if (cell3DZoomId.value === cellId) {
+    cell3DZoomId.value = ''
+    _clear3DCanvas(cellId)
+  } else {
+    // 互斥：关电子放大
+    if (cellEZoomId.value) toggleEZoom(cellEZoomId.value)
+    cell3DZoomId.value = cellId
+    cell3DZoomState[cellId] = { drawing: false, x0: 0, y0: 0, x1: 0, y1: 0 }
+  }
+}
+
+const _clear3DCanvas = (cellId: string) => {
+  const c = document.getElementById('3dzoom-h' + cellId) as HTMLCanvasElement | null
+  if (c) c.getContext('2d')?.clearRect(0, 0, c.width, c.height)
+}
+
+const _sync3DCanvasSize = (cellId: string) => {
+  const container = document.getElementById('h' + cellId)
+  const c = document.getElementById('3dzoom-h' + cellId) as HTMLCanvasElement | null
+  if (container && c) { c.width = container.offsetWidth; c.height = container.offsetHeight }
+}
+
+const on3DMouseDown = (cellId: string, e: MouseEvent) => {
+  if (cell3DZoomId.value !== cellId) return
+  _sync3DCanvasSize(cellId)
+  const c = document.getElementById('3dzoom-h' + cellId) as HTMLCanvasElement
+  if (!c) return
+  const rect = c.getBoundingClientRect()
+  cell3DZoomState[cellId] = { drawing: true, x0: e.clientX - rect.left, y0: e.clientY - rect.top, x1: e.clientX - rect.left, y1: e.clientY - rect.top }
+}
+
+const on3DMouseMove = (cellId: string, e: MouseEvent) => {
+  const st = cell3DZoomState[cellId]
+  if (!st?.drawing) return
+  const c = document.getElementById('3dzoom-h' + cellId) as HTMLCanvasElement
+  if (!c) return
+  const rect = c.getBoundingClientRect()
+  st.x1 = e.clientX - rect.left; st.y1 = e.clientY - rect.top
+  const ctx = c.getContext('2d')!
+  ctx.clearRect(0, 0, c.width, c.height)
+  ctx.strokeStyle = '#00FF00'; ctx.lineWidth = 1.5
+  ctx.strokeRect(st.x0, st.y0, st.x1 - st.x0, st.y1 - st.y0)
+}
+
+const on3DMouseUp = (cellId: string, e: MouseEvent) => {
+  const st = cell3DZoomState[cellId]
+  if (!st?.drawing) return
+  st.drawing = false
+  const c = document.getElementById('3dzoom-h' + cellId) as HTMLCanvasElement
+  if (!c || c.width === 0 || c.height === 0) return
+  const x = Math.min(st.x0, st.x1) / c.width
+  const y = Math.min(st.y0, st.y1) / c.height
+  const w = Math.abs(st.x1 - st.x0) / c.width
+  const h = Math.abs(st.y1 - st.y0) / c.height
+  if (w < 0.02 || h < 0.02) { _clear3DCanvas(cellId); return }
+  const cam = cameraMap.value.get(cellId)
+  if (cam) {
+    try { PtzApi(cam.token, 'selzoomin', ptzSpeed.value) } catch {}
+  }
+  _clear3DCanvas(cellId)
+  // 框选完成后自动退出 3D 模式
+  cell3DZoomId.value = ''
+}
+
+const on3DMouseLeave = (cellId: string) => {
+  const st = cell3DZoomState[cellId]
+  if (st?.drawing) { st.drawing = false; _clear3DCanvas(cellId) }
+}
+
+// ─── 悬浮按钮：电子放大（2× 中心裁剪）────────────────────────────────────
+const cellEZoomId     = ref('')
+const cellEZoomTimers = new Map<string, number>()
+
+const toggleEZoom = (cellId: string) => {
+  if (cellEZoomId.value === cellId) {
+    cellEZoomId.value = ''
+    const h = cellEZoomTimers.get(cellId)
+    if (h !== undefined) { cancelAnimationFrame(h); cellEZoomTimers.delete(cellId) }
+    const c = document.getElementById('ezoom-h' + cellId) as HTMLCanvasElement | null
+    if (c) c.getContext('2d')?.clearRect(0, 0, c.width, c.height)
+  } else {
+    // 互斥：关 3D 框选
+    if (cell3DZoomId.value) toggle3DZoom(cell3DZoomId.value)
+    const cam = cameraMap.value.get(cellId)
+    if (!cam) return
+    cellEZoomId.value = cellId
+    nextTick(() => {
+      const container = document.getElementById('h' + cellId)
+      const c = document.getElementById('ezoom-h' + cellId) as HTMLCanvasElement | null
+      if (!c || !container) return
+      c.width = container.offsetWidth; c.height = container.offsetHeight
+      const _loop = () => {
+        if (cellEZoomId.value !== cellId) return
+        const video = document.getElementById(cam.videoid) as HTMLVideoElement | null
+        if (video && video.readyState >= 2 && video.videoWidth > 0) {
+          const sw = video.videoWidth / 2
+          const sh = video.videoHeight / 2
+          const sx = sw / 2; const sy = sh / 2
+          c.getContext('2d')?.drawImage(video, sx, sy, sw, sh, 0, 0, c.width, c.height)
+        }
+        cellEZoomTimers.set(cellId, requestAnimationFrame(_loop))
+      }
+      cellEZoomTimers.set(cellId, requestAnimationFrame(_loop))
+    })
+  }
+}
+
+// ─── 悬浮按钮：单格全屏 ───────────────────────────────────────────────────
+const cellFullscreenId = ref('')
+
+const toggleCellFullscreen = (cellId: string) => {
+  const el = document.getElementById('h' + cellId) as any
+  if (!el) return
+  const doc = document as any
+  if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+    ;(doc.exitFullscreen ?? doc.webkitExitFullscreen)?.call(doc)
+  } else {
+    ;(el.requestFullscreen ?? el.webkitRequestFullscreen)?.call(el)
+    cellFullscreenId.value = cellId
+  }
+}
+
+// fullscreenchange 监听：退出时重置
+const _onFullscreenChange = () => {
+  const doc = document as any
+  if (!doc.fullscreenElement && !doc.webkitFullscreenElement) {
+    cellFullscreenId.value = ''
+  }
+}
+
+// ─── stopCellExtra：清理单格额外状态 ─────────────────────────────────────
+const stopCellExtra = (cellId: string) => {
+  if (cell3DZoomId.value === cellId) { cell3DZoomId.value = ''; _clear3DCanvas(cellId) }
+  if (cellEZoomId.value === cellId) {
+    cellEZoomId.value = ''
+    const h = cellEZoomTimers.get(cellId)
+    if (h !== undefined) { cancelAnimationFrame(h); cellEZoomTimers.delete(cellId) }
+    const c = document.getElementById('ezoom-h' + cellId) as HTMLCanvasElement | null
+    if (c) c.getContext('2d')?.clearRect(0, 0, c.width, c.height)
+  }
+  if (cellAudioVisible.value === cellId) cellAudioVisible.value = ''
+}
+
+// ─── Event 面板状态 ────────────────────────────────────────────────────────
+const eventPanelShow   = ref(localStorage.getItem('hpro-event-show') === 'true')
+const eventTableData   = ref<any[]>([])
+const eventCurrentPage = ref(1)
+const eventPageSize    = 7
+const eventTotal       = computed(() => eventTableData.value.length)
+let   anaEventWS: any  = null
+const faceList         = ref<any[]>([])
+
+const eventRuleTypes: Record<string, string> = {
+  'USC_ANA_RULE_MIAA': t('Analytics.ana_rule_miaa'),
+  'USC_ANA_RULE_CRAL': t('Analytics.ana_rule_cral'),
+  'USC_ANA_RULE_LOIT': t('Analytics.ana_rule_loit'),
+  'USC_ANA_RULE_STVE': t('Analytics.ana_rule_stve'),
+  'USC_ANA_RULE_VECT': t('Analytics.ana_rule_vect'),
+  'USC_ANA_RULE_PECT': t('Analytics.ana_rule_pect'),
+  'USC_ANA_RULE_PPE':  t('Analytics.ana_rule_ppe'),
+  'USC_ANA_RULE_PEFA': t('Analytics.ana_rule_pefa'),
+  'USC_ANA_RULE_FARE': t('Analytics.ana_face_recognition'),
+  'USC_ANA_RULE_LPRE': t('Analytics.ana_lpre'),
+  'USC_ANA_RULE_CROD': t('Analytics.ana_rule_crod'),
+  'USC_ANA_RULE_FISM': 'Fire/Smoke Detection',
+  'USC_ANA_RULE_FBLK': 'Fire Detection',
+  'USC_ANA_RULE_FIGT': 'Fighting Detection',
+}
+
+// 目标类型图标（对照 uscweb shapeObj）
+const eventShapeObj: Record<string, string> = {
+  'person':     'icon-person',
+  'vehicle':    'icon-vehicle',
+  'motorcycle': 'icon-motorcycle',
+  'bicycle':    'icon-bicycle',
+  'car':        'icon-car',
+  'truck':      'icon-truck',
+  'bus':        'icon-bus',
+  'face':       'icon-face',
+}
+
+// 优先级渐变色（对照 uscweb priorityLevelRight，固定 dark 主题背景 #1e1e1e）
+const eventPriorityGradient = (priority: string): string => {
+  const map: Record<string, string> = {
+    Critical: 'linear-gradient(270deg, #7DDFDF 0%, #1e1e1e 100%)',
+    High:     'linear-gradient(270deg, #D83D3D 0%, #1e1e1e 100%)',
+    Low:      'linear-gradient(270deg, #00B75B 0%, #1e1e1e 100%)',
+    Medium:   'linear-gradient(270deg, #F09C37 0%, #1e1e1e 100%)',
+  }
+  return map[priority] ?? 'linear-gradient(270deg, #555 0%, #1e1e1e 100%)'
+}
+
+// 置信度渐变色（车牌，对照 uscweb priorityLevelRight1）
+const eventPriorityGradient1 = (confidence: number): string => {
+  const colors = ['#6B84EE','#4F99E8','#33BA7F','#FF7C00','#FE5003']
+  const idx = Math.min(Math.floor(confidence / 20), 4)
+  return `linear-gradient(270deg, ${colors[idx]} 0%, rgba(0,0,0,0.1) 100%)`
+}
+
+// 置信度文字颜色
+const eventConfidenceColor = (confidence: number): string => {
+  const colors = ['#6B84EE','#4F99E8','#33BA7F','#FF7C00','#FE5003']
+  return colors[Math.min(Math.floor(confidence / 20), 4)]
+}
+
+// ─── Event 面板数据方法 ───────────────────────────────────────────────────
+const getFaceList = async () => {
+  try {
+    const res = await http({ url: '/uapi/v1/FaceLibrary/List', method: 'GET' })
+    if (res.status === 200 && Array.isArray(res.data?.result)) {
+      for (const lib of res.data.result) {
+        try {
+          const r2 = await http({
+            url: `/uapi/v1/PersonLibrary/List?faceLibraryId=${lib.faceLibraryId}`,
+            method: 'GET',
+          })
+          if (r2?.status === 200 && r2.data?.code === 0) {
+            faceList.value.push(...(r2.data.result?.list ?? []))
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+}
+
+const getAnaEventList = async () => {
+  const now = new Date()
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+  try {
+    const res = await GetAnaEventApi({
+      pageIndex: 0,
+      pageSize: 20,
+      beginTime: formatTime(yesterday),
+      endTime: formatTime(now),
+      channelName: '',
+      ruleTypes: [],
+    })
+    if (res.status === 200 && res.data.code === 0) {
+      const raw: any[] = res.data.result.list ?? []
+      eventTableData.value = raw.map((item: any) => {
+        const row = { ...item, img: item.strJpeg || '' }
+        if (item.ruleType === 'USC_ANA_RULE_FARE') {
+          const person = faceList.value.find((p: any) => p.id === item.strEntity)
+          row.strEntity = person ? person.personName : item.strEntity
+        }
+        return row
+      })
+    } else {
+      console.warn('[getAnaEventList] unexpected response', res.data)
+    }
+  } catch(e) { console.warn('[getAnaEventList] error', e) }
+}
+
+const anaEventCB = (event: string) => {
+  try {
+    const msg = JSON.parse(event).msg
+    const row: any = {
+      anaName:      msg.strAnaName,
+      channelName:  msg.strChannelName,
+      targetType:   msg.strTargetType,
+      anaEvent:     msg.strEvent,
+      ruleType:     msg.strRuleType,
+      time:         msg.strTime,
+      priority:     msg.strPriority,
+      confidence:   msg.nConfidence,
+      img:          msg.strJpeg || '',
+      channelToken: msg.strChannelToken,
+      trackid:      msg.nTrackId,
+      strEntity:    msg.strEntity,
+    }
+    if (row.ruleType === 'USC_ANA_RULE_FARE') {
+      const person = faceList.value.find((p: any) => p.id === row.strEntity)
+      row.strEntity = person ? person.personName : row.strEntity
+    }
+    if (eventTableData.value.length >= 70) eventTableData.value.pop()
+    eventTableData.value.unshift(row)
+  } catch {}
+}
+
+const setAnaEvent = () => {
+  if (anaEventWS) return
+  try {
+    const conf = {
+      protocol:   window.location.protocol,
+      host:       userStore.WSROOT,
+      rootpath:   '/',
+      apipath:    '/uapi/v1/ws/anaEvent',
+      pbconf:     { callback: anaEventCB },
+      userdata:   null,
+      session:    userStore.session,
+      consolelog: 'false',
+    }
+    anaEventWS = new H5jsEvent(conf)
+    anaEventWS.connect()
+  } catch(e) { console.warn('[setAnaEvent]', e) }
+}
+
+const closeAnaEvent = () => {
+  if (anaEventWS) { anaEventWS.disconnect(); anaEventWS = null }
+}
+
+const toggleEventPanel = () => {
+  eventPanelShow.value = !eventPanelShow.value
+  localStorage.setItem('hpro-event-show', String(eventPanelShow.value))
+}
+
+const clickEventImg = async (row: any) => {
+  if (!row.channelToken) return
+  // 找当前选中格子，或找持有相同 token 的格子，或取第一格
+  let targetCell = selectedCellId.value
+  if (!targetCell || !cameraMap.value.has(targetCell)) {
+    const entry = [...cameraMap.value.entries()].find(([, c]) => c.token === row.channelToken)
+    targetCell = entry?.[0] ?? gridCells.value[0]?.id ?? ''
+  }
+  if (!targetCell) return
+  try {
+    const evtTime = new Date(row.time)
+    const seekTime = new Date(evtTime.getTime() - 5000)
+    xzvalue.value = seekTime
+    if (isLiveview.value) await setLiveMode(false)
+    const pbItem = pbPlayerMap.get(targetCell)
+    if (pbItem) {
+      pbItem.v1.moveto(formatTime(seekTime))
+    } else {
+      await buildPbPlayer(targetCell)
+    }
+    selectedCellId.value = targetCell
+  } catch(e) { console.warn('[clickEventImg]', e) }
+}
+
 const toggleCropping = () => {
   const cellId = selectedCellId.value || [...cameraMap.value.keys()][0]
   if (!cellId) return
@@ -1339,10 +1901,131 @@ const toggleFullscreen = () => {
   }
 }
 
+// ─── Float-layer: 码率信息（对照 GridView showInfo / fetchInfo）──────────
+const fetchCellInfo = async (token: string) => {
+  if (!token) return
+  try {
+    const res = await GetInformationDataApi(token)
+    if (res.status !== 200) return
+    const d = res.data
+    infoVideo.value = [
+      { name: t('Liveview.live_codec'),      data: d.strVideoType },
+      { name: t('Common.comm_width'),        data: d.nVideoWidth },
+      { name: t('Common.comm_height'),       data: d.nVideoHeight },
+      { name: t('Common.comm_fps'),          data: d.nVideoFPS },
+      { name: t('CommDev.comm_dev_bitrate'), data: (d.nVideoBitrate / 1024).toFixed(1) + 'kbps' },
+    ]
+    infoAudio.value = [
+      { name: t('Liveview.live_codec'),      data: d.strAudioType },
+      { name: t('Liveview.live_sampleRate'), data: d.nAudioSampleRate },
+      { name: t('Liveview.live_sampleBit'),  data: d.nAudioSampleBit },
+      { name: t('Liveview.live_channels'),   data: d.nAudioChannels },
+      { name: t('CommDev.comm_dev_bitrate'), data: (d.nAudioBitrate / 1024).toFixed(1) + 'kbps' },
+    ]
+  } catch {}
+}
+
+const showCellInfo = (cellId: string) => {
+  const cam = cameraMap.value.get(cellId)
+  if (!cam) return
+  if (infoShow.value) {
+    // 再次点击 → 关闭并停止轮询
+    infoShow.value = false; clearInterval(timerRunInfo); timerRunInfo = null
+  } else {
+    infoShow.value = true
+    fetchCellInfo(cam.token)
+    timerRunInfo = setInterval(() => fetchCellInfo(cam.token), 8000)
+  }
+}
+const closeInfo = () => {
+  infoShow.value = false; clearInterval(timerRunInfo); timerRunInfo = null
+}
+
+// ─── Float-layer: 对讲/喊话（对照 uscweb Shoutwheat）────────────────────
+const doShoutwheat = (cellId: string) => {
+  const cam = cameraMap.value.get(cellId)
+  if (!cam) return
+  if (audioingCellId.value === cellId) {
+    // 关闭对讲
+    audioback?.disconnect(); audioback = null
+    audioingCellId.value = ''
+  } else {
+    audioback?.disconnect()
+    audioback = new H5sPlayerAudBack({
+      protocol: window.location.protocol, host: userStore.WSROOT, rootpath: '/',
+      token: cam.token, session: userStore.session,
+    })
+    audioback.connect()
+    audioingCellId.value = cellId
+  }
+}
+
+// ─── Float-layer: 截图（对照 uscweb DoSnapshotWeb）───────────────────────
+const doSnapshot = (cellId: string) => {
+  const cam = cameraMap.value.get(cellId)
+  if (!cam) return
+  const video = document.getElementById(cam.videoid) as HTMLVideoElement | null
+  if (!video) return
+  const d = new Date()
+  const fileName = `${cam.token}_${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}-${d.getHours()}-${d.getMinutes()}-${d.getSeconds()}`
+  const canvas = document.createElement('canvas')
+  canvas.width = video.videoWidth || 640
+  canvas.height = video.videoHeight || 360
+  canvas.getContext('2d')!.drawImage(video, 0, 0)
+  const a = document.createElement('a')
+  a.download = fileName + '.png'; a.href = canvas.toDataURL('image/png')
+  document.body.appendChild(a); a.click(); document.body.removeChild(a)
+}
+
+// ─── Float-layer: 手动录像（对照 uscweb DoManualRecordStart）─────────────
+const doManualRec = async (cellId: string) => {
+  const cam = cameraMap.value.get(cellId)
+  if (!cam) return
+  const newState = !cam.recording
+  try {
+    const res = await setRecEnableApi({ devUUID: cam.resourceUUID, setting: { manualRecEnable: newState } })
+    if (res.status === 200 && res.data.msg === 'Success') {
+      cameraMap.value.set(cellId, { ...cam, recording: newState })
+    }
+  } catch {}
+}
+
+// ─── Float-layer: PTZ 云台（对照 uscweb PtzControlShow）─────────────────
+const showPtz = async (cellId: string) => {
+  const cam = cameraMap.value.get(cellId)
+  if (!cam) return
+  ptzToken.value = cam.token; presetList.value = []
+  try {
+    const res = await GetPresetsApi(ptzToken.value)
+    if (res.status === 200) presetList.value = (res.data.preset ?? []).slice(0, 8)
+  } catch {}
+  ptzShow.value = true
+}
+const closePtz = () => { ptzShow.value = false; ptzToken.value = '' }
+const ptzAction = (action: string) => {
+  if (!ptzToken.value) return
+  PtzApi(ptzToken.value, action, ptzSpeed.value)
+}
+const gotoPreset = (presetToken: string) => {
+  PresetJumpApi(ptzToken.value, presetToken, ptzSpeed.value)
+}
+const setPreset = (presetToken: string, ev: MouseEvent) => {
+  const inputVal = (ev.currentTarget as HTMLElement)
+    ?.previousElementSibling?.previousElementSibling
+    ?.querySelector('input')?.value ?? ''
+  SetPresetApi(ptzToken.value, inputVal, presetToken)
+}
+
+
 // ─── Lifecycle ────────────────────────────────────────────────────────────
 onMounted(async () => {
   loadTree()
   loadLayoutList()
+  document.addEventListener('fullscreenchange', _onFullscreenChange)
+  document.addEventListener('webkitfullscreenchange', _onFullscreenChange)
+  // Event 面板：挂载时立即连接 WebSocket + 拉取初始数据（对照 uscweb setAnaEvent on mounted）
+  getFaceList().catch(() => {}).then(() => getAnaEventList())
+  setAnaEvent()
   await restorePlayingState()
 })
 onBeforeUnmount(() => {
@@ -1356,6 +2039,16 @@ onBeforeUnmount(() => {
     viewTimeline.clearMotionBars?.()
     viewTimeline = null
   }
+  // 清理 float-layer 资源（对照 GridView closeAllVideo）
+  clearInterval(timerRunInfo); timerRunInfo = null
+  if (audioback) { audioback.disconnect(); audioback = null }
+  // 清理悬浮按钮：电子放大 rAF + fullscreenchange 监听
+  cellEZoomTimers.forEach((h) => cancelAnimationFrame(h))
+  cellEZoomTimers.clear()
+  document.removeEventListener('fullscreenchange', _onFullscreenChange)
+  document.removeEventListener('webkitfullscreenchange', _onFullscreenChange)
+  // 清理 Event 面板 WebSocket
+  closeAnaEvent()
 })
 </script>
 
@@ -1397,6 +2090,67 @@ onBeforeUnmount(() => {
 .view-right {
   flex: 1; display: flex; flex-direction: column; overflow: hidden;
 }
+.view-right-body {
+  flex: 1; display: flex; flex-direction: row; overflow: hidden; min-height: 0;
+}
+.view-right-main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0;
+}
+// Event 面板右侧布局（对照 uscweb alarm_right_right）
+.event-panel-right {
+  height: 100%;
+  border-left: 1px solid #333;
+  background: #1b1b1b;
+  .alarm_right_right {
+    position: relative; width: 100%; height: 100%;
+    display: flex; flex-direction: column; color: #ccc;
+    .alarm_right_right_header {
+      display: flex; justify-content: space-between; align-items: center;
+      height: 37px; flex-shrink: 0; padding: 0 10px;
+      font-size: 14px; font-weight: 500; border-bottom: 1px solid #2a2a2a;
+    }
+    .alarm_right_right_body {
+      flex: 1; overflow-y: auto; padding: 4px 6px;
+      &::-webkit-scrollbar { width: 6px; }
+      &::-webkit-scrollbar-thumb { border-radius: 3px; background: rgba(218,218,218,0.2); }
+      &::-webkit-scrollbar-track { background: rgba(218,218,218,0.05); }
+      .alarm_right_right_content {
+        height: 338px; padding: 0 8px; margin: 4px 0;
+        display: flex; flex-direction: column;
+        border-radius: 6px; overflow: hidden;
+        background: rgba(255,255,255,0.03);
+        .content_header {
+          height: 32px; display: flex; justify-content: space-between; align-items: center;
+          padding: 0 8px; flex-shrink: 0;
+          span { font-size: 13px; font-weight: 500; }
+          .iconfont { font-size: 20px; }
+        }
+        .content_body {
+          flex: 1; padding: 8px; display: flex; flex-direction: column;
+          .content_body_top {
+            height: 173px; display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.2); border-radius: 4px; overflow: hidden; flex-shrink: 0;
+            img { cursor: pointer; max-height: 100%; max-width: 100%; object-fit: contain; }
+          }
+          .content_body_bottom {
+            flex: 1; display: flex; padding-top: 10px; gap: 10px;
+            > div { flex: 1; min-width: 0; }
+            .label { font-size: 11px; color: #999; margin-bottom: 2px; }
+            .content { font-size: 13px; font-weight: 500; margin-bottom: 6px; word-break: break-all; }
+          }
+        }
+      }
+    }
+    .alarm_right_right_footer {
+      flex-shrink: 0; padding: 4px 0;
+      :deep(.el-pagination) {
+        .btn-prev, .btn-next, .el-pager li { border: none !important; }
+      }
+    }
+  }
+}
+.event-btn-active { color: #0399FE !important; }
+.EventPosition { color: #0399FE !important; }
 .liveview_footer {
   height: 42px; background: #252525; display: flex; align-items: center;
   flex-shrink: 0;
@@ -1424,6 +2178,21 @@ onBeforeUnmount(() => {
 }
 .liveview_right_video_hed {
   flex: 1; position: relative; background: #1a1a1a; overflow: hidden;
+  // 码率信息浮层（对照 GridView .malv）
+  .malv {
+    position: absolute; top: 20px; right: 16px; z-index: 100;
+    width: 336px; height: 150px; display: flex; transition: 0.2s;
+    .malv-close { position: absolute; top: 3px; right: 8px; font-size: 16px; cursor: pointer; }
+    .malv-left, .malv-right {
+      width: 50%; height: 100%; background-color: rgba(#333, 0.5);
+      .information_title { width: 100%; height: 30px; line-height: 30px; background-color: rgba(0,0,0,0.7); padding: 0 10px; }
+      .information_content { width: 100%; display: flex; justify-content: space-between; padding: 0 2px;
+        .information_content_left  { width: 50%; color: #3ABBFE; }
+        .information_content_right { width: 50%; color: #3ABBFE; }
+      }
+    }
+  }
+  .malv-hide { right: -336px; }
 }
 .video-empty-hint {
   flex: 1; display: flex; align-items: center; justify-content: center;
@@ -1449,12 +2218,12 @@ onBeforeUnmount(() => {
     // 最左：存储切换（对照 GridView storage_box）
     .storage_box { width: 17%; }
     .storage_mode {
-      width: 190px; display: flex; height: 24px; margin-left: 10px; border-radius: 12px;
+      width: 240px; display: flex; height: 24px; margin-left: 10px; border-radius: 12px;
       .CentralStorage, .DeviceStorage {
         flex: 1; height: 100%; line-height: 24px; text-align: center;
-        border-radius: 12px; cursor: pointer; font-size: 13px; color: #ccc;
+        border-radius: 12px; cursor: pointer; white-space: nowrap;
       }
-      .active { background: #0399FE; color: #fff; }
+      .active { background-color: #0399FE; }
     }
     // 中：控制按钮组
     button { padding:0; border:none; background:none; font-size:22px; margin-right:10px; color:#fff; }
@@ -1499,6 +2268,47 @@ onBeforeUnmount(() => {
     background: rgba(0,0,0,0.6); color: #fff; font-size: 12px; padding: 2px 6px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  // 悬浮按钮层：默认偏移到顶部以上，悬停时滑入（对照 GridView float-layer / uscweb liveplay_butt）
+  &:hover .float-layer { top: 0; }
+  .float-layer {
+    position: absolute; right: 0; top: -30px; z-index: 10;
+    width: 290px; height: 30px; line-height: 30px;
+    background: url('@/views/Monitoring/liveview/imgs/liveview_buttback.png') no-repeat;
+    background-size: 290px 30px; text-align: right; padding: 0 10px; transition: 0.2s;
+    display: flex; align-items: center; justify-content: flex-end;
+    i, span { margin-left: 8px; cursor: pointer; color: #fff; font-size: 16px;
+      &:hover { color: #0399FE; }
+    }
+    .protocol-label { font-size: 12px; cursor: default;
+      &:hover { color: #fff; }
+    }
+    .audio-active  { color: #0399FE !important; }
+    .rec-active    { color: #f44336 !important; }
+    .expend-active { color: #0399FE !important; }
+  }
+  // 音量滑块面板
+  .cell-audio-slider {
+    position: absolute; bottom: 36px; right: 8px; z-index: 20;
+    background: rgba(0,0,0,0.75); padding: 6px 10px; border-radius: 4px;
+    display: flex; align-items: center; gap: 8px; width: 150px;
+    i { font-size: 18px; color: #fff; flex-shrink: 0; }
+    :deep(.el-slider) { flex: 1;
+      .el-slider__runway { height: 3px; background: rgba(255,255,255,0.2); }
+      .el-slider__bar    { height: 3px; }
+      .el-slider__button { width: 10px; height: 10px; border: 2px solid #409EFF; }
+    }
+  }
+  // 电子放大 / 3D 框选画布
+  .cell-ezoom-canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 8; display: none;
+    &.active { display: block; }
+  }
+  .cell-3dzoom-canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 9; display: none;
+    &.active { display: block; pointer-events: auto; cursor: crosshair; }
+  }
   .cell-close {
     position: absolute; top: 2px; right: 4px; background: rgba(0,0,0,0.5);
     border: none; color: #fff; font-size: 16px; cursor: pointer; line-height: 1;
@@ -1506,7 +2316,47 @@ onBeforeUnmount(() => {
     &:hover { background: #f44336; }
   }
   &.palace-selected { outline: 2px solid #f44336; outline-offset: -2px; }
+  // 双击展开：覆盖整个视频容器（对照 GridView expandedCellId 逻辑）
+  &.palace-expanded {
+    position: absolute !important; top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important; z-index: 20;
+  }
 }
+
+// PTZ 云台面板（对照 GridView .yuntai）
+.yuntai {
+  position: absolute; left: 5px; bottom: 0; width: 288px; height: 550px; transition: 0.3s;
+  background: rgba(#232323, 0.95); border-radius: 4px; z-index: 100;
+  .header { width: 100%; height: 32px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center;
+    color: #fff;
+    i { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 10px; }
+  }
+  .ptz-slider { width: 100%; padding: 0 20px; display: flex; flex-direction: column; align-items: center; color: #fff; :deep(.el-slider) { width: 100%; } }
+  .controls {
+    width: 100%; height: 144px; display: flex; justify-content: space-between; padding: 0 20px; margin: 20px 0;
+    .left { width: 60px; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start;
+      i { cursor: pointer; color: #fff; font-size: 22px; width: 26px; height: 26px; line-height: 26px; text-align: center;
+        &:hover { color: #0399FE; }
+      }
+    }
+    .right { width: 144px; display: grid; grid-template-columns: repeat(3,1fr); gap: 4px;
+      .ptz-item { display: flex; align-items: center; justify-content: center; height: 44px; background: rgba(255,255,255,0.05); border-radius: 2px; cursor: pointer; color: #fff;
+        &:hover { background: rgba(3,153,254,0.3); }
+        i { font-size: 20px; }
+        &.center { background: rgba(255,255,255,0.1); cursor: default; }
+        &.corner { padding: 0; }
+        .zs,.ys,.zx,.yx { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      }
+    }
+  }
+  .preset_bgc { display: flex; align-items: center; gap: 6px;
+    .preset_input { background: transparent; border: none; border-bottom: 1px solid #555; color: #fff; flex: 1; outline: none; font-size: 13px; }
+    button { background: none; border: none; color: #fff; cursor: pointer; font-size: 16px; &:hover { color: #0399FE; } }
+  }
+  :deep(.el-timeline-item__wrapper) { padding-left: 16px; }
+  :deep(.el-card__body) { padding: 8px; background: rgba(255,255,255,0.04); }
+}
+.yuntai-hide { bottom: -550px; }
 .unfold-btn {
   position: absolute; left: 0; top: 0; width: 30px; height: 30px; line-height: 30px;
   text-align: center; background: rgba(124,124,124,0.5); border-radius: 0 2px 2px 0; cursor: pointer; z-index: 50;

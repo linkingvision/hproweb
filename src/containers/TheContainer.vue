@@ -39,9 +39,18 @@ watch(() => store.darkMode, (newVal: any) => {
 </template>
 
 <style lang="scss" scoped>
-.the-container {
+.c-app {
   width: 100%;
-  height: 100%;
-
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.the-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 </style>

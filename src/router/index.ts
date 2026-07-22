@@ -3,6 +3,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 const Login = () => import('@/containers/Login.vue');
+const Home = () => import('@/views/Home/Home.vue')
 const TheContainer = () => import('@/containers/TheContainer.vue')
 const Monitoring = () => import('@/views/Monitoring/Monitoring.vue')
 const GridCloudView = () => import('@/views/Monitoring/GridCloudView.vue')
@@ -69,12 +70,21 @@ const router = createRouter({
     }
   }, {
     path: '/',
-    name: 'Home',
+    name: 'Container',
     component: TheContainer,
     meta: {
       type: 'Administrator' // requires auth
     },
     children: [{
+      path: 'Home',
+      name: 'Home',
+      component: Home,
+      meta: {
+        title: '/Home',
+        name: 'Common.comm_home',
+        type: 'Operator'
+      }
+    }, {
       path: 'Monitoring',
       name: 'Monitoring',
       component: Monitoring,
