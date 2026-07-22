@@ -10,6 +10,10 @@
       :default-active="activeIndex"
       class="el-menu-vertical-demo"
     >
+      <el-menu-item index="/Home" @click="gotoPage('/Home')">
+        <i class="iconfont icon-Home"></i>
+        <span>{{ t('Common.comm_home') }}</span>
+      </el-menu-item>
       <el-menu-item index="/Monitoring" @click="gotoPage('/Monitoring')">
         <i class="iconfont icon-chakan"></i>
         <span>{{ t('Router.router_monitoring') }}</span>
@@ -47,7 +51,7 @@ const router = useRouter();
 const route = useRoute()
 const { t } = useI18n();
 
-const activeIndex = ref<string>('/Monitoring');
+const activeIndex = ref<string>('/Home');
 
 // Ref for sidebar DOM node
 const sidebarRef = ref<HTMLElement | null>(null)
@@ -67,6 +71,7 @@ const getCurrentRouter = () => {
 
 const gotoPage = (page: string) => {
   router.push(page)
+  store.setSidebarShow(false) // close overlay after navigation
 }
 
 const show = computed(() => store.sidebarShow);
@@ -83,6 +88,10 @@ watch(show, (newVal) => {
 })
 
 onMounted(() => {
+  getCurrentRouter();
+})
+
+watch(() => route.fullPath, () => {
   getCurrentRouter();
 })
 </script>

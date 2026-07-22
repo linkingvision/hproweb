@@ -114,7 +114,8 @@
     "comm_table_serial_number": "Serial Number",
     "comm_table_token": "Token",
     "comm_table_type": "Type",
-    "comm_modify_successfully": "Modify successfully!"
+    "comm_modify_successfully": "Modify successfully!",
+    "comm_detail_alarm": "View Alarms"
   },
   "CommTime": {
     "comm_time_start": "Start Time",
@@ -153,7 +154,20 @@
     "comm_select_date_time": "Select Date",
     "comm_width": "Width",
     "comm_height": "Height",
-    "comm_fps": "FPS"
+    "comm_fps": "FPS",
+    "comm_home": "Home",
+    "comm_good_midnight": "Good evening",
+    "comm_good_early_morning": "Good morning",
+    "comm_good_morning": "Good morning",
+    "comm_good_noon": "Good noon",
+    "comm_good_afternoon": "Good afternoon",
+    "comm_good_evening": "Good evening",
+    "comm_last_time1": "Last 1 hour",
+    "comm_last_time12": "Last 12 hours",
+    "comm_last_time24": "Last 24 hours",
+    "comm_last_time1524": "Last 15 days",
+    "comm_last_time3024": "Last 30 days",
+    "comm_alarms_count": "number alarm(s)"
   },
   "Configuration": {
     "conf_advanced_features": "Advanced Features",
@@ -260,7 +274,9 @@
     "mon_stop_recording": "Stop Recording",
     "mon_stop_recording_failed": "Stop Recording Failed!",
     "mon_live": "Live",
-    "mon_playback": "Playback"
+    "mon_playback": "Playback",
+    "mon_monitoring": "Monitoring",
+    "mon_cloud_view": "Cloud View"
   },
   "Router": {
     "router_analytics": "Analytics",
@@ -299,7 +315,11 @@
     "set_pw_uppercase": "The password must contain at least one uppercase letter.",
     "set_pw_user": "The password cannot contain the username.",
     "set_two_passwords_error": "Two passwords do not match, please re-enter!",
-    "set_user": "User"
+    "set_user": "User",
+    "set_high": "High",
+    "set_middle": "Medium",
+    "set_low": "Low",
+    "set_critical": "Critical"
   },
   "System": {
     "svs_file_import_success": "File imported successfully. It will take effect after restarting.",
@@ -365,7 +385,19 @@
   "SystemInfo": {
     "system_server": "Server",
     "system_total": "Total",
-    "system_units": "Units"
+    "system_units": "Units",
+    "system_runtime": "Uptime",
+    "system_hour": "h",
+    "system_minute": "min",
+    "system_network_in": "Network In",
+    "system_network_out": "Network Out",
+    "system_memory": "Memory",
+    "system_version": "Version",
+    "system_hostid": "Host ID",
+    "system_license": "License",
+    "system_channel": "Video Channels",
+    "system_endtime": "Expiry Date",
+    "system_copysuccessful": "Copy Successful"
   },
   "Liveview": {
     "live_view": "View",
@@ -384,11 +416,17 @@
     "live_codec": "Codec",
     "live_sampleRate": "Sample Rate",
     "live_sampleBit": "Sample Bit",
-    "live_channels": "Channels"
+    "live_channels": "Channels",
+    "live_camera": "Camera"
   },
   "CommDev": {
     "comm_dev_audio": "Audio",
-    "comm_dev_bitrate": "Bitrate"
+    "comm_dev_bitrate": "Bitrate",
+    "comm_dev_systemload": "System Load",
+    "comm_dev_sum": "Total",
+    "comm_online": "Online",
+    "comm_dev_cpuusage": "CPU Usage",
+    "comm_dev_accesscontroler": "Access Controller"
   },
   "CommTable": {
     "comm_bind_ip": "Bind IP",
@@ -425,10 +463,13 @@
     "pb_task": "Task",
     "pb_download": "Download",
     "pb_video_playback": "Playback",
-    "pb_device_record": "Device record"
+    "pb_device_record": "Device Record"
   },
   "Cascade": {
-    "cascade_central_record": "Central record"
+    "cascade_central_record": "Central Record"
+  },
+  "Event": {
+    "event_count": "Alarms"
   },
   "Theme": {
     "theme": "Theme",

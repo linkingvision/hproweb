@@ -1058,9 +1058,13 @@ onBeforeUnmount(() => {
   .control_btns {
     width: 100%; flex: 1; background: #282828; display: flex; align-items: center; justify-content: space-between;
     .storage_box { width: 17%; }
-    .storage_mode { width: 190px; display: flex; height: 24px; margin-left: 10px; border-radius: 12px;
-      .CentralStorage, .DeviceStorage { flex: 1; height: 100%; line-height: 24px; text-align: center; border-radius: 12px; cursor: pointer; }
-      .active { background: #0399FE; }
+    .storage_mode { 
+      width: 240px; display: flex; height: 24px; margin-left: 10px; border-radius: 12px;
+      .CentralStorage, .DeviceStorage { 
+        flex: 1; height: 100%; line-height: 24px; text-align: center; 
+        border-radius: 12px; cursor: pointer; white-space: nowrap;
+      }
+        .active { background-color: #0399FE; }
     }
     .control-center { display: flex; align-items: center;
       .resume-btn { background: transparent; border: none; i { font-size: 24px; cursor: pointer; color: #fff; } }
