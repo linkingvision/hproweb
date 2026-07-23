@@ -30,10 +30,10 @@ service.interceptors.request.use(
       // Get current route via router.currentRoute.value
       const currentRoute = router.currentRoute.value;
       router.replace({
-        path: '/login',
+        path: '/Login',
         query: {
           ...currentRoute.query, // preserve existing query params (e.g. code)
-          redirect: currentRoute.path 
+          redirect: currentRoute.path
         }
       });
     }
@@ -54,7 +54,7 @@ service.interceptors.response.use(
       const currentRoute = router.currentRoute.value;
       currentRoute.path !== 'login' &&
         router.replace({
-          path: '/login',
+          path: '/Login',
           query: {
             ...currentRoute.query,
             redirect: currentRoute.path
@@ -71,7 +71,7 @@ service.interceptors.response.use(
         case 401:
           currentRoute.path !== 'login' &&
             router.replace({
-              path: '/login',
+              path: '/Login',
               query: {
                 ...currentRoute.query, // preserve existing query params (e.g. code)
                 redirect: currentRoute.path

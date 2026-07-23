@@ -355,7 +355,7 @@ const onDragStart = (ev: DragEvent, data: TreeNode) => {
         protocol: baseUrl.protocol, host: userStore.WSROOT,
         token: data.data.token, rootpath: '/',
         session: userStore.session, streamprofile: 'main',
-        hlsver: 'v1', consolelog: 'true',
+        hlsver: 'v1', consolelog: 'true', meta: false,
         resourceUUID: data.data.uuid ?? data.data.resourceUUID,
       }
     } else {
@@ -368,6 +368,7 @@ const onDragStart = (ev: DragEvent, data: TreeNode) => {
         videoid: vid, name: data.label,
         protocol: baseUrl.protocol, host: userStore.WSROOT,
         rootpath: '/', token: data.data.token, serverpb: Adswitch,
+        meta: false,
         pbconf: {
           begintime: formatISO(st), endtime: formatISO(et),
           autoplay: 'true', showposter: 'false',
@@ -489,6 +490,16 @@ const transformViewToGrid = (layoutData: any, viewEntities: any[]) => {
   return result
 }
 
+// ─── GridLayoutManager event handlers (module scope for onBeforeUnmount access) ─
+const closeCellH  = (e: any) => closePlayContainer(e.detail)
+const clickCellH  = (e: any) => selectedSDK(e.detail)
+const infoH       = (e: any) => showInfo(e.detail.id)
+const shoutH      = (e: any) => doShoutwheat(e.detail.id, e.detail.audio)
+const snapH       = (e: any) => doSnapshot(e.detail.id)
+const recH        = (e: any) => doManualRec(e.detail.id, e.detail.recEnable)
+const ptzH        = (e: any) => showPtz(e.detail.id)
+const layoutReadyH= (e: any) => onLayoutReady(e.detail)
+
 // ─── GridLayoutManager init ───────────────────────────────────────────────────
 const initGridLayout = () => {
   GridManager = new GridLayoutManager('#gv_video_hed', {
@@ -500,15 +511,6 @@ const initGridLayout = () => {
       recEnableIcon: true, ptzcontrolIcon: true,
     },
   })
-
-  const closeCellH  = (e: any) => closePlayContainer(e.detail)
-  const clickCellH  = (e: any) => selectedSDK(e.detail)
-  const infoH       = (e: any) => showInfo(e.detail.id)
-  const shoutH      = (e: any) => doShoutwheat(e.detail.id, e.detail.audio)
-  const snapH       = (e: any) => doSnapshot(e.detail.id)
-  const recH        = (e: any) => doManualRec(e.detail.id, e.detail.recEnable)
-  const ptzH        = (e: any) => showPtz(e.detail.id)
-  const layoutReadyH= (e: any) => onLayoutReady(e.detail)
 
   GridManager.addEventListener('closeCell',            closeCellH)
   GridManager.addEventListener('cellClick',            clickCellH)
@@ -625,6 +627,17 @@ const doShoutwheat = (id: string, audio: boolean) => {
     audioback?.disconnect(); audioback = null
   } else {
     audioback?.disconnect()
+    // AudBack SDK 用旧式 navigator.getUserMedia(constraints, success) 仅传2个参数，
+    // 但浏览器要求3个(constraints, success, error)，用 mediaDevices shim 修复。
+    ;(navigator as any).getUserMedia = (
+      constraints: MediaStreamConstraints,
+      success: (s: MediaStream) => void,
+      error?: (e: any) => void,
+    ) => {
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then(success)
+        .catch(error ?? ((e: any) => console.warn('[doShoutwheat] getUserMedia error', e)))
+    }
     audioback = new H5sPlayerAudBack({
       protocol: window.location.protocol, host: userStore.WSROOT, rootpath: '/',
       token: cur.conf.token, session: userStore.session,
@@ -883,14 +896,14 @@ onBeforeUnmount(() => {
     timeline.clearMotionBars?.(); timeline = null
   }
   if (GridManager) {
-    GridManager.removeEventListener('closeCell',            () => {})
-    GridManager.removeEventListener('cellClick',            () => {})
-    GridManager.removeEventListener('Information',          () => {})
-    GridManager.removeEventListener('Shoutwheat',           () => {})
-    GridManager.removeEventListener('Snapshot',             () => {})
-    GridManager.removeEventListener('recEnableClick',       () => {})
-    GridManager.removeEventListener('PtzControlShow',       () => {})
-    GridManager.removeEventListener('layoutLoadedFromCache',() => {})
+    GridManager.removeEventListener('closeCell',            closeCellH)
+    GridManager.removeEventListener('cellClick',            clickCellH)
+    GridManager.removeEventListener('Information',          infoH)
+    GridManager.removeEventListener('Shoutwheat',           shoutH)
+    GridManager.removeEventListener('Snapshot',             snapH)
+    GridManager.removeEventListener('recEnableClick',       recH)
+    GridManager.removeEventListener('PtzControlShow',       ptzH)
+    GridManager.removeEventListener('layoutLoadedFromCache',layoutReadyH)
     GridManager.destroy?.(); GridManager = null
   }
 })
@@ -962,7 +975,7 @@ onBeforeUnmount(() => {
 
     .malv {
       position: absolute; top: 20px; right: 16px; z-index: 100;
-      width: 336px; height: 150px; display: flex; transition: 0.2s;
+      width: 420px; height: 150px; display: flex; transition: 0.2s;
       .malv-close { position: absolute; top: 3px; right: 8px; font-size: 16px; cursor: pointer; }
       .malv-left, .malv-right {
         width: 50%; height: 100%; background-color: rgba(#333, 0.5);
@@ -973,7 +986,7 @@ onBeforeUnmount(() => {
         }
       }
     }
-    .malv-hide { right: -336px; }
+    .malv-hide { right: -420px; }
 
     :deep(.line-matrix)  { position: absolute; z-index: 40; top: 0; left: 0; line { shape-rendering: crispEdges; stroke: #585858; } }
     :deep(.cell-matrix)  { z-index: 42; position: absolute; top: 0; left: 0;
@@ -999,34 +1012,128 @@ onBeforeUnmount(() => {
   }
 
   .yuntai {
-    position: absolute; left: 5px; bottom: 0; width: 288px; height: 550px; transition: 0.3s;
-    background: rgba(#232323, 0.95); border-radius: 4px;
-    .header { width: 100%; height: 32px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center;
-      i { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 10px; }
-    }
-    .ptz-slider { width: 100%; padding: 0 20px; display: flex; flex-direction: column; align-items: center; :deep(.el-slider) { width: 100%; } }
-    .controls {
-      width: 100%; height: 144px; display: flex; justify-content: space-between; padding: 0 20px; margin: 20px 0;
-      .left { width: 70px; height: 100%; display: grid; grid-template-columns: repeat(2,32px); grid-template-rows: repeat(4,32px); gap: 5px;
-        i { display: flex; align-items: center; justify-content: center; border-radius: 4px; width: 32px; height: 32px; font-size: 20px; cursor: pointer; &:active { color: #0399FE; } }
+    position: absolute;
+    left: 5px;
+    bottom: 0;
+    width: 288px;
+    height: 550px;
+    transition: 0.3s;
+    background: rgba(#232323, 0.95);
+    border-radius: 4px;
+    .header {
+      width: 100%;
+      height: 32px;
+      padding: 0 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      i {
+        display: block;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        text-align: center;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 10px;
       }
-      .right { width: 144px; height: 100%; display: grid; grid-template-columns: repeat(3,1fr); grid-template-rows: repeat(3,1fr);
-        .ptz-item { display: flex; justify-content: center; align-items: center; position: relative; i { font-size: 22px; } }
+    }
+    .ptz-slider {
+      width: 100%;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      :deep(.el-slider) { width: 100%; }
+    }
+    .controls {
+      width: 100%;
+      height: 144px;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      margin: 20px 0;
+      .left {
+        width: 70px;
+        height: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, 32px);
+        grid-template-rows: repeat(4, 32px);
+        grid-column-gap: 5px;
+        grid-row-gap: 5px;
+        i {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          width: 32px;
+          height: 32px;
+          font-size: 20px;
+          cursor: pointer;
+        }
+        i:active { color: #0399FE; }
+      }
+      .right {
+        width: 144px;
+        height: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        grid-column-gap: 0px;
+        grid-row-gap: 0px;
+        .ptz-item {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+          i { font-size: 22px; }
+        }
         .shang { border-radius: 4px 4px 0 0; cursor: pointer; }
         .zuo   { border-radius: 4px 0 0 4px; cursor: pointer; }
         .you   { border-radius: 0 4px 4px 0; cursor: pointer; }
         .xia   { border-radius: 0 0 4px 4px; cursor: pointer; }
-        .corner { background: transparent;
-          .zs, .ys, .zx, .yx { position: absolute; width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; i { font-size: 20px; } }
-          .zs { top: 0; left: 0; } .ys { top: 0; right: 0; } .zx { left: 0; bottom: 0; } .yx { right: 0; bottom: 0; }
+        .corner {
+          background-color: transparent;
+          .zs, .ys, .zx, .yx {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            i { font-size: 20px; }
+          }
+          .zs { top: 0; left: 0; }
+          .ys { top: 0; right: 0; }
+          .zx { left: 0; bottom: 0; }
+          .yx { right: 0; bottom: 0; }
         }
         .ptz-item:active i { color: #0399FE; }
       }
     }
     :deep(.el-timeline) { padding: 0 20px;
-      .preset_bgc { width: 100%; display: flex; justify-content: space-between; align-items: center;
-        .preset_input { width: 150px; background: transparent; border: none; box-shadow: none; padding-left: 10px; }
-        button { background: transparent; border: none; }
+      .el-timeline-item__wrapper {
+        .preset_bgc {
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background-color: transparent;
+          .preset_input {
+            width: 150px;
+            background-color: transparent;
+            border: none;
+            box-shadow: none;
+            padding-left: 10px;
+          }
+          button {
+            background-color: transparent;
+            border: none;
+          }
+        }
       }
     }
   }

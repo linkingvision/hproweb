@@ -50,24 +50,6 @@
         <div class="view-right-main">
       <!-- 视频网格（无顶部工具栏，对照uscweb Liveview） -->
       <div class="liveview_right_video_hed" id="video_hed" v-if="LiveplayShow">
-        <!-- 码率信息浮层（对照 GridView .malv） -->
-        <div class="malv" :class="infoShow ? '' : 'malv-hide'">
-          <div class="malv-close" @click="closeInfo">×</div>
-          <div class="malv-left">
-            <div class="information_title">{{ t('Liveview.live_video') }}</div>
-            <div class="information_content" v-for="(a,i) in infoVideo" :key="i">
-              <div class="information_content_left">{{ a.name }}</div>
-              <div class="information_content_right">{{ a.data }}</div>
-            </div>
-          </div>
-          <div class="malv-right">
-            <div class="information_title">{{ t('CommDev.comm_dev_audio') }}</div>
-            <div class="information_content" v-for="(a,i) in infoAudio" :key="i">
-              <div class="information_content_left">{{ a.name }}</div>
-              <div class="information_content_right">{{ a.data }}</div>
-            </div>
-          </div>
-        </div>
         <div v-for="cell in gridCells" :key="cell.id"
           class="palace" :id="'h'+cell.id"
           :class="{ 'palace-selected': selectedCellId===cell.id, 'palace-expanded': expandedCellId===cell.id }"
@@ -76,17 +58,40 @@
           @dblclick="toggleExpand(cell.id)"
           @drop.prevent="dropOnCell($event, cell.id)"
           @dragover.prevent>
-          <!-- ── 悬浮按钮层（对照 uscweb liveplay_butt）── -->
+          <!-- 码率信息浮层 -->
+          <div v-if="infoShow && infoToken === getCellCamera(cell.id)?.token" class="malv" @click.stop>
+            <div class="malv-close" @click="closeInfo">×</div>
+            <div class="malv-left">
+              <div class="information_title">{{ t('Liveview.live_video') }}</div>
+              <div class="information_content" v-for="(a,i) in infoVideo" :key="i">
+                <div class="information_content_left">{{ a.name }}</div>
+                <div class="information_content_right">{{ a.data }}</div>
+              </div>
+            </div>
+            <div class="malv-right">
+              <div class="information_title">{{ t('CommDev.comm_dev_audio') }}</div>
+              <div class="information_content" v-for="(a,i) in infoAudio" :key="i">
+                <div class="information_content_left">{{ a.name }}</div>
+                <div class="information_content_right">{{ a.data }}</div>
+              </div>
+            </div>
+          </div>
+          <!-- 悬浮按钮层 -->
           <div v-if="getCellCamera(cell.id)" class="float-layer" @click.stop>
-            <span class="protocol-label">WS2</span>
+            <i class="iconfont play-mode-toggle"
+               :class="playModeShow ? 'icon-shouqi' : 'icon-zhankai'"
+               @click.stop="togglePlayMode"></i>
+            <span v-show="playModeShow" class="protocol-label">{{ playModeText }}</span>
             <!-- 2. 音量 -->
             <i class="iconfont"
                :class="(cellAudioSliders[cell.id] ?? 0) === 0 ? 'icon-wusheng' : 'icon-shengyinkai'"
+               style="font-size: 24px;"
                title="Volume"
                @click.stop="toggleCellAudio(cell.id)"></i>
             <!-- 3. 码率信息 -->
             <i v-if="getCellCamera(cell.id)"
                class="iconfont icon-yibiao"
+               style="margin-left: 0;"
                title="Stream Info"
                @click.stop="showCellInfo(cell.id)"></i>
             <!-- 4. 对讲 -->
@@ -138,11 +143,12 @@
           <!-- 音量滑块面板 -->
           <div v-if="cellAudioVisible === cell.id" class="cell-audio-slider" @click.stop>
             <i class="iconfont"
-               :class="(cellAudioSliders[cell.id] ?? 0) === 0 ? 'icon-shengyinguan' : 'icon-shengyinkai'"></i>
+               :class="(cellAudioSliders[cell.id] ?? 0) === 0 ? 'icon-shengyinguan' : 'icon-shengyinkai'"
+               :style="{ color: (cellAudioSliders[cell.id] ?? 0) === 0 ? 'grey' : '#409EFF' }"></i>
             <el-slider :step="0.1" :show-tooltip="false" :max="1"
                        :model-value="cellAudioSliders[cell.id] ?? 0"
                        @update:model-value="(v: number) => setCellVolume(cell.id, v)"
-                       style="flex:1;" />
+                       style="flex:1;margin-left:10px;" />
           </div>
 
           <!-- 电子放大画布 -->
@@ -156,6 +162,56 @@
                   @mousemove.stop="on3DMouseMove(cell.id, $event)"
                   @mouseup.stop="on3DMouseUp(cell.id, $event)"
                   @mouseleave.stop="on3DMouseLeave(cell.id)"></canvas>
+
+          <!-- PTZ 云台面板-->
+          <div v-if="ptzShow && ptzToken === getCellCamera(cell.id)?.token" class="yuntai" @click.stop>
+            <div class="flex_content">
+              <div class="content_zoom">
+                <div class="key_zoom">
+                  <div class="key_flex">
+                    <div class="key_but" @mousedown="ptzAction('upleft')"    @mouseup="ptzAction('stop')" @touchstart.prevent="ptzAction('upleft')"    @touchend="ptzAction('stop')"><div style="width:50%;height:50%;margin-top:8%;margin-left:20%;border-radius:2px;"><i class="iconfont icon-zuoshang"></i></div></div>
+                    <div class="key_but" @mousedown="ptzAction('up')"        @mouseup="ptzAction('stop')" @touchstart.prevent="ptzAction('up')"        @touchend="ptzAction('stop')"><div style="width:50%;height:50%;margin-top:10%;margin-left:30%;"><i class="iconfont icon-shang"></i></div></div>
+                    <div class="key_but" @mousedown="ptzAction('upright')"   @mouseup="ptzAction('stop')" @touchstart.prevent="ptzAction('upright')"   @touchend="ptzAction('stop')"><div style="width:50%;height:50%;margin-top:8%;margin-left:30%;border-radius:2px;"><i class="iconfont icon-youshang"></i></div></div>
+                    <div class="key_but" @mousedown="ptzAction('left')"      @mouseup="ptzAction('stop')" @touchstart.prevent="ptzAction('left')"      @touchend="ptzAction('stop')"><div style="width:50%;height:50%;margin-top:10%;margin-left:20%;"><i class="iconfont icon-zuo"></i></div></div>
+                    <div class="key_but"></div>
+                    <div class="key_but" @mousedown="ptzAction('right')"     @mouseup="ptzAction('stop')" @touchstart.prevent="ptzAction('right')"     @touchend="ptzAction('stop')"><div style="width:50%;height:50%;margin-top:10%;margin-left:30%;"><i class="iconfont icon-you"></i></div></div>
+                    <div class="key_but" @mousedown="ptzAction('downleft')"  @mouseup="ptzAction('stop')" @touchstart.prevent="ptzAction('downleft')"  @touchend="ptzAction('stop')"><div style="width:50%;height:50%;margin-top:15%;margin-left:20%;border-radius:2px;"><i class="iconfont icon-zuoxia"></i></div></div>
+                    <div class="key_but" @mousedown="ptzAction('down')"      @mouseup="ptzAction('stop')" @touchstart.prevent="ptzAction('down')"      @touchend="ptzAction('stop')"><div style="width:50%;height:50%;margin-top:18%;margin-left:30%;"><i class="iconfont icon-xia"></i></div></div>
+                    <div class="key_but" @mousedown="ptzAction('downright')" @mouseup="ptzAction('stop')" @touchstart.prevent="ptzAction('downright')" @touchend="ptzAction('stop')"><div style="width:50%;height:50%;margin-top:15%;margin-left:30%;border-radius:2px;"><i class="iconfont icon-youxia"></i></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="zoom_g">
+                <button class="iconfont icon-jujiao2    zoom_add" @mousedown="ptzAction('focusin')"  @mouseup="ptzAction('stop')"></button>
+                <button class="iconfont icon-jujiao1    zoom_add" @mousedown="ptzAction('focusout')" @mouseup="ptzAction('stop')"></button>
+                <button class="iconfont icon-guangquanjia  zoom_add" @mousedown="ptzAction('irisin')"   @mouseup="ptzAction('stop')"></button>
+                <button class="iconfont icon-guangquanjian zoom_add" @mousedown="ptzAction('irisout')"  @mouseup="ptzAction('stop')"></button>
+                <button class="iconfont icon-light-open    zoom_add" @mousedown="ptzAction('lighton')"  @mouseup="ptzAction('stop')"></button>
+                <button class="iconfont icon-light-close   zoom_add" @mousedown="ptzAction('lightoff')" @mouseup="ptzAction('stop')"></button>
+                <button class="iconfont icon-kaiyushua     zoom_add" @mousedown="ptzAction('wiperon')"  @mouseup="ptzAction('stop')"></button>
+                <button class="iconfont icon-guanyushua    zoom_add" @mousedown="ptzAction('wiperoff')" @mouseup="ptzAction('stop')"></button>
+              </div>
+              <div class="Preset">
+                <div style="text-align:center;">
+                  <el-slider v-model="ptzSpeed" :show-tooltip="false" :max="1" :min="0.1" :step="0.1" />
+                  <span style="color:#fff;">{{ ptzSpeed }}</span>
+                </div>
+                <div class="block">
+                  <el-timeline>
+                    <el-timeline-item placement="top" v-for="pre in presetList" :key="pre.strToken">
+                      <el-card>
+                        <div class="preset_bgc">
+                          <input type="text" class="preset_input" :value="pre.strName" />
+                          <button class="iconfont icon-RectangleCopy1" @click="gotoPreset(pre.strToken)"></button>
+                          <button class="iconfont icon-icon-test1"     @click="setPreset(pre.strToken,$event)"></button>
+                        </div>
+                      </el-card>
+                    </el-timeline-item>
+                  </el-timeline>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div v-else class="video-empty-hint">{{ t('Liveview.live_view') }}</div>
@@ -383,52 +439,6 @@
       <i class="iconfont icon-liebiao"></i>
     </div>
 
-    <!-- PTZ 云台面板（对照 GridView .yuntai，对照 uscweb liveplay_ptz） -->
-    <div class="yuntai" :class="ptzShow ? '' : 'yuntai-hide'">
-      <div class="header">
-        <span>{{ t('Liveview.live_ptz') }}</span>
-        <i class="iconfont icon-zhankai2" @click="closePtz"></i>
-      </div>
-      <div class="controls">
-        <div class="left">
-          <i class="iconfont icon-jujiao2"       @mousedown="ptzAction('focusin')"  @mouseup="ptzAction('stop')"></i>
-          <i class="iconfont icon-jujiao1"       @mousedown="ptzAction('focusout')" @mouseup="ptzAction('stop')"></i>
-          <i class="iconfont icon-guangquanjia"  @mousedown="ptzAction('irisin')"   @mouseup="ptzAction('stop')"></i>
-          <i class="iconfont icon-guangquanjian" @mousedown="ptzAction('irisout')"  @mouseup="ptzAction('stop')"></i>
-          <i class="iconfont icon-light-open"    @mousedown="ptzAction('lighton')"  @mouseup="ptzAction('stop')"></i>
-          <i class="iconfont icon-light-close"   @mousedown="ptzAction('lightoff')" @mouseup="ptzAction('stop')"></i>
-          <i class="iconfont icon-kaiyushua"     @mousedown="ptzAction('wiperon')"  @mouseup="ptzAction('stop')"></i>
-          <i class="iconfont icon-guanyushua"    @mousedown="ptzAction('wiperoff')" @mouseup="ptzAction('stop')"></i>
-        </div>
-        <div class="right">
-          <div class="ptz-item corner"><div class="zs" @mousedown="ptzAction('upleft')"    @mouseup="ptzAction('stop')"><i class="iconfont icon-zuoshang"></i></div></div>
-          <div class="ptz-item shang"               @mousedown="ptzAction('up')"        @mouseup="ptzAction('stop')"><i class="iconfont icon-shang"></i></div>
-          <div class="ptz-item corner"><div class="ys" @mousedown="ptzAction('upright')"   @mouseup="ptzAction('stop')"><i class="iconfont icon-youshang"></i></div></div>
-          <div class="ptz-item zuo"                 @mousedown="ptzAction('left')"      @mouseup="ptzAction('stop')"><i class="iconfont icon-zuo"></i></div>
-          <div class="ptz-item center"></div>
-          <div class="ptz-item you"                 @mousedown="ptzAction('right')"     @mouseup="ptzAction('stop')"><i class="iconfont icon-you"></i></div>
-          <div class="ptz-item corner"><div class="zx" @mousedown="ptzAction('downleft')"  @mouseup="ptzAction('stop')"><i class="iconfont icon-zuoxia"></i></div></div>
-          <div class="ptz-item xia"                 @mousedown="ptzAction('down')"      @mouseup="ptzAction('stop')"><i class="iconfont icon-xia"></i></div>
-          <div class="ptz-item corner"><div class="yx" @mousedown="ptzAction('downright')" @mouseup="ptzAction('stop')"><i class="iconfont icon-youxia"></i></div></div>
-        </div>
-      </div>
-      <div class="ptz-slider">
-        <span>{{ ptzSpeed }}</span>
-        <el-slider v-model="ptzSpeed" :show-tooltip="false" :max="1" :min="0.1" :step="0.1" />
-      </div>
-      <el-timeline>
-        <el-timeline-item placement="top" v-for="pre in presetList" :key="pre.strToken">
-          <el-card>
-            <div class="preset_bgc">
-              <input type="text" class="preset_input" :value="pre.strName" />
-              <button class="iconfont icon-RectangleCopy1" @click="gotoPreset(pre.strToken)"></button>
-              <button class="iconfont icon-icon-test1"     @click="setPreset(pre.strToken,$event)"></button>
-            </div>
-          </el-card>
-        </el-timeline-item>
-      </el-timeline>
-    </div>
-
     <!-- Add View Dialog -->
     <el-dialog v-model="addDialogVisible" :title="t('Setting.set_adding_views')" width="420px">
       <el-form :model="viewForm" label-width="90px">
@@ -576,6 +586,7 @@ const customDateArr   = ref<number[]>([])
 const audioingCellId  = ref('')           // 正在对讲的 cellId
 let   audioback: any  = null              // H5sPlayerAudBack 实例
 const infoShow        = ref(false)        // 码率信息面板显隐
+const infoToken       = ref('')           // 当前显示码率信息的摄像头 token
 const infoVideo       = ref<any[]>([])    // 码率信息-视频
 const infoAudio       = ref<any[]>([])    // 码率信息-音频
 let   timerRunInfo: any = null            // 码率轮询定时器（对照 GridView）
@@ -588,6 +599,12 @@ const pickerOptions   = {
   cellClassName(date: Date) {
     return customDateArr.value.indexOf(date.getTime()) !== -1 ? 'custom_date_class' : ''
   }
+}
+
+const playModeText = computed(() => (isLiveview.value ? store.liveviewrtc : store.liveviewrtc1))
+const playModeShow = ref(false)
+const togglePlayMode = () => {
+  playModeShow.value = !playModeShow.value
 }
 
 // 音量变化时应用到所有播放器
@@ -1744,10 +1761,11 @@ const anaEventCB = (event: string) => {
 const setAnaEvent = () => {
   if (anaEventWS) return
   try {
+    const baseUrl = new URL(userStore.IPPORT || window.location.origin)
     const conf = {
-      protocol:   window.location.protocol,
+      protocol:   baseUrl.protocol,
       host:       userStore.WSROOT,
-      rootpath:   '/',
+      rootpath:   '',
       apipath:    '/uapi/v1/ws/anaEvent',
       pbconf:     { callback: anaEventCB },
       userdata:   null,
@@ -1928,17 +1946,17 @@ const fetchCellInfo = async (token: string) => {
 const showCellInfo = (cellId: string) => {
   const cam = cameraMap.value.get(cellId)
   if (!cam) return
-  if (infoShow.value) {
-    // 再次点击 → 关闭并停止轮询
-    infoShow.value = false; clearInterval(timerRunInfo); timerRunInfo = null
+  if (infoShow.value && infoToken.value === cam.token) {
+    // 再次点击同一格子 → 关闭并停止轮询
+    infoShow.value = false; infoToken.value = ''; clearInterval(timerRunInfo); timerRunInfo = null
   } else {
-    infoShow.value = true
+    infoShow.value = true; infoToken.value = cam.token
     fetchCellInfo(cam.token)
     timerRunInfo = setInterval(() => fetchCellInfo(cam.token), 8000)
   }
 }
 const closeInfo = () => {
-  infoShow.value = false; clearInterval(timerRunInfo); timerRunInfo = null
+  infoShow.value = false; infoToken.value = ''; clearInterval(timerRunInfo); timerRunInfo = null
 }
 
 // ─── Float-layer: 对讲/喊话（对照 uscweb Shoutwheat）────────────────────
@@ -1951,6 +1969,17 @@ const doShoutwheat = (cellId: string) => {
     audioingCellId.value = ''
   } else {
     audioback?.disconnect()
+    // AudBack SDK 用旧式 navigator.getUserMedia(constraints, success) 仅传2个参数，
+    // 但浏览器要求3个(constraints, success, error)，用 mediaDevices shim 修复。
+    ;(navigator as any).getUserMedia = (
+      constraints: MediaStreamConstraints,
+      success: (s: MediaStream) => void,
+      error?: (e: any) => void,
+    ) => {
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then(success)
+        .catch(error ?? ((e: any) => console.warn('[doShoutwheat] getUserMedia error', e)))
+    }
     audioback = new H5sPlayerAudBack({
       protocol: window.location.protocol, host: userStore.WSROOT, rootpath: '/',
       token: cam.token, session: userStore.session,
@@ -1986,14 +2015,23 @@ const doManualRec = async (cellId: string) => {
     const res = await setRecEnableApi({ devUUID: cam.resourceUUID, setting: { manualRecEnable: newState } })
     if (res.status === 200 && res.data.msg === 'Success') {
       cameraMap.value.set(cellId, { ...cam, recording: newState })
+      ElMessage.success(newState ? t('Liveview.live_rec_start') : t('Liveview.live_rec_stop'))
+    } else {
+      ElMessage.error(t('CommTableEdit.comm_modify_failed'))
     }
-  } catch {}
+  } catch {
+    ElMessage.error(t('CommTableEdit.comm_modify_failed'))
+  }
 }
 
 // ─── Float-layer: PTZ 云台（对照 uscweb PtzControlShow）─────────────────
 const showPtz = async (cellId: string) => {
   const cam = cameraMap.value.get(cellId)
   if (!cam) return
+  // 再次点击同一路云台则关闭
+  if (ptzShow.value && ptzToken.value === cam.token) {
+    ptzShow.value = false; ptzToken.value = ''; return
+  }
   ptzToken.value = cam.token; presetList.value = []
   try {
     const res = await GetPresetsApi(ptzToken.value)
@@ -2180,8 +2218,8 @@ onBeforeUnmount(() => {
   flex: 1; position: relative; background: #1a1a1a; overflow: hidden;
   // 码率信息浮层（对照 GridView .malv）
   .malv {
-    position: absolute; top: 20px; right: 16px; z-index: 100;
-    width: 336px; height: 150px; display: flex; transition: 0.2s;
+    position: absolute; bottom: 40px; left: 10px; z-index: 100;
+    width: 420px; height: 150px; display: flex;
     .malv-close { position: absolute; top: 3px; right: 8px; font-size: 16px; cursor: pointer; }
     .malv-left, .malv-right {
       width: 50%; height: 100%; background-color: rgba(#333, 0.5);
@@ -2192,7 +2230,6 @@ onBeforeUnmount(() => {
       }
     }
   }
-  .malv-hide { right: -336px; }
 }
 .video-empty-hint {
   flex: 1; display: flex; align-items: center; justify-content: center;
@@ -2261,7 +2298,7 @@ onBeforeUnmount(() => {
 // 时间轴容器背景
 .timeline-box-view { background: #1a1a1a; }
 .palace {
-  background: #111; cursor: pointer;
+  position: relative; background: #111; cursor: pointer;
   video { display: block; width: 100%; height: 100%; object-fit: fill; }
   .cell-label {
     position: absolute; bottom: 0; left: 0; right: 0;
@@ -2279,6 +2316,7 @@ onBeforeUnmount(() => {
     i, span { margin-left: 8px; cursor: pointer; color: #fff; font-size: 16px;
       &:hover { color: #0399FE; }
     }
+    .play-mode-toggle { flex-shrink: 0; margin-left: 20px; }
     .protocol-label { font-size: 12px; cursor: default;
       &:hover { color: #fff; }
     }
@@ -2286,15 +2324,16 @@ onBeforeUnmount(() => {
     .rec-active    { color: #f44336 !important; }
     .expend-active { color: #0399FE !important; }
   }
-  // 音量滑块面板
+  // 音量滑块面板（对照 uscweb .Audio_slider）
   .cell-audio-slider {
-    position: absolute; bottom: 36px; right: 8px; z-index: 20;
-    background: rgba(0,0,0,0.75); padding: 6px 10px; border-radius: 4px;
-    display: flex; align-items: center; gap: 8px; width: 150px;
-    i { font-size: 18px; color: #fff; flex-shrink: 0; }
-    :deep(.el-slider) { flex: 1;
-      .el-slider__runway { height: 3px; background: rgba(255,255,255,0.2); }
-      .el-slider__bar    { height: 3px; }
+    position: absolute; top: 30px; left: 50%; z-index: 20;
+    width: 174px;
+    background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 4px;
+    display: flex; align-items: center;
+    i { font-size: 18px; flex-shrink: 0; }
+    :deep(.el-slider) {
+      .el-slider__runway { height: 4px; background: rgba(255,255,255,0.2); }
+      .el-slider__bar    { height: 4px; }
       .el-slider__button { width: 10px; height: 10px; border: 2px solid #409EFF; }
     }
   }
@@ -2323,40 +2362,85 @@ onBeforeUnmount(() => {
   }
 }
 
-// PTZ 云台面板（对照 GridView .yuntai）
+// PTZ 云台面板（对照 uscweb liveplay_ptz）
 .yuntai {
-  position: absolute; left: 5px; bottom: 0; width: 288px; height: 550px; transition: 0.3s;
-  background: rgba(#232323, 0.95); border-radius: 4px; z-index: 100;
-  .header { width: 100%; height: 32px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center;
-    color: #fff;
-    i { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 10px; }
-  }
-  .ptz-slider { width: 100%; padding: 0 20px; display: flex; flex-direction: column; align-items: center; color: #fff; :deep(.el-slider) { width: 100%; } }
-  .controls {
-    width: 100%; height: 144px; display: flex; justify-content: space-between; padding: 0 20px; margin: 20px 0;
-    .left { width: 60px; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start;
-      i { cursor: pointer; color: #fff; font-size: 22px; width: 26px; height: 26px; line-height: 26px; text-align: center;
+  position: absolute; left: 0; bottom: 0; width: 100%; height: 100%;
+  z-index: 100; background: rgba(255,255,255,0); pointer-events: none;
+  .flex_content {
+    width: 100%; height: 100%; padding: 8% 0; position: relative; pointer-events: none;
+    .content_zoom {
+      width: 50%; height: 100%; display: flex; align-items: flex-end; pointer-events: auto;
+      .key_zoom {
+        width: 25%; margin: 0 4% 0 8%;
+        .key_flex {
+          width: 100px; height: 100px;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          grid-template-rows: repeat(3, 1fr);
+          gap: 16px;
+          margin-left: 5%;
+          background: url('@/views/Monitoring/liveview/imgs/liveview_ptzbutton.png') no-repeat center;
+          background-size: 100px 100px;
+          .key_but {
+            width: 100%; height: 100%;
+            text-align: center; cursor: pointer; color: #fff;
+            i { font-size: 12px; }
+            &:hover i { color: #0399FE; }
+          }
+        }
+      }
+    }
+    .zoom_g {
+      width: 20px; height: 100%;
+      position: absolute; left: 0; top: 0;
+      background-color: rgba(0,0,0,0.6);
+      display: flex; flex-wrap: wrap;
+      justify-content: space-around; align-content: space-around; padding: 0 2px;
+      pointer-events: auto;
+      .zoom_add {
+        width: 20px; height: 20px; text-align: center;
+        background: none; border: 0; padding: 0; color: #fff; font-size: 14px; cursor: pointer;
         &:hover { color: #0399FE; }
       }
     }
-    .right { width: 144px; display: grid; grid-template-columns: repeat(3,1fr); gap: 4px;
-      .ptz-item { display: flex; align-items: center; justify-content: center; height: 44px; background: rgba(255,255,255,0.05); border-radius: 2px; cursor: pointer; color: #fff;
-        &:hover { background: rgba(3,153,254,0.3); }
-        i { font-size: 20px; }
-        &.center { background: rgba(255,255,255,0.1); cursor: default; }
-        &.corner { padding: 0; }
-        .zs,.ys,.zx,.yx { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+    .Preset {
+      width: 30%; position: absolute; bottom: 10%; right: 4%; pointer-events: auto;
+      .block {
+        width: 100%; height: 140px; overflow: auto; color: #fff;
+        &::-webkit-scrollbar { display: none; }
+      }
+      :deep(.el-timeline) { padding: 0;
+        .el-timeline-item__wrapper { padding-left: 16px; }
+        .el-timeline-item__tail { left: 4px; }
+        .el-timeline-item__node { left: 0; }
+        .el-card {
+          background: transparent; border: none; box-shadow: none;
+          .el-card__body { padding: 0 0 4px 0; }
+        }
+        .preset_bgc {
+          width: 100%; height: 24px; background: rgba(255,255,255,0.2);
+          display: flex; align-items: center;
+          .preset_input {
+            width: 52%; background: none; border-radius: 12px;
+            border: 0; padding: 0 0 0 10px; color: #fff !important;
+          }
+          button {
+            width: 15%; background: none; border: 0;
+            font-size: 15px; color: #fff; margin-left: 3px; cursor: pointer;
+            &:hover { color: #0399FE; }
+          }
+        }
       }
     }
+    .ptz-close-btn {
+      position: absolute; top: 8px; right: 8px;
+      color: #fff; cursor: pointer; font-size: 18px;
+      pointer-events: auto;
+      &:hover { color: #0399FE; }
+    }
   }
-  .preset_bgc { display: flex; align-items: center; gap: 6px;
-    .preset_input { background: transparent; border: none; border-bottom: 1px solid #555; color: #fff; flex: 1; outline: none; font-size: 13px; }
-    button { background: none; border: none; color: #fff; cursor: pointer; font-size: 16px; &:hover { color: #0399FE; } }
-  }
-  :deep(.el-timeline-item__wrapper) { padding-left: 16px; }
-  :deep(.el-card__body) { padding: 8px; background: rgba(255,255,255,0.04); }
 }
-.yuntai-hide { bottom: -550px; }
+.yuntai-hide { display: none; }
 .unfold-btn {
   position: absolute; left: 0; top: 0; width: 30px; height: 30px; line-height: 30px;
   text-align: center; background: rgba(124,124,124,0.5); border-radius: 0 2px 2px 0; cursor: pointer; z-index: 50;

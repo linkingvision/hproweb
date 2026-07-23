@@ -122,6 +122,20 @@
                   </div>
                   <div class="stat-title"><span class="dot"></span>{{ t('Liveview.live_camera') }}</div>
                 </div>
+                <div class="stat-card">
+                  <div class="stat-numbers">
+                    <div class="stat-item">
+                      <span class="stat-value" :class="accessControlTotalClasses">{{ accessControlInfo.nAccessControlTotal }}</span>
+                      <span class="stat-label">{{ t('CommDev.comm_dev_sum') }}</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                      <span class="stat-value" :class="accessControlOnlineClasses">{{ accessControlInfo.nAccessControlOnline }}</span>
+                      <span class="stat-label">{{ t('CommDev.comm_online') }}</span>
+                    </div>
+                  </div>
+                  <div class="stat-title"><span class="dot"></span>{{ t('CommDev.comm_dev_accesscontroler') }}</div>
+                </div>
               </div>
             </div>
             <div class="system">
@@ -205,13 +219,13 @@ const navCards = [
 
 // ── 告警统计 ─────────────────────────────────────────────────────
 const alarmTime = ref<number>(24)
-const alarmTimeOptions = [
-  { value: 1, label: t('Common.comm_last_time1') },
-  { value: 12, label: t('Common.comm_last_time12') },
-  { value: 24, label: t('Common.comm_last_time24') },
+const alarmTimeOptions = computed(() => [
+  { value: 1,       label: t('Common.comm_last_time1')    },
+  { value: 12,      label: t('Common.comm_last_time12')   },
+  { value: 24,      label: t('Common.comm_last_time24')   },
   { value: 15 * 24, label: t('Common.comm_last_time1524') },
   { value: 30 * 24, label: t('Common.comm_last_time3024') },
-]
+])
 const alarmEvent = ref({ critical: 0, high: 0, medium: 0, low: 0 })
 const alarmEventCount = ref(0)
 const alarmEventTotal = ref<string | number>(0)
@@ -232,6 +246,7 @@ const cpuUsageData = ref<number[]>(new Array(60).fill(0))
 // ── 设备统计 ─────────────────────────────────────────────────────
 const cameraInfo = ref({ nCameraTotal: 0, nCameraOnline: 0 })
 const deviceInfo = ref({ nDeviceTotal: 0, nDeviceOnline: 0 })
+const accessControlInfo = ref({ nAccessControlTotal: 0, nAccessControlOnline: 0 })
 
 // ── 系统信息 ─────────────────────────────────────────────────────
 const systemInfo = ref({ strVersion: store.version || '', strHostId: '', strType: '', nVideoChannel: '' as string | number, strEndTime: '' })
@@ -247,6 +262,8 @@ const deviceTotalClasses = computed(() => ({ 'zero-value': deviceInfo.value.nDev
 const deviceOnlineClasses = computed(() => ({ 'isOnline': deviceInfo.value.nDeviceOnline > 0, 'isOffline': deviceInfo.value.nDeviceOnline === 0 }))
 const cameraTotalClasses = computed(() => ({ 'zero-value': cameraInfo.value.nCameraTotal === 0, 'positive-value': cameraInfo.value.nCameraTotal > 0 }))
 const cameraOnlineClasses = computed(() => ({ 'isOnline': cameraInfo.value.nCameraOnline > 0, 'isOffline': cameraInfo.value.nCameraOnline === 0 }))
+const accessControlTotalClasses = computed(() => ({ 'zero-value': accessControlInfo.value.nAccessControlTotal === 0, 'positive-value': accessControlInfo.value.nAccessControlTotal > 0 }))
+const accessControlOnlineClasses = computed(() => ({ 'isOnline': accessControlInfo.value.nAccessControlOnline > 0, 'isOffline': accessControlInfo.value.nAccessControlOnline === 0, 'zero-value': accessControlInfo.value.nAccessControlOnline === 0, 'positive-value': accessControlInfo.value.nAccessControlOnline > 0 }))
 
 // ── API 方法 ─────────────────────────────────────────────────────
 const getDiscoverServiceSite = async () => {
@@ -255,14 +272,10 @@ const getDiscoverServiceSite = async () => {
 }
 
 const getAlarmEventList = async () => {
-  const offsetMinutes = -new Date().getTimezoneOffset()
-  const sign = offsetMinutes >= 0 ? '+' : '-'
-  const absOffset = Math.abs(offsetMinutes)
-  const offsetStr = `${sign}${String(Math.floor(absOffset / 60)).padStart(2, '0')}:${String(absOffset % 60).padStart(2, '0')}`
-  const beginTime = dayjs(Date.now() - alarmTime.value * 3600000).format(`YYYY-MM-DDTHH:mm:ss${offsetStr}`)
-  const endTime = dayjs(new Date()).format(`YYYY-MM-DDTHH:mm:ss${offsetStr}`)
+  const beginTime = dayjs(Date.now() - alarmTime.value * 3600000).format('YYYY-MM-DDTHH:mm:ss+08:00')
+  const endTime = dayjs(new Date()).format('YYYY-MM-DDTHH:mm:ss+08:00')
   const res = await GetAlarmEventHomeList({ beginTime, endTime, username: userStore.username })
-  if (res.status === 200 && res.data.msg === 'Success') {
+  if (res.status === 200 && res.data.msg?.toLowerCase() === 'success') {
     const r = res.data.result
     alarmEvent.value = { high: r.high ?? 0, medium: r.medium ?? 0, low: r.low ?? 0, critical: r.critical ?? 0 }
     const total = (r.high ?? 0) + (r.medium ?? 0) + (r.low ?? 0) + (r.critical ?? 0)
@@ -291,19 +304,20 @@ const initAlarmChart = () => {
 
 const getWorkServer = async () => {
   const res = await GetWorkServerListApi()
-  if (res.status === 200 && res.data.msg === 'Success') {
-    workServerList.value = res.data.result.list
-    workServer.value = res.data.result.list[0]?.nodeId ?? ''
-    for (const item of res.data.result.list) {
-      if (item.nodeType === 'main') { await getRunTime(item.nodeId); break }
-    }
+  if (res.status === 200 && res.data.msg?.toLowerCase() === 'success') {
+    const list = res.data.result.list
+    workServerList.value = list
+    workServer.value = list[0]?.nodeId ?? ''
+    // 优先找 main 节点，找不到则用第一个节点
+    const mainNode = list.find((item: any) => item.nodeType === 'main') ?? list[0]
+    if (mainNode) await getRunTime(mainNode.nodeId)
     await getRunInfo()
   }
 }
 
 const getRunTime = async (nodeId: string) => {
   const res = await GetRunTimeApi(nodeId)
-  if (res.status === 200 && res.data.msg === 'Success') strRunTime.value = res.data.result.strRunTime
+  if (res.status === 200 && res.data.msg?.toLowerCase() === 'success') strRunTime.value = res.data.result.strRunTime
 }
 
 const formatNetworkSpeed = (speed: number) => (!speed ? '0 Kbps' : speed < 1024 ? `${Math.round(speed)}Kbps` : `${(speed / 1024).toFixed(1)}Mbps`)
@@ -314,6 +328,11 @@ const getRunInfo = async () => {
   if (res.status === 200 && res.data) {
     const d = res.data
     const nIn = parseInt(d.strNetworkInK) || 0, nOut = parseInt(d.strNetworkOutK) || 0
+    // 首次加载时用真实数据填满60个点，避免图表全显示为0
+    if (networkDataIn.value.every(v => v === 0) && nIn > 0) {
+      networkDataIn.value.fill(nIn)
+      networkDataOut.value.fill(nOut)
+    }
     initResourceCharts({ nCPUUsage: d.nCPUUsage, strMemory: d.strMemory, nMemoryUsage: d.nMemoryUsage, nTotalMemoryByte: d.nTotalMemoryByte,
       strNetworkIn: formatNetworkSpeed(nIn), strNetworkOut: formatNetworkSpeed(nOut), nNetworkIn: nIn, nNetworkOut: nOut })
     if (cpuChart) updateCPUChart(parseInt(d.nCPUUsage) || 0)
@@ -331,8 +350,8 @@ const initResourceCharts = (data: any) => {
     networkChart.setOption({ tooltip: { trigger: 'axis', backgroundColor: bgcol }, legend: { data: [t('SystemInfo.system_network_in'), t('SystemInfo.system_network_out')], icon: 'circle', itemWidth: 8, textStyle: { color: titlecol }, bottom: 37, left: 161 },
       grid: { left: 109, right: 20, top: 40, bottom: 73 }, xAxis: { type: 'category', boundaryGap: false, data: timeAxis, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { color: titlecol, interval: 58 } },
       yAxis: { type: 'value', axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { color: titlecol, fontSize: 10 } },
-      series: [{ name: t('SystemInfo.system_network_in'), data: networkDataIn.value, type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#00FF66' }, areaStyle: { color: 'rgba(0,255,102,0.5)' } },
-               { name: t('SystemInfo.system_network_out'), data: networkDataOut.value, type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#468AFF' }, areaStyle: { color: 'rgba(70,138,255,0.5)' } }] })
+      series: [{ name: t('SystemInfo.system_network_in'), data: networkDataIn.value, type: 'line', smooth: true, symbol: 'none', sampling: 'average', lineStyle: { color: '#00FF66' }, itemStyle: { color: '#00FF66' }, areaStyle: { color: 'rgba(0,255,102,0.5)' } },
+               { name: t('SystemInfo.system_network_out'), data: networkDataOut.value, type: 'line', smooth: true, symbol: 'none', sampling: 'average', lineStyle: { color: '#468AFF' }, itemStyle: { color: '#468AFF' }, areaStyle: { color: 'rgba(70,138,255,0.5)' } }] })
   }
   if (!cpuChart) {
     cpuChart = echarts.init(chartCPUContainerRef.value)
@@ -346,8 +365,10 @@ const initResourceCharts = (data: any) => {
   }
   const formatMemory = (bytes: number) => { const units = ['B','KB','MB','GB','TB']; let v = bytes, i = 0; while (v >= 1024 && i < units.length - 1) { v /= 1024; i++ }; return `${parseFloat(v.toFixed(2))} ${units[i]}` }
   memChart.setOption({ legend: { bottom: '3%', left: 'center', selectedMode: false, textStyle: { color: titlecol, fontSize: 16 }, itemWidth: 12, itemHeight: 12 },
-    series: [{ type: 'pie', radius: ['60%', '70%'], center: ['50%', '40%'], hoverOffset: 0, label: { normal: { show: true, position: 'center', formatter: data.nTotalMemoryByte === 0 ? data.strMemory : `${data.strMemory}\n${t('CommTable.comm_total')} ${formatMemory(data.nTotalMemoryByte)}`, fontSize: 16, color: titlecol } },
-      labelLine: { normal: { show: false } }, data: [{ value: data.nMemoryUsage, name: t('SystemInfo.system_memory'), itemStyle: { color: '#0399FE' } }, { value: 100 - data.nMemoryUsage, name: 'Free', itemStyle: { color: '#50586E' } }] }] })
+    series: [{ type: 'pie', radius: ['60%', '70%'], center: ['50%', '40%'], hoverOffset: 0,
+      label: { show: true, position: 'center', formatter: data.nTotalMemoryByte === 0 ? data.strMemory : `${data.strMemory}\n${t('CommTable.comm_total')} ${formatMemory(data.nTotalMemoryByte)}`, fontSize: 16, color: titlecol },
+      labelLine: { show: false },
+      data: [{ value: data.nMemoryUsage, name: t('SystemInfo.system_memory'), itemStyle: { color: '#0399FE' } }, { value: 100 - data.nMemoryUsage, name: 'Free', itemStyle: { color: '#50586E' } }] }] })
 }
 
 const updateCPUChart = (usage: number) => { if (!cpuChart) return; cpuUsageData.value.push(usage); cpuUsageData.value.shift(); cpuChart.setOption({ series: [{ data: cpuUsageData.value }] }) }
@@ -358,7 +379,10 @@ const networkRealtimeUpdate = () => {
     if (!workServer.value) return
     const res = await GetRunInfoApi(workServer.value)
     if (res.status === 200) {
-      const nIn = parseInt(res.data.strNetworkInK) || 0, nOut = parseInt(res.data.strNetworkOutK) || 0
+      const d = res.data
+      // 兼容两种字段名：strNetworkInK（字符串）和 nNetworkInK（整数）
+      const nIn = parseInt(d.strNetworkInK || d.nNetworkInK) || 0
+      const nOut = parseInt(d.strNetworkOutK || d.nNetworkOutK) || 0
       networkDataIn.value.push(nIn); networkDataIn.value.shift(); networkDataOut.value.push(nOut); networkDataOut.value.shift()
       if (networkChart) networkChart.setOption({ series: [{ data: networkDataIn.value }, { data: networkDataOut.value }] })
       if (cpuChart) updateCPUChart(parseInt(res.data.nCPUUsage) || 0)
@@ -368,7 +392,14 @@ const networkRealtimeUpdate = () => {
 
 const getDeviceSummary = async () => {
   const [r1, r2] = await Promise.all([GetDeviceSummaryApi(), GetDeviceInfoApi()])
-  if (r1.status === 200) cameraInfo.value = r1.data.result
+  if (r1.status === 200) {
+    cameraInfo.value = r1.data.result
+    const d = r1.data.result
+    accessControlInfo.value = {
+      nAccessControlTotal: (d.accessControlOnline || 0) + (d.accessControlOffline || 0),
+      nAccessControlOnline: d.accessControlOnline || 0,
+    }
+  }
   if (r2.status === 200) { const d = r2.data.result; deviceInfo.value = { nDeviceTotal: (d.online||0)+(d.offline||0), nDeviceOnline: d.online||0 } }
 }
 
@@ -417,6 +448,11 @@ onBeforeUnmount(() => {
   if (resizeTimer) clearTimeout(resizeTimer)
   window.removeEventListener('resize', handleResize)
   networkChart?.dispose(); cpuChart?.dispose(); alarmChart?.dispose(); memChart?.dispose()
+  // 必须置 null，否则下次进入 Home 时初始化判断会失败
+  networkChart = null
+  cpuChart = null
+  alarmChart = null
+  memChart = null
 })
 </script>
 
@@ -514,10 +550,14 @@ onBeforeUnmount(() => {
           justify-content: space-between;
           padding: 40px;
 
-          :deep(.el-select .el-input__inner) {
-            border: none !important;
-            border-radius: 6px;
+          :deep(.el-select__wrapper) {
+            background: #F1F3F4 !important;
+            --el-text-color-regular: #333333;
+            --el-text-color-placeholder: #606266;
+            --el-select-input-color: #333333;
+            --el-select-disabled-color: #333333;
           }
+          :deep(.el-select__selected-item) { color: #333333 !important; }
         }
         .alarm-main {
           display: flex;
@@ -569,9 +609,8 @@ onBeforeUnmount(() => {
               font-size: 18px;
             }
 
-            :deep(.el-select .el-input__inner) {
-              border: none !important;
-              border-radius: 6px;
+            :deep(.el-select__wrapper) {
+              background: #F1F3F4 !important;
             }
           }
           .memory-cpu-main {
@@ -667,6 +706,7 @@ onBeforeUnmount(() => {
                 height: 30px;
               }
               label {
+                display: inline-block;
                 width: 100px;
               }
               .strHostId {
@@ -686,43 +726,154 @@ onBeforeUnmount(() => {
     }
   }
 
-  // ── Card panel background colors ──────────────────────────────────────
-  .content-left,
-  .memory-cpu,
-  .run,
-  .system {
-    background-color: #FFFFFF;
+  // ── Light mode colors (default) ───────────────────────────────────────
+  background: #F1F3F4;
+
+  .home-top {
+    .greeting { color: #0399FE; }
+    .datetime  { color: #999999; }
   }
 
+  .home-tabs {
+    .home-tab-item {
+      background: #FFFFFF;
+      box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.2);
+      .home-tab-name { color: #0399FE; }
+      .home-tab-children { color: #666666; }
+      .jump .iconfont { color: #0399FE; }
+      &:hover {
+        background: rgba(141, 189, 255, 0.3);
+        box-shadow: 0 0 0 1px #0399FE;
+      }
+    }
+  }
+
+  .home-event .home-event-content {
+    .content-left {
+      background: #ffffff;
+      .alarm-header :deep(.el-select__wrapper) {
+        background: #F1F3F4 !important;
+        --el-text-color-regular: #333333;
+        --el-text-color-placeholder: #606266;
+        --el-select-input-color: #333333;
+        --el-select-disabled-color: #333333;
+      }
+      .alarm-header :deep(.el-select__selected-item) { color: #333333 !important; }
+      .alarm-footer div:nth-child(1) {
+        color: #0399FE;
+        background: rgba(147, 211, 255, 0.1);
+      }
+    }
+    .content-right {
+      .memory-cpu {
+        background: #ffffff;
+        .memory-cpu-header {
+          .runtime-text {
+            color: rgba(0, 0, 0, 0.7);
+            .runtime-nums { color: #000000; }
+          }
+          :deep(.el-select__wrapper) {
+            background: #F1F3F4 !important;
+          }
+        }
+      }
+      .run-system {
+        .run {
+          background: #ffffff;
+          .run-main .stat-numbers {
+            .stat-divider { background-color: rgba(0, 0, 0, 0.06); }
+            .stat-item .stat-value {
+              &.zero-value   { color: #000000; opacity: 0.32; }
+              &.positive-value { color: #000000; opacity: 1; }
+              &.isOffline    { color: #000000; opacity: 0.32; }
+              &.isOnline     { color: #00D856; opacity: 1; }
+            }
+          }
+        }
+        .system { background: #ffffff; }
+      }
+    }
+  }
+
+  // ── Dark theme overrides ───────────────────────────────────────────────
   &.c-dark-theme {
-    .content-left,
-    .memory-cpu,
-    .run,
-    .system {
-      background-color: #252525;
+    background: #1D1D1D;
+    .home-top {
+      .greeting { color: #0399FE; }   // 与 uscweb 对齐：深色模式 greeting 也是蓝色
+      .datetime  { color: #999999; }
+    }
+    .home-tabs .home-tab-item {
+      background: #2A2A2A;
+      box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.2);
+      .home-tab-name { color: #FFFFFF; }
+      .home-tab-children { color: #FFFFFF; }
+      .jump .iconfont { color: #0399FE; }  // youshang 图标深色模式也是蓝色
+      &:hover { background: #31373D; box-shadow: 0 0 0 1px #0399FE; }
+    }
+    .home-event .home-event-content {
+      .content-left {
+        background: #2A2A2A;
+        .alarm-header {
+          :deep(.el-select__wrapper) {
+            background: #3D3D3D !important;
+            --el-text-color-regular: #FFFFFF;
+            --el-text-color-placeholder: rgba(255,255,255,0.5);
+            --el-select-input-color: rgba(255,255,255,0.5);
+          }
+        }
+        .alarm-footer div:nth-child(1) { color: #0399FE; background: rgba(147, 211, 255, 0.1); }
+      }
+      .content-right {
+        .memory-cpu {
+          background: #2A2A2A;
+          .memory-cpu-header {
+            .runtime-text {
+              color: rgba(255, 255, 255, 0.7);
+              .runtime-nums { color: #FFFFFF; }
+            }
+            :deep(.el-select__wrapper) {
+              background: #3D3D3D !important;
+            }
+            :deep(.el-select__selected-item) { color: #FFFFFF; }
+            :deep(.el-select__placeholder)   { color: rgba(255,255,255,0.5); }
+          }
+        }
+        .run-system {
+          .run {
+            background: #2A2A2A;
+            .run-main .stat-numbers {
+              .stat-divider { background-color: rgba(255, 255, 255, 0.06); }
+              .stat-item .stat-value {
+                &.zero-value    { color: #FFFFFF; opacity: 0.32; }
+                &.positive-value { color: #FFFFFF; opacity: 1; }
+                &.isOffline     { color: #FFFFFF; opacity: 0.32; }
+                &.isOnline      { color: #00D856; opacity: 1; }
+              }
+            }
+          }
+          .system { background: #2A2A2A; }
+        }
+      }
     }
   }
 
   &.darkblue {
-    .content-left,
-    .memory-cpu,
-    .run,
-    .system {
-      background-color: #1A2233;
+    background: #0D1929;
+    .home-tabs .home-tab-item {
+      background: #1A2233;
+      box-shadow: none;
+      &:hover { background: rgba(3, 153, 254, 0.15); box-shadow: 0 0 0 1px #0399FE; }
+    }
+    .home-event .home-event-content {
+      .content-left { background: #1A2233; }
+      .content-right {
+        .memory-cpu { background: #1A2233; }
+        .run-system {
+          .run { background: #1A2233; }
+          .system { background: #1A2233; }
+        }
+      }
     }
   }
-}
-
-.zero-value {
-  color: grey;
-}
-.positive-value {
-  color: inherit;
-}
-.isOnline {
-  color: #00B75B;
-}
-.isOffline {
-  color: #D83D3D;
 }
 </style>

@@ -109,7 +109,8 @@
     "comm_table_serial_number": "序號",
     "comm_table_token": "編號",
     "comm_table_type": "類型",
-    "comm_modify_successfully": "修改成功！"
+    "comm_modify_successfully": "修改成功！",
+    "comm_detail_alarm": "查看報警"
   },
   "CommTime": {
     "comm_time_start": "開始時間",
@@ -353,7 +354,15 @@
   "SystemInfo": {
     "system_server": "服務器",
     "system_total": "共",
-    "system_units": "個"
+    "system_units": "個",
+    "system_version": "版本",
+    "system_hostid": "主機號",
+    "system_license": "版權",
+    "system_channel": "通道",
+    "system_endtime": "版權結束時間",
+    "system_runtime": "運行時間",
+    "system_hour": "時",
+    "system_minute": "分"
   },
   "Liveview": {
     "live_view": "視圖",
@@ -372,11 +381,29 @@
     "live_codec": "編碼格式",
     "live_sampleRate": "採樣率",
     "live_sampleBit": "採樣位",
-    "live_channels": "聲道"
+    "live_channels": "聲道",
+    "live_rec_start": "開始錄像",
+    "live_rec_stop": "停止錄像"
   },
   "CommDev": {
     "comm_dev_audio": "音頻",
-    "comm_dev_bitrate": "碼率"
+    "comm_dev_bitrate": "碼率",
+    "comm_alias": "別名",
+    "comm_dev_accesscontroler": "門禁控制器",
+    "comm_dev_cpuusage": "CPU使用率",
+    "comm_dev_device": "設備",
+    "comm_dev_device_sdk": "設備SDK",
+    "comm_dev_main_stream": "主碼流",
+    "comm_dev_root": "根節點",
+    "comm_dev_stream": "碼流",
+    "comm_dev_sub_stream": "輔碼流",
+    "comm_dev_sum": "總數",
+    "comm_dev_systemload": "系統負載",
+    "comm_dome": "標記球機",
+    "comm_forbidden": "禁用",
+    "comm_offline": "離線",
+    "comm_online": "在線",
+    "comm_unoccupied": "空閒"
   },
   "CommTable": {
     "comm_bind_ip": "綁定 IP",

@@ -12,7 +12,7 @@
       </div>
     </div>
   </el-dialog>
-  <div class="header-com">
+  <div class="header-com" :class="store.darkMode">
     <div class="header-left">
       <i class="iconfont icon-hanbaobao" @click="openSidebar"></i>
       <img v-if="store.lang === 'en' && store.darkMode" src="../assets/imgs/HPro_Logo_black_en.svg" alt="">
@@ -98,29 +98,15 @@ const logout = () => {
 }
 
 const routes = () => {
-  let routes: any = {
-    children: router.options.routes
-  }
-
   const matchedRoutes: any = route.matched
-  if (!matchedRoutes[1]) return []
-  title.value = t(matchedRoutes[1].meta.name);
-  for (let i = 0; i < matchedRoutes.length; i++) {
-    if (!routes.children) break
-    for (let k = 0; k < routes.children.length; k++) {
-      if (matchedRoutes[i].name === routes.children[k].name) {
-        const HomeChildren = routes.children[k].children
-        if (HomeChildren) {
-          for (let n = 0; n < HomeChildren.length; n++) {
-            if (matchedRoutes[1]?.name === HomeChildren[n].name) {
-              routes.children = HomeChildren[n].children
-            }
-          }
-        }
-      }
-    }
+  if (!matchedRoutes || matchedRoutes.length < 2) return []
+
+  // matchedRoutes[1] 是顶级导航路由（如 Monitoring、Configuration 等）
+  const parentRoute = matchedRoutes[1]
+  if (parentRoute?.meta?.name) {
+    title.value = t(parentRoute.meta.name)
   }
-  return routes.children || []
+  return parentRoute?.children || []
 }
 
 const getRouterList = () => {
@@ -214,7 +200,20 @@ onBeforeMount(() => {
   width: 100%;
   height: 30px;
   display: flex;
-  background-color: #2C2C2C;
+  background-color: #F2F1F1;  // 浅色默认
+  color: #000;
+  .header-title { color: #000; border-right-color: #D0D0D0; }
+
+  &.c-dark-theme {
+    background-color: #2C2C2C;
+    color: #fff;
+    .header-title { color: #fff; border-right-color: #4A4A4A; }
+  }
+  &.darkblue {
+    background-color: #061E2E;
+    color: #fff;
+    .header-title { color: #fff; border-right-color: #1A3A4A; }
+  }
   .header-left {
     width: 256px;
     height: 100%;
@@ -240,7 +239,7 @@ onBeforeMount(() => {
       font-size: 14px;
       line-height: 20px;
       height: 20px;
-      border-right: 2px solid #4A4A4A;
+      border-right: 2px solid;  // 颜色由父级主题规则控制
       margin-right: 20px;
       margin-top: 5px;
     }

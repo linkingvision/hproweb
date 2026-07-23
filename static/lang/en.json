@@ -115,7 +115,7 @@
     "comm_table_token": "Token",
     "comm_table_type": "Type",
     "comm_modify_successfully": "Modify successfully!",
-    "comm_detail_alarm": "View Alarms"
+    "comm_detail_alarm": "Detail Alarm"
   },
   "CommTime": {
     "comm_time_start": "Start Time",
@@ -386,17 +386,17 @@
     "system_server": "Server",
     "system_total": "Total",
     "system_units": "Units",
-    "system_runtime": "Uptime",
-    "system_hour": "h",
-    "system_minute": "min",
+    "system_runtime": "Runtime",
+    "system_hour": "Hour",
+    "system_minute": "Minute",
     "system_network_in": "Network In",
     "system_network_out": "Network Out",
     "system_memory": "Memory",
     "system_version": "Version",
-    "system_hostid": "Host ID",
+    "system_hostid": "Hostid",
     "system_license": "License",
-    "system_channel": "Video Channels",
-    "system_endtime": "Expiry Date",
+    "system_channel": "Channel",
+    "system_endtime": "Endtime",
     "system_copysuccessful": "Copy Successful"
   },
   "Liveview": {
@@ -417,7 +417,9 @@
     "live_sampleRate": "Sample Rate",
     "live_sampleBit": "Sample Bit",
     "live_channels": "Channels",
-    "live_camera": "Camera"
+    "live_camera": "Camera",
+    "live_rec_start": "Recording started",
+    "live_rec_stop": "Recording stopped"
   },
   "CommDev": {
     "comm_dev_audio": "Audio",
@@ -426,7 +428,18 @@
     "comm_dev_sum": "Total",
     "comm_online": "Online",
     "comm_dev_cpuusage": "CPU Usage",
-    "comm_dev_accesscontroler": "Access Controller"
+    "comm_dev_accesscontroler": "Access Controller",
+    "comm_alias": "Alias",
+    "comm_dev_device": "Device",
+    "comm_dev_device_sdk": "Device SDK",
+    "comm_dev_main_stream": "Main stream",
+    "comm_dev_root": "Root",
+    "comm_dev_stream": "Stream",
+    "comm_dev_sub_stream": "Sub stream",
+    "comm_dome": "Dome",
+    "comm_forbidden": "Forbidden",
+    "comm_offline": "Offline",
+    "comm_unoccupied": "Idle"
   },
   "CommTable": {
     "comm_bind_ip": "Bind IP",

@@ -44,15 +44,6 @@ const router = createRouter({
     return { top: 0 }
   },
   routes: [{
-    path: '/',
-    redirect: (to) => {
-      console.log('Redirect from /, query:', to.query);
-      return {
-        path: '/Login',
-        query: to.query // forward query params
-      }
-    }
-  },{
     path: '/Login',
     name: 'Login',
     component: Login,
@@ -72,6 +63,7 @@ const router = createRouter({
     path: '/',
     name: 'Container',
     component: TheContainer,
+    redirect: '/Home',
     meta: {
       type: 'Administrator' // requires auth
     },
@@ -404,6 +396,9 @@ const router = createRouter({
         }]
       }]
     }]
+  }, {
+    path: '/:pathMatch(.*)*',
+    redirect: '/Login'
   }],
 })
 

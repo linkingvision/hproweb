@@ -109,7 +109,8 @@
     "comm_table_serial_number": "Número de serie",
     "comm_table_token": "Simbólico",
     "comm_table_type": "Tipo",
-    "comm_modify_successfully": "¡Modifique con éxito!"
+    "comm_modify_successfully": "¡Modifique con éxito!",
+    "comm_detail_alarm": "Detalle Alarma"
   },
   "CommTime": {
     "comm_time_start": "Hora de inicio",
@@ -352,7 +353,15 @@
   "SystemInfo": {
     "system_server": "Servidor",
     "system_total": "Total",
-    "system_units": "Unidades"
+    "system_units": "Unidades",
+    "system_version": "Versión",
+    "system_hostid": "Hostid",
+    "system_license": "Licencia",
+    "system_channel": "Canal",
+    "system_endtime": "Fin del tiempo",
+    "system_runtime": "Tiempo de ejecución",
+    "system_hour": "Hora",
+    "system_minute": "Minuto"
   },
   "Liveview": {
     "live_view": "Vista",
@@ -371,11 +380,29 @@
     "live_codec": "Códec",
     "live_sampleRate": "Frecuencia de muestreo",
     "live_sampleBit": "Bits de muestra",
-    "live_channels": "Canales"
+    "live_channels": "Canales",
+    "live_rec_start": "Grabación iniciada",
+    "live_rec_stop": "Grabación detenida"
   },
   "CommDev": {
     "comm_dev_audio": "Audio",
-    "comm_dev_bitrate": "Tasa de bits"
+    "comm_dev_bitrate": "Tasa de bits",
+    "comm_alias": "Alias",
+    "comm_dev_accesscontroler": "Controlador de Acceso",
+    "comm_dev_cpuusage": "Uso de CPU",
+    "comm_dev_device": "Dispositivo",
+    "comm_dev_device_sdk": "SDK del dispositivo",
+    "comm_dev_main_stream": "corriente principal",
+    "comm_dev_root": "Raíz",
+    "comm_dev_stream": "Arroyo",
+    "comm_dev_sub_stream": "Subcorriente",
+    "comm_dev_sum": "Total",
+    "comm_dev_systemload": "Carga del Sistema",
+    "comm_dome": "Cúpula",
+    "comm_forbidden": "Prohibido",
+    "comm_offline": "Desconectado",
+    "comm_online": "En línea",
+    "comm_unoccupied": "Inactivo"
   },
   "CommTable": {
     "comm_bind_ip": "Vincular IP",
