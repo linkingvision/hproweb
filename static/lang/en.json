@@ -278,10 +278,16 @@
     "mon_monitoring": "Monitoring",
     "mon_cloud_view": "Cloud View"
   },
+  "Partition": {
+    "part_name": "Partition Name",
+    "part_id": "Partition ID",
+    "part_parent": "Parent Partition"
+  },
   "Router": {
     "router_analytics": "Analytics",
     "router_basic": "Basic",
     "router_configuration": "Configuration",
+    "router_device_partition": "Device Partition",
     "router_image_storage": "Image Storage",
     "router_local_obj_storage": "Local Object Storage",
     "router_meta_storage": "Meta Storage",
@@ -413,6 +419,9 @@
     "live_playing": "Playing",
     "live_video": "Video",
     "live_ptz": "PTZ",
+    "live_expendarea": "Region Zoom",
+    "live_expendarea_enter": "Enter region zoom mode, please drag to select the area to zoom",
+    "live_expendarea_exit": "Exit region zoom mode",
     "live_codec": "Codec",
     "live_sampleRate": "Sample Rate",
     "live_sampleBit": "Sample Bit",

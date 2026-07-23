@@ -7,6 +7,7 @@ import LangES from './lang/es.json'
 const i18n = createI18n({
   legacy: false,  // you must set `false`, to use Composition API
   locale: 'en',
+  fallbackLocale: 'en',
   messages: {
     'en': LangEn,
     'zhcht': LangZhCHT,

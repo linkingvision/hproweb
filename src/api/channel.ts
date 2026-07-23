@@ -45,7 +45,7 @@ export const getSearchStorRecordByTimeApi = (token: string, start: string, end: 
   method: 'GET'
 })
 
-// Get time slots with recordings from device storage（对照uscweb Advancepb.vue）
+// Get time slots with recordings from device storage
 export const getSearchDeviceRecordByTimeApi = (token: string, start: string, end: string) => axios({
   url: '/uapi/v1/SearchDeviceRecordByTime?token=' + token + '&start=' + encodeURIComponent(start) + '&end=' + encodeURIComponent(end) + '&maxlen=86400',
   method: 'GET'
@@ -75,13 +75,11 @@ export const SetPresetApi = (ptzToken: string, inputVal: string, presetToken: st
   method: 'GET'
 })
 
-// PTZ control
 export const PtzApi = (ptzToken: string, action: string, speed: number) => axios({
   url: '/uapi/v1/Ptz?token=' + ptzToken + '&action=' + action + '&speed=' + speed,
   method: 'GET'
 })
 
-// View query
 export const GetViewApi = (id: string) => axios({
   url: '/uapi/v1/View/' + id,
   method: 'GET'

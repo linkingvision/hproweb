@@ -58,19 +58,15 @@ const filterTreeNodes = (nodes: TreeNode[], filterValue: string): TreeNode[] => 
       continue;
     }
     
-    // Check if current node matches (case-insensitive)
     // Only match partition, device, map and view nodes
     const nodeMatches = node.label.toLowerCase().includes(filterValue.toLowerCase());
-    
-    // Process child nodes
+
     let filteredChildren: TreeNode[] = [];
     if (node.children && node.children.length > 0) {
       // Matched device node: keep all channel children
       if (node.type === 'device' && nodeMatches) {
-        // Device matches: keep all children including channels
         filteredChildren = [...node.children];
       } else {
-        // Recursively filter non-channel children
         filteredChildren = filterTreeNodes(node.children, filterValue);
         
         // Device with matching children: keep all channels
@@ -81,7 +77,6 @@ const filterTreeNodes = (nodes: TreeNode[], filterValue: string): TreeNode[] => 
       }
     }
     
-    // Include node if it or any descendant matches
     if (nodeMatches || filteredChildren.length > 0) {
       const newNode = { ...node };
       if (filteredChildren.length > 0) {
@@ -134,7 +129,6 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
       loaded: false
     };
     
-    // Only set children when sub-data exists
     if (hasChildren) {
       partitionNode.children = [];
       
@@ -169,12 +163,12 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             label: map.mapName,
             type: 'map',
             data: map,
-            isLeaf: true, // map is a leaf node
+            isLeaf: true,
             loaded: true
           });
         });
       }
-      
+
       // 4. Views — leaf nodes, no expand icon
       if (partition.view && partition.view.length > 0) {
         partition.view.forEach((view: any) => {
@@ -183,7 +177,7 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             label: view.viewName,
             type: 'view',
             data: view,
-            isLeaf: true, // view is a leaf node
+            isLeaf: true,
             loaded: true
           });
         });
@@ -233,12 +227,12 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           label: map.mapName,
           type: 'map',
           data: map,
-          isLeaf: true, // map is a leaf node
+          isLeaf: true,
           loaded: true
         });
       });
     }
-    
+
     // 4. Views — leaf nodes, no expand icon
     if (partition.view && partition.view.length > 0) {
       partition.view.forEach((view: any) => {
@@ -247,7 +241,7 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           label: view.viewName,
           type: 'view',
           data: view,
-          isLeaf: true, // view is a leaf node
+          isLeaf: true,
           loaded: true
         });
       });
@@ -256,11 +250,9 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
   
   return result;
 };
-// Get node CSS class
 const getNodeClass = (node: TreeNode) => {
   const classes = ['tree-node'];
   if (node.type === 'device') {
-    // Get online status
     const isOnline = node.online !== undefined ? node.online : (node.data && node.data.online);
     
     if (isOnline) {
@@ -271,11 +263,9 @@ const getNodeClass = (node: TreeNode) => {
   }
   return classes.join(' ');
 };
-// Get node icon
 const getNodeIcon = (node: TreeNode) => {
   switch (node.type) {
     case 'partition':
-      // Sub-partition nodes use icon-gen
       return 'icon-gen';
     case 'device':
       // Channel leaf nodes use camera icon
@@ -285,25 +275,20 @@ const getNodeIcon = (node: TreeNode) => {
       // Devices in dev use icon-Device
       return 'icon-Device';
     case 'map':
-      // Map nodes use icon-ditu
       return 'icon-ditu';
     case 'view':
-      // View nodes use icon-shipin
       return 'icon-shitu2';
     default:
       return 'icon-gen';
   }
 };
-// Get node colour
 const getNodeColor = (node: TreeNode) => {
   if (node.type === 'device') {
-    // Get online status
     const isOnline = node.online !== undefined ? node.online : (node.data && node.data.online);
     return isOnline ? '1' : '0.6';
   }
   return '1';
 };
-// Node click handler
 const handleNodeClick = (data: TreeNode, node: any) => {
   quitConfig()
   tableData.value = [];
@@ -316,7 +301,6 @@ const handleNodeClick = (data: TreeNode, node: any) => {
       rules: analyticsCount.value[node.data.data.uuid] ? analyticsCount.value[node.data.data.uuid].length : 0
     }
     tableData.value.push(row)
-    // console.log(tableData.value)
     total.value = tableData.value.length;
   }
 };
@@ -329,7 +313,6 @@ const loadDeviceChannels = async (deviceNode: TreeNode) => {
 
   const cacheKey = deviceNode.data.token;
   
-  // Check cache
   if (deviceCache.has(cacheKey)) {
     const cachedData = deviceCache.get(cacheKey);
     if (cachedData.length > 0) {
@@ -361,16 +344,14 @@ const loadDeviceChannels = async (deviceNode: TreeNode) => {
         isDeviceChannel: true // mark as device channel
       }));
       
-      // Cache data
       deviceCache.set(cacheKey, channels);
-      
+
       deviceNode.children = channels;
       deviceNode.loaded = true;
       deviceNode.isLeaf = false;
     } else {
-      // Cache empty result
       deviceCache.set(cacheKey, []);
-      
+
       // Device has no channels — mark as leaf
       delete deviceNode.children;
       deviceNode.loaded = true;
@@ -384,16 +365,14 @@ const loadDeviceChannels = async (deviceNode: TreeNode) => {
   }
 };
 
-// Find and update node in source data
 const findAndUpdateNode = (nodes: TreeNode[], targetId: string, updatedNode: TreeNode): boolean => {
   if (!nodes || nodes.length === 0) return false;
-  
+
   for (let i = 0; i < nodes.length; i++) {
     const currentNode = nodes[i];
     if (!currentNode) continue;
-    
+
     if (currentNode.id === targetId) {
-      // Update node
       nodes[i] = { ...currentNode, ...updatedNode };
       return true;
     }
@@ -407,7 +386,6 @@ const findAndUpdateNode = (nodes: TreeNode[], targetId: string, updatedNode: Tre
   return false;
 };
 
-// Node expand handler
 const handleNodeExpand = async (data: TreeNode, node: any) => {
   // Skip expand handling for channel nodes
   if (data.isDeviceChannel) {
@@ -446,7 +424,6 @@ const handleNodeExpand = async (data: TreeNode, node: any) => {
   }
 };
 
-// Node collapse handler
 const handleNodeCollapse = (data: TreeNode, node: any) => {
   // Skip collapse handling for channel nodes
   if (data.isDeviceChannel) {
@@ -470,7 +447,6 @@ const handleNodeCollapse = (data: TreeNode, node: any) => {
   }
 };
 
-// const ruleSearch = ref<string>('')
 const rulesTableData = ref<any[]>([])
 const rulesTotal = ref<number>(0)
 const pageIndex = ref<number>(1)
@@ -516,7 +492,6 @@ const GetAnalytics = async (channelUUID?: string, bEnable?: boolean, metaEnabled
 
 const anauuid = ref<string>('')
 const vectPect = ref<boolean>(false)
-// Table row click handler
 const goClick = (row: any, column?: any) => {
   console.log('goCLick row =>', row)
   anauuid.value = row.uuid;
@@ -621,7 +596,6 @@ const AnalyticsSetDraw = (row: any) => {
       $(".lprMaxSize").width(maxWidth);
       let maxHeight = Math.min(row.setting.Rule.Lpre.lprHeightMax / (videoDom.videoHeight / videoDom.offsetHeight), videoDom.offsetHeight);
       $(".lprMaxSize").height(maxHeight);
-      // console.log(this.formLabelAlign);
       return row.setting.Rule.Lpre;
     case "USC_ANA_RULE_CROD":
       checkboxgroupShow.value = false;
@@ -679,7 +653,6 @@ const clearCanvas = () => {
 
 const platformyes = async () => {
   if (!h5handler.value) return
-  // console.log(ruleForm.value)
   const scheduleUUID = ruleForm.value.schedule;
   const polygon = draw.value.getPolygons();
   const lines = draw.value.getLines();
@@ -692,7 +665,6 @@ const platformyes = async () => {
       Rule: {}
     }
   }
-  // console.log(scheduleUUID, polygon, lines, data)
   switch (ruleForm.value.ruleType) {
     case "USC_ANA_RULE_CONF":
       let classifiers = [];
@@ -935,11 +907,9 @@ const delRow = async (row: any) => {
   }
 }
 
-// Fetch recording schedule
 const GetRecordingTemplate = async () => {
   const res = await GetRecordingTemplateApi();
   if (res.status == 200 && res.data.code == 0) {
-    // console.log('Recording Template =>', res)
     const result = res.data.result;
     for (const item of result) {
       const newItem = {
@@ -955,7 +925,6 @@ const GetRecordingTemplate = async () => {
     }
   }
 }
-// Fetch face library
 const GetFaceLibrary = async () => {
   const res = await GetFaceLibraryApi();
   if (res.status == 200 && res.data.code == 0) {
@@ -966,19 +935,17 @@ const GetFaceLibrary = async () => {
   }
 }
 
-// 
 const objSizeStart = ref<boolean>(false);
 const h5handler = ref<any>(null)
 const channelUUID = ref<string>('')
 const playVideo = async (data: any) => {
   closeVideo();
-  // ruleForm.value.stream = data.streamprofile || '';
   const conf: any = {
     videoid: "h5videoRule",
     protocol: window.location.protocol, //http: or https:
     host: userStore.WSROOT,
     streamprofile: ruleForm.value.stream || 'main',
-    rootpath: '/', // '/'
+    rootpath: '/',
     token: data.token,
     hlsver: 'v1', //v1 is for ts, v2 is for fmp4
     rtcengine: localStorage.getItem('H5sRtcengine') || 'v1',
@@ -1002,7 +969,6 @@ const playVideo = async (data: any) => {
   draw.value = new AiDraw(document.getElementById('h5vcanvasRule'));
   draw.value.setDefaultArrowDirection('AB')
 }
-// console.log('AiDraw =>' ,AiDraw)
 const closeVideo = () => {
   if (h5handler.value) {
     h5handler.value.disconnect();
@@ -1034,11 +1000,9 @@ const ruleConfigBread = async (row: any) => {
   const div = document.getElementById('h5videoRule');
   const canvas = document.getElementById('h5vcanvasRule') as HTMLCanvasElement | null;
   if (!div || !canvas) return;
-  // Get container dimensions
   var divWidth = div?.offsetWidth;
   var divHeight = div?.offsetHeight;
   console.log(divWidth, divHeight)
-  // Set canvas size from container
   canvas.width = divWidth;
   canvas.height = divHeight;
 }
@@ -1201,7 +1165,6 @@ const handleChange = (value: string) => {
     default:
       break;
   }
-  // console.log('checkboxgroupShow =>', checkboxgroupShow.value)
 }
 
 const moreSetting = ref<boolean>(false);
@@ -1219,7 +1182,6 @@ const GetClassifierList = async () => {
   }
 }
 
-// Face recognition min-size change handler
 const updateFareSize = (value: any) => {
   const videoDom = document.getElementById('h5videoRule')  as HTMLVideoElement;
   let width = Math.min(ruleForm.value.faceMinimumSize / (videoDom.videoWidth / videoDom.offsetWidth), videoDom.offsetWidth);
@@ -1227,7 +1189,6 @@ const updateFareSize = (value: any) => {
   let height = Math.min(ruleForm.value.faceMinimumSize / (videoDom.videoHeight / videoDom.offsetHeight), videoDom.offsetHeight);
   $(".fareSize").height(height);
 }
-// Watch filter text changes
 watch(filterText, () => {
   if (filterText.value.trim()) {
     channelData.value = filterTreeNodes(originalChannelData.value, filterText.value.trim());
@@ -1260,7 +1221,6 @@ const activeNames = ['1']
             <div style="display: flex;justify-content: space-between;width: 85%;align-items: center;">
               <div>{{ t('Common.comm_root') }}</div>
               <div class="rules_colltitle">
-                <!-- <div class="rules_titleicon1" @click.stop="Refresh"></div> -->
               </div>
             </div>
           </template>
@@ -1479,7 +1439,6 @@ const activeNames = ['1']
             <div>{{ t('Analytics.ana_obj_size') }}</div>
             <br>
             <el-slider v-model="ruleForm.objectSize" show-input @input="updateObjSize"></el-slider>
-            <!-- <el-input style="width: 80px;" v-model="formLabelAlign.objectSize"></el-input> -->
           </div>
           <div v-show="ruleForm.ruleType === 'USC_ANA_RULE_CONF'"
             @click="() => { moreSetting = true; console.log(ruleForm) }" style="cursor: pointer; color: #177DDC; padding: 20px 20px 0 20px;">
@@ -1532,7 +1491,6 @@ const activeNames = ['1']
                 <span :class="'iconfont icon-person'"></span>
               </div>
               <div v-else-if="row.setting.ruleType == 'USC_ANA_RULE_LPRE'" style="font-size: 20px;">
-                <!-- <span :class="'iconfont icon-person'"></span> -->
               </div>
               <div v-else-if="row.setting.ruleType == 'USC_ANA_RULE_PEFA'" style="font-size: 20px;">
                 <span :class="'iconfont icon-person'"></span>
@@ -1673,7 +1631,6 @@ const activeNames = ['1']
     .analytics_rule_right_video {
       width: 100%;
       height: calc(100% - 48px);
-      // background-color: #212121;
       position: relative;
       display: flex;
       justify-content: center;
@@ -1727,7 +1684,6 @@ const activeNames = ['1']
     width: 100%;
     height: 48px;
     background-color: #2D2D2D;
-    // line-height: 48px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1880,7 +1836,6 @@ const activeNames = ['1']
 }
 :deep(.el-dialog) {
   padding: 0 !important;
-  // margin: 0;
   .el-dialog__header {
     height: 40px;
     line-height: 50px;

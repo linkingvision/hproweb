@@ -1,35 +1,38 @@
 <template>
   <div id="home" :class="store.darkMode">
-    <!-- 顶部：问候语 + 时间 -->
-    <div class="home-top">
-      <div class="greeting">{{ greetingText }}</div>
-      <div class="datetime">{{ dateTimeText }}</div>
-    </div>
-
-    <!-- 导航卡片 -->
-    <div class="home-tabs">
-      <div
-        v-for="item in navCards"
-        :key="item.name"
-        class="home-tab-item"
-        @click="router.push(item.router)"
-      >
-        <div class="home-tab-name">
-          <span class="icon" :class="item.icon"></span>&nbsp;
-          <span class="name">{{ item.name }}</span>
-        </div>
-        <div class="home-tab-children">{{ item.children.join(', ') }}</div>
-        <div class="jump">
-          <span class="iconfont icon-youshang"></span>
+    <!-- Top section: greeting, time, and navigation cards (same row) -->
+    <div class="home-header">
+      <div class="home-top">
+        <div class="greeting">{{ greetingText }}</div>
+        <div class="datetime">{{ dateTimeText }}</div>
+      </div>
+      <div class="home-tabs">
+        <div
+          v-for="item in navCards"
+          :key="item.name"
+          class="home-tab-item"
+          @click="router.push(item.router)"
+        >
+          <div class="home-tab-name">
+            <span class="icon" :class="item.icon"></span>&nbsp;
+            <span class="name">{{ item.name }}</span>
+          </div>
+          <div class="home-tab-children">{{ item.children.join(', ') }}</div>
+          <div class="jump">
+            <span class="iconfont icon-youshang"></span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 事件区 -->
+    <!-- Spacer to preserve original layout position -->
+    <div class="home-spacer"></div>
+
+    <!-- Event section -->
     <div class="home-event">
       <header>{{ siteName }}</header>
       <div class="home-event-content">
-        <!-- 左侧：告警图表 -->
+        <!-- Left: alarm chart -->
         <div class="content-left">
           <div class="alarm-header">
             <div>
@@ -37,7 +40,7 @@
               {{ t('Playback.pb_alarm') }}
             </div>
             <div>
-              <el-select v-model="alarmTime" :placeholder="t('Common.comm_please_select')" @change="onAlarmTimeChange">
+              <el-select v-model="alarmTime" :placeholder="t('Common.comm_please_select')" @change="onAlarmTimeChange" style="width: 160px;">
                 <el-option v-for="opt in alarmTimeOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
               </el-select>
             </div>
@@ -60,7 +63,7 @@
           </div>
         </div>
 
-        <!-- 右侧：资源 + 设备 + 系统 -->
+        <!-- Right: resources, devices, and system -->
         <div class="content-right">
           <div class="memory-cpu">
             <div class="memory-cpu-header">
@@ -77,7 +80,7 @@
                 </span>
               </div>
               <div>
-                <el-select v-model="workServer" :placeholder="t('Common.comm_please_select')" @change="onWorkServerChange">
+                <el-select v-model="workServer" :placeholder="t('Common.comm_please_select')" @change="onWorkServerChange" style="width: 160px;">
                   <el-option v-for="srv in workServerList" :key="srv.nodeId" :label="srv.nodeName" :value="srv.nodeId" />
                 </el-select>
               </div>
@@ -209,7 +212,7 @@ const updateDateTime = () => {
   greetingText.value = getGreeting()
 }
 
-// ── 导航卡片（静态）──────────────────────────────────────────────
+// Navigation cards (static, not data-driven)
 const navCards = [
   { name: t('Monitoring.mon_monitoring'), icon: 'iconfont icon-chakan', children: [t('Monitoring.mon_view'), t('Monitoring.mon_grid_view')], router: '/Monitoring' },
   { name: t('Router.router_configuration'), icon: 'iconfont icon-peizhi', children: [t('Router.router_basic'), t('Device.device_dev')], router: '/Configuration' },
@@ -217,22 +220,22 @@ const navCards = [
   { name: t('System.sys_system'), icon: 'iconfont icon-xitong', children: [t('System.sys_setting')], router: '/System' },
 ]
 
-// ── 告警统计 ─────────────────────────────────────────────────────
+// Alarm statistics
 const alarmTime = ref<number>(24)
-const alarmTimeOptions = computed(() => [
+const alarmTimeOptions = [
   { value: 1,       label: t('Common.comm_last_time1')    },
   { value: 12,      label: t('Common.comm_last_time12')   },
   { value: 24,      label: t('Common.comm_last_time24')   },
   { value: 15 * 24, label: t('Common.comm_last_time1524') },
   { value: 30 * 24, label: t('Common.comm_last_time3024') },
-])
+]
 const alarmEvent = ref({ critical: 0, high: 0, medium: 0, low: 0 })
 const alarmEventCount = ref(0)
 const alarmEventTotal = ref<string | number>(0)
 const alarmColors = { critical: '#7DDFDF', high: '#D83D3D', medium: '#F09C37', low: '#00B75B' } as const
 let alarmChart: echarts.ECharts | null = null
 
-// ── 系统资源 ─────────────────────────────────────────────────────
+// System resources
 const workServer = ref('')
 const workServerList = ref<Array<{ nodeId: string; nodeName: string; nodeType: string }>>([])
 const strRunTime = ref('')
@@ -243,21 +246,20 @@ let cpuChart: echarts.ECharts | null = null
 let memChart: echarts.ECharts | null = null
 const cpuUsageData = ref<number[]>(new Array(60).fill(0))
 
-// ── 设备统计 ─────────────────────────────────────────────────────
+// Device statistics
 const cameraInfo = ref({ nCameraTotal: 0, nCameraOnline: 0 })
 const deviceInfo = ref({ nDeviceTotal: 0, nDeviceOnline: 0 })
 const accessControlInfo = ref({ nAccessControlTotal: 0, nAccessControlOnline: 0 })
 
-// ── 系统信息 ─────────────────────────────────────────────────────
+// System info
 const systemInfo = ref({ strVersion: store.version || '', strHostId: '', strType: '', nVideoChannel: '' as string | number, strEndTime: '' })
 
-// ── DOM refs ─────────────────────────────────────────────────────
+// DOM refs 
 const chartAlarmContainerRef = ref<HTMLElement | null>(null)
 const chartNetworkContainerRef = ref<HTMLElement | null>(null)
 const chartCPUContainerRef = ref<HTMLElement | null>(null)
 const chartMemoryContainerRef = ref<HTMLElement | null>(null)
 
-// ── computed ─────────────────────────────────────────────────────
 const deviceTotalClasses = computed(() => ({ 'zero-value': deviceInfo.value.nDeviceTotal === 0, 'positive-value': deviceInfo.value.nDeviceTotal > 0 }))
 const deviceOnlineClasses = computed(() => ({ 'isOnline': deviceInfo.value.nDeviceOnline > 0, 'isOffline': deviceInfo.value.nDeviceOnline === 0 }))
 const cameraTotalClasses = computed(() => ({ 'zero-value': cameraInfo.value.nCameraTotal === 0, 'positive-value': cameraInfo.value.nCameraTotal > 0 }))
@@ -265,7 +267,6 @@ const cameraOnlineClasses = computed(() => ({ 'isOnline': cameraInfo.value.nCame
 const accessControlTotalClasses = computed(() => ({ 'zero-value': accessControlInfo.value.nAccessControlTotal === 0, 'positive-value': accessControlInfo.value.nAccessControlTotal > 0 }))
 const accessControlOnlineClasses = computed(() => ({ 'isOnline': accessControlInfo.value.nAccessControlOnline > 0, 'isOffline': accessControlInfo.value.nAccessControlOnline === 0, 'zero-value': accessControlInfo.value.nAccessControlOnline === 0, 'positive-value': accessControlInfo.value.nAccessControlOnline > 0 }))
 
-// ── API 方法 ─────────────────────────────────────────────────────
 const getDiscoverServiceSite = async () => {
   const res = await GetDiscoverServiceSiteApi()
   if (res.status === 200) siteName.value = res.data.result?.DeviceName ?? 'System'
@@ -308,7 +309,7 @@ const getWorkServer = async () => {
     const list = res.data.result.list
     workServerList.value = list
     workServer.value = list[0]?.nodeId ?? ''
-    // 优先找 main 节点，找不到则用第一个节点
+    // Prefer the main node; fall back to the first node if not found
     const mainNode = list.find((item: any) => item.nodeType === 'main') ?? list[0]
     if (mainNode) await getRunTime(mainNode.nodeId)
     await getRunInfo()
@@ -328,7 +329,7 @@ const getRunInfo = async () => {
   if (res.status === 200 && res.data) {
     const d = res.data
     const nIn = parseInt(d.strNetworkInK) || 0, nOut = parseInt(d.strNetworkOutK) || 0
-    // 首次加载时用真实数据填满60个点，避免图表全显示为0
+    // On first load, pre-fill all 60 data points with the real value to avoid the chart rendering as all zeros
     if (networkDataIn.value.every(v => v === 0) && nIn > 0) {
       networkDataIn.value.fill(nIn)
       networkDataOut.value.fill(nOut)
@@ -380,7 +381,7 @@ const networkRealtimeUpdate = () => {
     const res = await GetRunInfoApi(workServer.value)
     if (res.status === 200) {
       const d = res.data
-      // 兼容两种字段名：strNetworkInK（字符串）和 nNetworkInK（整数）
+      // Handle both field names: strNetworkInK (string) and nNetworkInK (integer)
       const nIn = parseInt(d.strNetworkInK || d.nNetworkInK) || 0
       const nOut = parseInt(d.strNetworkOutK || d.nNetworkOutK) || 0
       networkDataIn.value.push(nIn); networkDataIn.value.shift(); networkDataOut.value.push(nOut); networkDataOut.value.shift()
@@ -448,7 +449,7 @@ onBeforeUnmount(() => {
   if (resizeTimer) clearTimeout(resizeTimer)
   window.removeEventListener('resize', handleResize)
   networkChart?.dispose(); cpuChart?.dispose(); alarmChart?.dispose(); memChart?.dispose()
-  // 必须置 null，否则下次进入 Home 时初始化判断会失败
+  // Must null these refs so chart initialization checks work correctly on the next Home entry
   networkChart = null
   cpuChart = null
   alarmChart = null
@@ -465,63 +466,72 @@ onBeforeUnmount(() => {
   flex-direction: column;
   overflow-y: auto;
 
-  .home-top {
-    height: 120px;
-    padding: 20px;
+  .home-header {
+    display: flex;
     align-items: center;
+    gap: 20px;
+    padding: 10px 20px;
+  }
+
+  .home-top {
+    flex-shrink: 0;
+    padding: 10px;
     font-family: Inter, Inter;
     font-style: normal;
     text-transform: none;
     .greeting {
-      height: 40px;
-      line-height: 40px;
+      height: 36px;
+      line-height: 36px;
       font-weight: 400;
-      font-size: 32px;
+      font-size: 26px;
     }
     .datetime {
-      height: 40px;
-      line-height: 40px;
-      font-size: 20px;
+      height: 28px;
+      line-height: 28px;
+      font-size: 16px;
     }
   }
 
+  .home-spacer {
+    height: 170px; 
+    flex-shrink: 0;
+  }
+
   .home-tabs {
-    height: 130px;
-    padding: 20px;
+    flex: 1;
     display: flex;
-    gap: 40px;
+    gap: 16px;
     justify-content: space-between;
     .home-tab-item {
       position: relative;
       flex: 1;
-      padding: 20px;
+      padding: 12px 16px;
       border-radius: 8px;
       cursor: pointer;
       .home-tab-name {
-        margin-bottom: 5px;
-        line-height: 26px;
-        height: 26px;
+        margin-bottom: 4px;
+        line-height: 22px;
+        height: 22px;
         .icon {
-          font-size: 26px;
+          font-size: 20px;
         }
         .name {
-          font-size: 14px;
+          font-size: 13px;
         }
       }
       .home-tab-children {
-        width: 270px;
-        font-size: 12px;
+        font-size: 11px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .jump {
         position: absolute;
-        right: 30px;
-        top: 35%;
+        right: 14px;
+        top: 50%;
         transform: translateY(-50%);
         .iconfont {
-          font-size: 20px;
+          font-size: 16px;
         }
       }
     }
@@ -549,15 +559,6 @@ onBeforeUnmount(() => {
           display: flex;
           justify-content: space-between;
           padding: 40px;
-
-          :deep(.el-select__wrapper) {
-            background: #F1F3F4 !important;
-            --el-text-color-regular: #333333;
-            --el-text-color-placeholder: #606266;
-            --el-select-input-color: #333333;
-            --el-select-disabled-color: #333333;
-          }
-          :deep(.el-select__selected-item) { color: #333333 !important; }
         }
         .alarm-main {
           display: flex;
@@ -726,7 +727,7 @@ onBeforeUnmount(() => {
     }
   }
 
-  // ── Light mode colors (default) ───────────────────────────────────────
+  // Light mode colors (default)
   background: #F1F3F4;
 
   .home-top {
@@ -751,14 +752,11 @@ onBeforeUnmount(() => {
   .home-event .home-event-content {
     .content-left {
       background: #ffffff;
-      .alarm-header :deep(.el-select__wrapper) {
-        background: #F1F3F4 !important;
-        --el-text-color-regular: #333333;
-        --el-text-color-placeholder: #606266;
-        --el-select-input-color: #333333;
-        --el-select-disabled-color: #333333;
+      .alarm-header {
+        :deep(.el-select__wrapper) {
+          background: #F1F3F4 !important;
+        }
       }
-      .alarm-header :deep(.el-select__selected-item) { color: #333333 !important; }
       .alarm-footer div:nth-child(1) {
         color: #0399FE;
         background: rgba(147, 211, 255, 0.1);
@@ -795,11 +793,11 @@ onBeforeUnmount(() => {
     }
   }
 
-  // ── Dark theme overrides ───────────────────────────────────────────────
+  // Dark theme overrides
   &.c-dark-theme {
     background: #1D1D1D;
     .home-top {
-      .greeting { color: #0399FE; }   // 与 uscweb 对齐：深色模式 greeting 也是蓝色
+      .greeting { color: #0399FE; }   
       .datetime  { color: #999999; }
     }
     .home-tabs .home-tab-item {
@@ -807,7 +805,7 @@ onBeforeUnmount(() => {
       box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.2);
       .home-tab-name { color: #FFFFFF; }
       .home-tab-children { color: #FFFFFF; }
-      .jump .iconfont { color: #0399FE; }  // youshang 图标深色模式也是蓝色
+      .jump .iconfont { color: #0399FE; }  
       &:hover { background: #31373D; box-shadow: 0 0 0 1px #0399FE; }
     }
     .home-event .home-event-content {
@@ -816,10 +814,9 @@ onBeforeUnmount(() => {
         .alarm-header {
           :deep(.el-select__wrapper) {
             background: #3D3D3D !important;
-            --el-text-color-regular: #FFFFFF;
-            --el-text-color-placeholder: rgba(255,255,255,0.5);
-            --el-select-input-color: rgba(255,255,255,0.5);
           }
+          :deep(.el-select__selected-item) { color: #FFFFFF; }
+          :deep(.el-select__placeholder)   { color: rgba(255,255,255,0.5); }
         }
         .alarm-footer div:nth-child(1) { color: #0399FE; background: rgba(147, 211, 255, 0.1); }
       }

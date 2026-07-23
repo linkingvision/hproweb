@@ -120,7 +120,7 @@
             <i v-if="getCellCamera(cell.id)"
                class="iconfont icon-fangda6"
                :class="{ 'expend-active': cell3DZoomId === cell.id }"
-               title="3D Zoom"
+               :title="t('Liveview.live_expendarea')"
                @click.stop="toggle3DZoom(cell.id)"></i>
             <!-- 9. 电子放大 -->
             <i v-if="getCellCamera(cell.id)"
@@ -151,8 +151,14 @@
                        style="flex:1;margin-left:10px;" />
           </div>
 
-          <!-- 电子放大画布 -->
+          <!-- 电子放大主画布（全格，显示放大区域）对照 uscweb canvas2id -->
           <canvas :id="'ezoom-h'+cell.id" class="cell-ezoom-canvas"
+                  :class="{ active: cellEZoomId === cell.id }"></canvas>
+          <!-- 缩略图（右下角）对照 uscweb canvas3id -->
+          <canvas :id="'ezoom-mini-h'+cell.id" class="cell-ezoom-mini-canvas"
+                  :class="{ active: cellEZoomId === cell.id }"></canvas>
+          <!-- 选框 overlay（叠在缩略图上）对照 uscweb canvasid -->
+          <canvas :id="'ezoom-sel-h'+cell.id" class="cell-ezoom-sel-canvas"
                   :class="{ active: cellEZoomId === cell.id }"></canvas>
 
           <!-- 3D 框选画布 -->
@@ -741,47 +747,84 @@ const applyCustomLayout = (item: any) => {
 }
 
 // ─── Tree loading ─────────────────────────────────────────────────────────
-const flattenRoot = (parts: any[]): TreeNode[] => {
-  const out: TreeNode[] = []
-  parts.forEach(p => {
-    if (p.children?.length) out.push(...flattenRoot(p.children))
-    p.dev?.forEach((d: any) => out.push({
+// buildTree: 递归构建子分区层级
+const buildTree = (parts: any[]): TreeNode[] => {
+  return parts.map(p => {
+    const children: TreeNode[] = []
+    if (p.children?.length) children.push(...buildTree(p.children))
+    p.dev?.forEach((d: any) => children.push({
       id: `dev_${d.devId}`, label: d.name, type: 'device', online: d.online, data: d,
-      children: [{ id: 'placeholder', label: '', type: 'device', data: null }], isLeaf: false
+      children: [], isLeaf: false,
     }))
-    p.view?.forEach((v: any) => out.push({
-      id: `view_${v.viewId}`, label: v.viewName, type: 'view', data: v, isLeaf: true
+    p.view?.forEach((v: any) => children.push({
+      id: `view_${v.viewId}`, label: v.viewName, type: 'view', data: v, isLeaf: true,
     }))
+    return {
+      id: `part_${p.devPartitionId}`,
+      label: p.devPartitionName,
+      type: 'partition',
+      data: p,
+      isLeaf: false,
+      children,
+    } as TreeNode
+  })
+}
+
+// extractDevices: 从树中按引用提取所有设备节点
+const extractDevices = (nodes: TreeNode[]): TreeNode[] => {
+  const out: TreeNode[] = []
+  nodes.forEach(n => {
+    if (n.type === 'device' && !n.isDeviceChannel) out.push(n)
+    if (n.children?.length) out.push(...extractDevices(n.children))
   })
   return out
 }
 
 const loadTree = async () => {
   const res = await GetDevPartitionApi()
-  if (res.status !== 200 || res.data.code !== 0) return
-  const list = flattenRoot(res.data.result)
-  const devices = list.filter(n => n.type === 'device' && n.data?.token)
-  for (let i = 0; i < devices.length; i += 3) {
-    await Promise.allSettled(devices.slice(i, i + 3).map(async item => {
+  if (res.status !== 200 || !res.data?.result?.length) return
+  const root = res.data.result[0]
+
+  // 对照 uscweb DevicePartitionData[0].children：Root 节点本身不显示，
+  // 从 Root 的子分区 + 直属设备开始构建
+  const tree: TreeNode[] = []
+  if (root.children?.length) tree.push(...buildTree(root.children))
+  root.dev?.forEach((d: any) => tree.push({
+    id: `dev_${d.devId}`, label: d.name, type: 'device', online: d.online, data: d,
+    children: [], isLeaf: false,
+  }))
+
+  // 从同一份树对象中按引用提取设备节点，确保通道加载后直接反映到树里
+  const deviceNodes = extractDevices(tree)
+  for (let i = 0; i < deviceNodes.length; i += 3) {
+    await Promise.allSettled(deviceNodes.slice(i, i + 3).map(async item => {
       if (deviceCache.has(item.data.token)) {
-        const c = deviceCache.get(item.data.token)!
-        item.children = c.length ? c : undefined; item.isLeaf = !c.length; return
+        const cached = deviceCache.get(item.data.token)!
+        item.children = cached.length ? cached : undefined
+        item.isLeaf  = !cached.length
+        return
       }
       const r = await GetDeviceChannels(item.data.token)
-      if (r.status === 200 && r.data.code === 0 && r.data.result.length) {
-        const chs = r.data.result.map((ch: any, i: number) => ({
-          id: `ch_${item.data.devId}_${i}`, label: ch.name || `ch ${i+1}`,
-          type: 'device', data: ch, isLeaf: true, isDeviceChannel: true, online: ch.online
+      if (r.status === 200 && r.data.code === 0 && r.data.result?.length) {
+        const chs = r.data.result.map((ch: any, idx: number) => ({
+          id: `ch_${item.data.devId}_${idx}`, label: ch.name || `ch ${idx + 1}`,
+          type: 'device', data: ch, isLeaf: true, isDeviceChannel: true, online: ch.online,
         }))
-        deviceCache.set(item.data.token, chs); item.children = chs; item.isLeaf = false
-        item.totalCount = chs.length
+        deviceCache.set(item.data.token, chs)
+        item.children    = chs
+        item.isLeaf      = false
+        item.totalCount  = chs.length
         item.onlineCount = chs.filter((c: any) => c.online).length
-      } else { deviceCache.set(item.data.token, []); item.children = undefined; item.isLeaf = true }
+      } else {
+        deviceCache.set(item.data.token, [])
+        item.children = undefined
+        item.isLeaf   = true
+      }
     }))
   }
-  const keys = list.filter(n => n.type === 'device' && !n.isDeviceChannel).map(n => n.id)
-  expandedKeys.value = keys
-  treeData.value = list
+
+  expandedKeys.value = deviceNodes.map(n => n.id)
+  treeData.value = tree
 }
 
 const refreshTree = () => { deviceCache.clear(); loadTree() }
@@ -1482,11 +1525,15 @@ const toggle3DZoom = (cellId: string) => {
   if (cell3DZoomId.value === cellId) {
     cell3DZoomId.value = ''
     _clear3DCanvas(cellId)
+    // 对照 uscweb：退出时弹窗提示
+    ElMessage({ message: t('Liveview.live_expendarea_exit'), type: 'info', duration: 2000 })
   } else {
     // 互斥：关电子放大
     if (cellEZoomId.value) toggleEZoom(cellEZoomId.value)
     cell3DZoomId.value = cellId
     cell3DZoomState[cellId] = { drawing: false, x0: 0, y0: 0, x1: 0, y1: 0 }
+    // 对照 uscweb：进入时弹窗提示操作说明
+    ElMessage({ message: t('Liveview.live_expendarea_enter'), type: 'info', duration: 3000 })
   }
 }
 
@@ -1539,8 +1586,7 @@ const on3DMouseUp = (cellId: string, e: MouseEvent) => {
     try { PtzApi(cam.token, 'selzoomin', ptzSpeed.value) } catch {}
   }
   _clear3DCanvas(cellId)
-  // 框选完成后自动退出 3D 模式
-  cell3DZoomId.value = ''
+  // 对照 uscweb：框选完成后保持3D模式，用户可继续框选，需再次点击按钮才退出
 }
 
 const on3DMouseLeave = (cellId: string) => {
@@ -1548,42 +1594,164 @@ const on3DMouseLeave = (cellId: string) => {
   if (st?.drawing) { st.drawing = false; _clear3DCanvas(cellId) }
 }
 
-// ─── 悬浮按钮：电子放大（2× 中心裁剪）────────────────────────────────────
+// ─── 悬浮按钮：电子放大/画中画（严格对照 uscweb discanvas/videocanvas）────────
+// canvas 结构与 uscweb 一一对应：
+//   ezoom-h    ↔ canvas2id  全格放大视图
+//   ezoom-mini-h ↔ canvas3id 右下角缩略图（只绘视频帧）
+//   ezoom-sel-h  ↔ canvasid  选框 overlay（叠在缩略图上，只在鼠标/滚轮事件时重绘）
 const cellEZoomId     = ref('')
-const cellEZoomTimers = new Map<string, number>()
+const cellEZoomTimers = new Map<string, { interval: ReturnType<typeof setInterval>; cleanup: () => void }>()
+
+// 辅助：绘制选框 indicator（对照 uscweb context.drawImage(img, x, y, disW, disH)）
+// 我们用灰色半透明矩形代替 2000.png
+const _drawSelIndicator = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) => {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+  ctx.fillStyle   = 'rgba(120, 120, 120, 0.30)'
+  ctx.fillRect(x, y, w, h)
+  ctx.strokeStyle = 'rgba(200, 200, 200, 0.85)'
+  ctx.lineWidth   = 1.5
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1)
+}
+
+const _stopEZoom = (cellId: string) => {
+  cellEZoomId.value = ''
+  const entry = cellEZoomTimers.get(cellId)
+  if (entry) { clearInterval(entry.interval); entry.cleanup(); cellEZoomTimers.delete(cellId) }
+  ;['ezoom-h', 'ezoom-mini-h', 'ezoom-sel-h'].forEach(pfx => {
+    const c = document.getElementById(pfx + cellId) as HTMLCanvasElement | null
+    c?.getContext('2d')?.clearRect(0, 0, c.width, c.height)
+  })
+}
 
 const toggleEZoom = (cellId: string) => {
-  if (cellEZoomId.value === cellId) {
-    cellEZoomId.value = ''
-    const h = cellEZoomTimers.get(cellId)
-    if (h !== undefined) { cancelAnimationFrame(h); cellEZoomTimers.delete(cellId) }
-    const c = document.getElementById('ezoom-h' + cellId) as HTMLCanvasElement | null
-    if (c) c.getContext('2d')?.clearRect(0, 0, c.width, c.height)
-  } else {
-    // 互斥：关 3D 框选
-    if (cell3DZoomId.value) toggle3DZoom(cell3DZoomId.value)
-    const cam = cameraMap.value.get(cellId)
-    if (!cam) return
-    cellEZoomId.value = cellId
-    nextTick(() => {
-      const container = document.getElementById('h' + cellId)
-      const c = document.getElementById('ezoom-h' + cellId) as HTMLCanvasElement | null
-      if (!c || !container) return
-      c.width = container.offsetWidth; c.height = container.offsetHeight
-      const _loop = () => {
-        if (cellEZoomId.value !== cellId) return
-        const video = document.getElementById(cam.videoid) as HTMLVideoElement | null
-        if (video && video.readyState >= 2 && video.videoWidth > 0) {
-          const sw = video.videoWidth / 2
-          const sh = video.videoHeight / 2
-          const sx = sw / 2; const sy = sh / 2
-          c.getContext('2d')?.drawImage(video, sx, sy, sw, sh, 0, 0, c.width, c.height)
-        }
-        cellEZoomTimers.set(cellId, requestAnimationFrame(_loop))
+  if (cellEZoomId.value === cellId) { _stopEZoom(cellId); return }
+
+  // 互斥：关 3D 框选
+  if (cell3DZoomId.value) toggle3DZoom(cell3DZoomId.value)
+  const cam = cameraMap.value.get(cellId)
+  if (!cam) return
+  cellEZoomId.value = cellId
+
+  nextTick(() => {
+    const container = document.getElementById('h' + cellId)
+    const video  = document.getElementById(cam.videoid) as HTMLVideoElement | null
+    const canvas2 = document.getElementById('ezoom-h' + cellId)    as HTMLCanvasElement | null
+    const canvas3 = document.getElementById('ezoom-mini-h' + cellId) as HTMLCanvasElement | null
+    const canvas  = document.getElementById('ezoom-sel-h' + cellId)  as HTMLCanvasElement | null
+    if (!canvas2 || !canvas3 || !canvas || !container) return
+
+    // 尺寸（对照 uscweb：缩略图 = 格子的 1/4）
+    const vw = container.offsetWidth
+    const vh = container.offsetHeight
+    const width  = Math.floor(vw / 4)   // 对照 uscweb let width
+    const height = Math.floor(vh / 4)   // 对照 uscweb let height
+
+    canvas2.width  = vw;    canvas2.height  = vh
+    canvas3.width  = width; canvas3.height  = height
+    canvas.width   = width; canvas.height   = height
+
+    const context2 = canvas2.getContext('2d')!
+    const context3 = canvas3.getContext('2d')!
+    const context  = canvas.getContext('2d')!
+
+    // 对照 uscweb：let x=0,y=0,disX=0,disY=0,disW=width,disH=height
+    let x = 0, y = 0, disX = 0, disY = 0
+    let disW = width, disH = height
+
+    // ── setInterval：只更新放大视图 + 缩略图（对照 uscweb captureFrame）────
+    const intervalId = setInterval(() => {
+      if (!video || video.paused || video.ended || !video.videoWidth) return
+      const resolutionw = video.videoWidth
+      const resolutionh = video.videoHeight
+      // 全幅时归零（对照 uscweb if disW/width==1）
+      if (disW === width) { disX = 0; disY = 0 }
+      // 边界钳制（对照 uscweb boundary check）
+      if (resolutionw * disW / width > resolutionw - disX)
+        disX = resolutionw - resolutionw * disW / width
+      if (resolutionh * disH / height > resolutionh - disY)
+        disY = resolutionh - resolutionh * disH / height
+      // canvas2：放大区域铺满（对照 uscweb context2.drawImage）
+      context2.clearRect(0, 0, vw, vh)
+      context2.drawImage(video, disX, disY,
+        resolutionw * disW / width, resolutionh * disH / height,
+        0, 0, vw, vh)
+      // canvas3：完整缩略图（对照 uscweb context3.drawImage）
+      context3.clearRect(0, 0, width, height)
+      context3.drawImage(video, 0, 0, width, height)
+    }, 40)
+
+    // ── 选框初始绘制（全幅时不绘，初始状态同 uscweb）───────────────────────
+    // （uscweb 初始也不绘选框，只有鼠标按下后才出现）
+
+    // ── 鼠标事件（对照 uscweb canvas.onmousedown/onmousemove/onmouseup）────
+    // 拖拽：以鼠标点为中心定位选框，配合边界钳制（uscweb 同样逻辑）
+    const clampPos = (mx: number, my: number) => {
+      let nx = mx, ny = my
+      if (nx <= disW / 2)                      nx = 0
+      else if (nx < width  - disW / 2)         nx = nx - disW / 2
+      else                                     nx = width  - disW
+      if (ny <= disH / 2)                      ny = 0
+      else if (ny < height - disH / 2)         ny = ny - disH / 2
+      else                                     ny = height - disH
+      return { nx, ny }
+    }
+
+    const onSelDown = (e: MouseEvent) => {
+      const r  = canvas.getBoundingClientRect()
+      const mx = e.clientX - r.left
+      const my = e.clientY - r.top
+      const { nx, ny } = clampPos(mx, my)
+      x = nx; y = ny
+      // 对照 uscweb mousedown：disX = resolutionw / disW * x
+      disX = (video?.videoWidth  ?? 0) / disW * x
+      disY = (video?.videoHeight ?? 0) / disH * y
+      _drawSelIndicator(context, x, y, disW, disH)
+
+      canvas.onmousemove = (ev: MouseEvent) => {
+        const r2 = canvas.getBoundingClientRect()
+        const { nx: nx2, ny: ny2 } = clampPos(ev.clientX - r2.left, ev.clientY - r2.top)
+        x = nx2; y = ny2
+        // 对照 uscweb mousemove：disX = resolutionw / width * x
+        disX = (video?.videoWidth  ?? 0) / width  * x
+        disY = (video?.videoHeight ?? 0) / height * y
+        _drawSelIndicator(context, x, y, disW, disH)
       }
-      cellEZoomTimers.set(cellId, requestAnimationFrame(_loop))
+      canvas.onmouseup = () => { canvas.onmousemove = null; canvas.onmouseup = null }
+    }
+    canvas.addEventListener('mousedown', onSelDown)
+
+    // ── 滚轮（对照 uscweb canvas2.onmousewheel = canvas.onmousewheel）────────
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const stepW = width  / 4
+      const stepH = height / 4
+      if (e.deltaY < 0) {               // 向上 = 缩小选框 = 放大倍率
+        if (disW < width) { disW = Math.min(width,  disW + stepW); disH = Math.min(height, disH + stepH) }
+        else              { disW = width; disH = height }
+      } else {                          // 向下 = 放大选框 = 降低倍率
+        if (disW < width / 2) { disW = width / 4; disH = height / 4 }
+        else                  { disW = Math.max(width / 4, disW - stepW); disH = Math.max(height / 4, disH - stepH) }
+      }
+      // 滚轮后选框不超出边界（对照 uscweb if canvas.width - x < disW）
+      if (width  - x < disW) x = width  - disW
+      if (height - y < disH) y = height - disH
+      _drawSelIndicator(context, x, y, disW, disH)
+    }
+    canvas2.addEventListener('wheel', onWheel, { passive: false })
+    canvas.addEventListener('wheel',  onWheel, { passive: false })
+
+    // 清理
+    cellEZoomTimers.set(cellId, {
+      interval: intervalId,
+      cleanup: () => {
+        canvas.removeEventListener('mousedown', onSelDown)
+        canvas2.removeEventListener('wheel', onWheel)
+        canvas.removeEventListener('wheel',  onWheel)
+        canvas.onmousemove = null
+        canvas.onmouseup   = null
+      }
     })
-  }
+  })
 }
 
 // ─── 悬浮按钮：单格全屏 ───────────────────────────────────────────────────
@@ -1612,13 +1780,7 @@ const _onFullscreenChange = () => {
 // ─── stopCellExtra：清理单格额外状态 ─────────────────────────────────────
 const stopCellExtra = (cellId: string) => {
   if (cell3DZoomId.value === cellId) { cell3DZoomId.value = ''; _clear3DCanvas(cellId) }
-  if (cellEZoomId.value === cellId) {
-    cellEZoomId.value = ''
-    const h = cellEZoomTimers.get(cellId)
-    if (h !== undefined) { cancelAnimationFrame(h); cellEZoomTimers.delete(cellId) }
-    const c = document.getElementById('ezoom-h' + cellId) as HTMLCanvasElement | null
-    if (c) c.getContext('2d')?.clearRect(0, 0, c.width, c.height)
-  }
+  if (cellEZoomId.value === cellId) _stopEZoom(cellId)
   if (cellAudioVisible.value === cellId) cellAudioVisible.value = ''
 }
 
@@ -1981,7 +2143,9 @@ const doShoutwheat = (cellId: string) => {
         .catch(error ?? ((e: any) => console.warn('[doShoutwheat] getUserMedia error', e)))
     }
     audioback = new H5sPlayerAudBack({
-      protocol: window.location.protocol, host: userStore.WSROOT, rootpath: '/',
+      protocol: window.location.protocol,
+      host: window.location.host,   // 对照 uscweb：用 window.location.host 走代理，不直连后端
+      rootpath: '/',
       token: cam.token, session: userStore.session,
     })
     audioback.connect()
@@ -2337,11 +2501,24 @@ onBeforeUnmount(() => {
       .el-slider__button { width: 10px; height: 10px; border: 2px solid #409EFF; }
     }
   }
-  // 电子放大 / 3D 框选画布
+  // 电子放大主画布：全格放大视图（对照 uscweb canvas2id）
   .cell-ezoom-canvas {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 8; display: none;
+    &.active { display: block; pointer-events: auto; cursor: zoom-in; }
+  }
+  // 缩略图（对照 uscweb canvas3id）—— 纯视频帧，无交互
+  .cell-ezoom-mini-canvas {
+    position: absolute; bottom: 2px; right: 2px; z-index: 9;
+    display: none; pointer-events: none;
+    box-shadow: 0 0 4px rgba(0,0,0,0.8);
     &.active { display: block; }
+  }
+  // 选框 overlay（对照 uscweb canvasid）—— 叠在缩略图上，处理鼠标/滚轮
+  .cell-ezoom-sel-canvas {
+    position: absolute; bottom: 2px; right: 2px; z-index: 10;
+    display: none; cursor: crosshair;
+    &.active { display: block; pointer-events: auto; }
   }
   .cell-3dzoom-canvas {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -2545,6 +2722,17 @@ onBeforeUnmount(() => {
       display: flex;
       justify-content: flex-start;
       align-items: center;
+      // 对照 uscweb .liveview_group button { font-size:24px; margin:0 15px 0 0 }
+      .el-button {
+        padding: 0;
+        border: none;
+        background: none;
+        box-shadow: none;
+        font-size: 24px;
+        margin: 0 15px 0 0;
+        color: inherit;
+        &:hover { color: #0399FE; }
+      }
     }
   }
 

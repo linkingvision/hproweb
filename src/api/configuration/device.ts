@@ -131,3 +131,44 @@ export const DelDeviceApi = (data: delDeviceParams) => axios({
   method: 'DELETE',
   data
 })
+
+// ── Device Partition CRUD ────────────────────────────────────────────────────
+export interface AddDevPartitionParams {
+  parentId: number
+  devPartitionName: string
+  description: string
+}
+export const AddDevPartitionApi = (data: AddDevPartitionParams) => axios({
+  url: '/uapi/v1/DevPartition/Item',
+  method: 'POST',
+  data
+})
+
+export interface EditDevPartitionParams {
+  devPartitionId: number
+  parentId: number
+  devPartitionName: string
+  description: string
+}
+export const EditDevPartitionApi = (data: EditDevPartitionParams) => axios({
+  url: `/uapi/v1/DevPartition/Item/${data.devPartitionId}`,
+  method: 'PUT',
+  data
+})
+
+export interface DelDevPartitionParams {
+  ids: number[]
+}
+export const DelDevPartitionApi = (data: DelDevPartitionParams) => axios({
+  url: '/uapi/v1/DevPartition/Item',
+  method: 'DELETE',
+  data
+})
+
+export const MoveDevPartitionApi = (
+  origDevPartitionId: number,
+  toDevPartitionId: number
+) => axios({
+  url: `/uapi/v1/DevPartition/Move?origDevPartitionId=${origDevPartitionId}&toDevPartitionId=${toDevPartitionId}`,
+  method: 'GET'
+})

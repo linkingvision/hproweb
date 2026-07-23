@@ -2,7 +2,7 @@
   <div class="liveview_container grid-view" style="width:100%;">
     <div class="liveview">
 
-      <!-- ── 左侧设备树 ── -->
+      <!-- ── Left device tree ── -->
       <div class="liveview_left" :class="{'liveview_lefts': isTreeFold}">
         <div class="liveview_left_input" style="display:flex;align-items:center;padding:4px 8px;gap:6px;">
           <el-input :placeholder="t('Common.comm_filtration')" v-model="filterText" size="small" style="flex:1">
@@ -47,14 +47,14 @@
         </el-collapse>
       </div>
 
-      <!-- ── 右侧视频区 ── -->
+      <!-- ── Right video panel ── -->
       <div class="liveview_right" id="gv-videoPanel">
         <div style="width:100%;flex:1;min-height:0;display:flex;flex-direction:column;">
 
-          <!-- GridLayoutManager 挂载容器 -->
+          <!-- GridLayoutManager mount container -->
           <div class="liveview_right_video_hed" id="gv_video_hed"
             @drop.prevent="onDrop($event)" @dragover.prevent="onDragOver($event)">
-            <!-- 码率信息浮层 -->
+            <!-- Bitrate info overlay -->
             <div class="malv" :class="infoShow ? '' : 'malv-hide'">
               <div class="malv-close" @click="closeInfo">×</div>
               <div class="malv-left">
@@ -74,7 +74,7 @@
             </div>
           </div>
 
-          <!-- 回放控制区（仅回放模式显示） -->
+          <!-- Playback controls (visible in playback mode only) -->
           <div v-show="!isLiveview" class="control_area" style="width:100%;">
             <div class="timeline-box" style="width:100%;height:80px;padding:0;box-sizing:border-box;border:none;">
               <svg id="gv-timeline"></svg>
@@ -125,7 +125,7 @@
             </div>
           </div>
         </div>
-        <!-- 底部工具栏（在 liveview_right 内，仅覆盖视频区宽度，居中精准） -->
+        <!-- Bottom toolbar (inside liveview_right, spans video panel width only) -->
         <div class="liveview_footer">
           <div class="BlankPlaceholder"></div>
           <div class="show-play-replay">
@@ -141,12 +141,11 @@
         </div>
       </div>
 
-      <!-- 树折叠时的展开按钮 -->
       <div v-if="isTreeFold" class="TreeFold" @click="toggleFold">
         <i class="iconfont icon-liebiao"></i>
       </div>
 
-      <!-- PTZ 云台面板 -->
+      <!-- PTZ camera control panel -->
       <div class="yuntai" :class="ptzShow ? '' : 'yuntai-hide'">
         <div class="header">
           <span>{{ t('Liveview.live_ptz') }}</span>
@@ -260,7 +259,6 @@ const pickerOptions = {
   }
 }
 
-// 音量变化时同步到所有播放器
 watch(volumeVal, (val) => {
   isPlayingArr.value.forEach(item => {
     try { item.v1?.setVolume?.(val) } catch {}
@@ -404,7 +402,6 @@ const onDrop = async (ev: DragEvent) => {
   }
   const drag = dragData.value
   if (drag.videoid) {
-    // 摄像头拖入
     let recEnable: boolean | undefined
     try {
       const res = await RecEnableApi(drag.token)
@@ -432,7 +429,7 @@ const onDrop = async (ev: DragEvent) => {
     isPlayingArr.value.push(obj)
     selectedSDK('G' + drag.videoid)
     markNodePlaying(drag.token)
-    // 回放模式下拖入画面后，同步播放按钮为"正在播放"状态（pbconf.autoplay:'true'）
+    // In playback mode, after a stream is dragged in, sync the play button to playing state (pbconf.autoplay is 'true')
     if (!isLiveview.value) isPlaying.value = true
   } else if (drag.viewid) {
     loadViewInGrid(drag.viewid)
@@ -559,7 +556,7 @@ const closePlayContainer = (id: string) => {
   unmarkNodePlaying(obj.conf.token)
   isPlayingArr.value.splice(idx, 1)
   if (selectCellId.value === vid) { selectCellId.value = '' }
-  // 最后一格关闭后：重置播放状态，并清除时间轴上的蓝色录像色块
+  // After the last cell closes: reset play state and clear the recording segments on the timeline
   if (isPlayingArr.value.length === 0) {
     isPlaying.value = false
     if (timeline) {
@@ -627,8 +624,8 @@ const doShoutwheat = (id: string, audio: boolean) => {
     audioback?.disconnect(); audioback = null
   } else {
     audioback?.disconnect()
-    // AudBack SDK 用旧式 navigator.getUserMedia(constraints, success) 仅传2个参数，
-    // 但浏览器要求3个(constraints, success, error)，用 mediaDevices shim 修复。
+    // AudBack SDK uses the legacy navigator.getUserMedia(constraints, success) with only 2 args,
+    // but browsers require 3 (constraints, success, error). Shim via mediaDevices to fix this.
     ;(navigator as any).getUserMedia = (
       constraints: MediaStreamConstraints,
       success: (s: MediaStream) => void,
@@ -710,7 +707,7 @@ const closeAllVideo = () => {
   if (!isLiveview.value && timeline) {
     timeline.options.name = ''; timeline._initEventBarName?.(); timeline.updateMotionEvents?.([], null)
   }
-  // 保持回放/实时模式不变，进度条由 v-show 的 length 条件控制隐藏
+  // Live/playback mode is unchanged; progress bar visibility is driven by v-show on array length
   isPlaying.value = false
   GridManager?.reloadStageConfiguration(async () => {})
 }
@@ -747,7 +744,7 @@ const initTimeline = () => {
   timeline = new Timeline('#gv-timeline', { timelineBackgroundColor: bg, singleEvent: true })
   timeline.updateBackgroundColor(bg)
 
-  // 拖拽时间轴结束 → 所有播放器跳转
+  // Timeline drag end: seek all players to the new position
   timeline.addEventListener('resume', (e: CustomEvent) => {
     if (!isPlayingArr.value.length) return
     const cur = isPlayingArr.value.find(item => item.conf.videoid === selectCellId.value)
@@ -758,7 +755,7 @@ const initTimeline = () => {
     }
   })
 
-  // 时间轴当前时间更新 → 同步日期选择器
+  // Timeline current time update: sync the date picker
   timeline.addEventListener('timelineCurrentTime', (e: CustomEvent) => {
     if (e.detail) xzvalue.value = new Date(e.detail)
   })
@@ -814,7 +811,7 @@ const resetPlayMode = () => {
     item.v1 = new H5sPlayerWS2(item.conf)
     item.v1.connect()
   })
-  // 回放模式且有画面时，同步播放按钮为"正在播放"状态（autoplay:'true' 已自动开始）
+  // In playback mode with active streams, sync the play button to playing state (autoplay:'true' starts immediately)
   if (!isLiveview.value && isPlayingArr.value.length > 0) {
     isPlaying.value = true
   }
@@ -1159,7 +1156,7 @@ onBeforeUnmount(() => {
   :deep(button) { padding: 0; border: none; background: none; box-shadow: none; font-size: 22px; color: #fff; cursor: pointer; &:hover { color: #0399FE; } }
 }
 
-// 回放控制区
+// Playback control area
 .control_area {
   width: 100%; display: flex; flex-direction: column; flex-shrink: 0;
   .control_btns {
@@ -1200,7 +1197,7 @@ onBeforeUnmount(() => {
 </style>
 
 <style lang="scss">
-/* 时间轴 SVG 全局样式（非 scoped） */
+/* Timeline SVG global styles (non-scoped, applied globally) */
 #gv-timeline {
   .center-pointer line { stroke: #FEEF03; stroke-width: 2; }
   .label text  { font-size: 14px; }

@@ -2,26 +2,22 @@ import { defineStore } from "pinia";
 import { ref, computed } from 'vue';
 
 export const useStore = defineStore('main', () =>{
-  // i18n locale
   const lang = ref<"en" | "zhchs" | "zhcht" | "pt" | "es">('en');
   function changeLang(newLang: "en" | "zhchs" | "zhcht" | "pt" | "es") {
     lang.value = newLang;
   }
 
-  // UI theme
   type ThemeType = 'darkblue' | 'c-dark-theme' | false
   const darkMode = ref<ThemeType>('c-dark-theme')
   function setDarkMode(value: ThemeType) {
     darkMode.value = value;
   }
 
-  // Sidebar visibility
   const sidebarShow = ref<boolean>(false)
   function setSidebarShow(flag: boolean) {
     sidebarShow.value = flag;
   }
 
-  // App version
   const version = ref<string>('');
   function setVersion(value: string) {
     version.value = value;
@@ -47,13 +43,13 @@ export const useStore = defineStore('main', () =>{
     H264CpuDecode.value = value;
   }
 
-  // 存储类型：'DeviceStorage' | 'CentralStorage'
+  // Storage type: 'DeviceStorage' | 'CentralStorage'
   const DefaultStorage = ref<string>('DeviceStorage');
   function setDefaultStorage(value: string) {
     DefaultStorage.value = value;
   }
 
-  // 是否显示存储切换 UI（由服务端系统配置控制）
+  // Whether to show the storage-switch UI (controlled by server-side system config)
   const PlaybackShowStorageMode = ref<boolean>(false);
   function setPlaybackShowStorageMode(value: boolean) {
     PlaybackShowStorageMode.value = value;

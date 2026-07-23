@@ -238,7 +238,7 @@ const props = {
   children: 'children'
 }
 let expandedKeys = ref<any[]>([])  // keys to expand by default
-let treeRef = ref<any>(null)  // tree component ref
+let treeRef = ref<any>(null)
 
 let IsTreeFold = ref(false) // left tree panel state
 
@@ -265,7 +265,7 @@ const selectCellId = ref<string>('')
 const mainSDKId = ref<string>('')
 const Audioslider = ref<number>(0)
 
-const initUPlayList = ():void => { // initialise UPlayerList
+const initUPlayList = ():void => {
   UPlayerList.value = new UPlayerListClass('#timeline');
   GridManager.value.initialize()
 }
@@ -321,7 +321,7 @@ const initGridLayout = ():void => {
       return false;
     };
     
-    // Wait for device tree to finish loading
+    // Wait for device tree data to be populated before restoring playback state
     const deviceDataReady = await waitForDeviceData();
     if (!deviceDataReady) {
       console.warn('Device tree data not ready, skipping playing status update');
@@ -368,7 +368,6 @@ const initGridLayout = ():void => {
           PlayBackArr.value.push(UPlayer);
           isPlaying.value = true;
           
-          // Update playback state
           if (nodeId) {
             updatePlayingStatus('add', nodeId);
             console.log('Auto-play: Updated playing status for node:', nodeId, 'token:', row.camera.token);
@@ -447,7 +446,6 @@ const Informationdata = async (id: string, token: string) => {
     }]
   }
 }
-// Close stats overlay
 const closeInformation = (): void => {
   informationshow.value = false;
   if (timerRunInfo.value) {
@@ -801,7 +799,6 @@ const handleDragStart = (node: any) => {
   console.log('drag =>', drag.value)
 }
 
-// Dragging
 const dragOver = (event: any) => {
   if (!isDrag.value && !drag.value.viewId || !isDrag.value && !drag.value.videoid) return;
   // const container: Element | null = document.getElementById('video_hed');
@@ -809,7 +806,6 @@ const dragOver = (event: any) => {
   const eventX = event.pageX;
   const eventY = event.pageY;
   let cellsToHighlight = [];
-  // Show grid
   GridManager.value.showLines()
   let gridPosition = GridManager.value.findGridPositionByCoordinates(eventX, eventY);
   if (gridPosition !== false) {
@@ -883,7 +879,6 @@ const dropTarget = async (event: any) => {
   
   // Trigger tree re-render to reflect playback state
   nextTick(() => {
-    // Force tree component update
     if (treeRef.value) {
       treeRef.value.$forceUpdate?.();
     }
@@ -905,9 +900,7 @@ const srcView = async (viewId: string) => {
 }
 
 const transformViewToGrid = (layoutData: any, viewEntities: any) => {
-  // Fetch layout info
   const layout = layoutData.setting.layoutView
-  // Build position map from viewEntities
 
   // Create position-to-entity map
   const positionMap: any = {};
@@ -926,8 +919,7 @@ const transformViewToGrid = (layoutData: any, viewEntities: any) => {
   // Determine grid size from max row/col in layout
   const maxRow = Math.max(...layout.map((cell: any) => cell.rowEnd)) - 1;
   const maxCol = Math.max(...layout.map((cell: any) => cell.colEnd)) - 1;
-  // Initialise 4x4 result grid
-  const result: any[] = Array.from({ length: maxRow }, () => 
+  const result: any[] = Array.from({ length: maxRow }, () =>
     Array.from({ length: maxCol }, () => ({}))
   )
 
@@ -940,7 +932,6 @@ const transformViewToGrid = (layoutData: any, viewEntities: any) => {
     return 0;
   });
 
-  // Convert each layout cell
   sortedLayout.forEach((cell: any) => {
     const row = cell.rowStart - 1;
     const col = cell.colStart - 1;
@@ -955,7 +946,6 @@ const transformViewToGrid = (layoutData: any, viewEntities: any) => {
     // Check if a video entity exists at this position
     const hasCamera = positionMap[posKey];
     
-    // Merged cell
     if (cell.merged) {
       const rowSpan = cell.rowEnd - cell.rowStart;
       const colSpan = cell.colEnd - cell.colStart;
@@ -1025,10 +1015,8 @@ const transformViewToGrid = (layoutData: any, viewEntities: any) => {
           }
         }
       }
-    } 
-    // Single cell
+    }
     else {
-      // Check if covered by a merged cell
       if (!processedCells.has(cellKey)) {
         if (hasCamera) {
           const videoId = uuid(8);
@@ -1061,7 +1049,6 @@ const transformViewToGrid = (layoutData: any, viewEntities: any) => {
     }
   })
 
-  // Convert each layout cell
   // layout.forEach((cell: any) => {
   //   const row = cell.rowStart - 1;
   //   const col = cell.colStart - 1;
@@ -1167,12 +1154,12 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             label: map.mapName,
             type: 'map',
             data: map,
-            isLeaf: true, // map is a leaf node
+            isLeaf: true,
             loaded: true
           });
         });
       }
-      
+
       // 4. Views — leaf nodes, no expand icon
       if (partition.view && partition.view.length > 0) {
         partition.view.forEach((view: any) => {
@@ -1181,7 +1168,7 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
             label: view.viewName,
             type: 'view',
             data: view,
-            isLeaf: true, // view is a leaf node
+            isLeaf: true,
             loaded: true
           });
         });
@@ -1230,12 +1217,12 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           label: map.mapName,
           type: 'map',
           data: map,
-          isLeaf: true, // map is a leaf node
+          isLeaf: true,
           loaded: true
         });
       });
     }
-    
+
     // 4. Views — leaf nodes, no expand icon
     if (partition.view && partition.view.length > 0) {
       partition.view.forEach((view: any) => {
@@ -1244,7 +1231,7 @@ const flattenRootNodes = (partitions: any[]): TreeNode[] => {
           label: view.viewName,
           type: 'view',
           data: view,
-          isLeaf: true, // view is a leaf node
+          isLeaf: true,
           loaded: true
         });
       });
@@ -1281,7 +1268,6 @@ const getDeviceList = async () => {
         await Promise.allSettled(
           batch.map(async (item) => {
             try {
-              // Check cache
               const cacheKey = item.data.token;
               if (deviceCache.has(cacheKey)) {
                 const cachedData = deviceCache.get(cacheKey);
@@ -1312,19 +1298,18 @@ const getDeviceList = async () => {
                   isDeviceChannel: true // mark as device channel
                 }));
                 
-                // Cache data
                 deviceCache.set(cacheKey, channels);
-                
+
                 item.children = channels;
                 item.loaded = true;
                 item.isLeaf = false;
               } else {
-                // Cache empty result
+                // Cache empty result to avoid re-fetching for devices with no channels
                 deviceCache.set(cacheKey, []);
-                
+
                 delete item.children;
                 item.loaded = true;
-                item.isLeaf = false; // mark as leaf
+                item.isLeaf = false;
               }
             } catch (error) {
               delete item.children;
@@ -1348,9 +1333,9 @@ const getDeviceList = async () => {
 }
 
 const xzvalue = ref<Date>(new Date())
-const customDateArr = ref<any>([])    // stores marked date array
+const customDateArr = ref<any>([])
 // let monthChangeHandler: EventListener | null = null;
-const input_ch = () => {    // triggered when date-picker value changes
+const input_ch = () => {
   if (!UPlayerList.value) return;
   UPlayerList.value.setAllPosition(xzvalue.value.getTime()).then(() => {
     UPlayerList.value.playAll(xzvalue.value.getTime());
@@ -1386,7 +1371,7 @@ const monthChange = async (panelDate: Date, type: 'month' | 'year') => {   // re
     markRecordDates(year, month)
   }
 }
-const SearchRecordCalendar = async (token: string, year: number, month: number) => {    // fetch recording dates for given year/month
+const SearchRecordCalendar = async (token: string, year: number, month: number) => {
   customDateArr.value = [];
   // $('.available').removeClass('custom_date_class');
   let res = await GetRecordCalendar(token, year, month);
@@ -1435,7 +1420,6 @@ const gotoLive = async () => {  // switch to live view
     isLiveview.value = true;
   } else {
     const notPlaybackArr = PlayingArr.value.filter(item => !PlayBackArr.value.includes(item))
-    // 
     await Promise.all(
       notPlaybackArr.map(item => {
         return new Promise<void>((resolve) => {
@@ -1505,7 +1489,7 @@ const resume = () => {
   isPlaying.value = !isPlaying.value;
 }
 
-const Alloffvideo = () => { // close all videos and cells
+const Alloffvideo = () => {
   if (!UPlayerList.value) return;
   if (PlayingArr.value.length == 0) return;
   const notPlaybackArr = PlayingArr.value.filter(item => !PlayBackArr.value.includes(item));
@@ -1593,22 +1577,19 @@ const updatePlayingStatus = (type: string, id: string) => {
       playingIdArr.value.push(id);
     }
   } else if (type == 'del') {
-    // Remove playback state
     playingIdArr.value = playingIdArr.value.filter(item => item !== id);
   }
   
   // console.log('playingIdArr after update =>', playingIdArr.value);
 }
 
-// Check if channel is playing
 const isChannelPlaying = (node: TreeNode) => {
   if (!node.data) return false;
-  
+
   // Check playback state on leaf/channel nodes and view nodes only
   // Prevent parent device nodes from showing playback state
   if (!node.isLeaf && !node.isDeviceChannel && node.type !== 'view') return false;
-  
-  // Check if node is in playing list
+
   const isPlaying = playingIdArr.value.includes(node.id);
   if (isPlaying) {
     console.log('isChannelPlaying', node.id, node.label);
@@ -1616,12 +1597,10 @@ const isChannelPlaying = (node: TreeNode) => {
   return isPlaying;
 };
 
-// Get node icon
 const getNodeIcon = (node: TreeNode) => {
   // console.log('getNodeIcon', node)
   switch (node.type) {
     case 'partition':
-      // Sub-partition nodes use icon-gen
       return 'icon-gen';
     case 'device':
       // Channel leaf nodes use camera icon
@@ -1638,21 +1617,17 @@ const getNodeIcon = (node: TreeNode) => {
       // Devices in dev use icon-Device
       return 'icon-Device';
     case 'map':
-      // Map nodes use icon-ditu
       return 'icon-ditu';
     case 'view':
-      // View nodes use icon-shipin
       return 'icon-shitu2';
     default:
       return 'icon-gen';
   }
 };
 
-// Get node CSS class
 const getNodeClass = (node: TreeNode) => {
   const classes = ['tree-node'];
   if (node.type === 'device') {
-    // Get online status
     const isOnline = node.online !== undefined ? node.online : (node.data && node.data.online);
     
     if (isOnline) {
@@ -1664,10 +1639,8 @@ const getNodeClass = (node: TreeNode) => {
   return classes.join(' ');
 };
 
-// Get node colour
 const getNodeColor = (node: TreeNode) => {
   if (node.type === 'device') {
-    // Get online status
     const isOnline = node.online !== undefined ? node.online : (node.data && node.data.online);
     return isOnline ? '1' : '0.6';
   }

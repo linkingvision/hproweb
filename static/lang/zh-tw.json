@@ -142,7 +142,20 @@
     "comm_select_date_time": "選擇日期",
     "comm_width": "寬",
     "comm_height": "高",
-    "comm_fps": "幀率"
+    "comm_fps": "幀率",
+    "comm_home": "首頁",
+    "comm_good_midnight": "夜深了",
+    "comm_good_early_morning": "早安",
+    "comm_good_morning": "早安",
+    "comm_good_noon": "午安",
+    "comm_good_afternoon": "午後好",
+    "comm_good_evening": "晚安",
+    "comm_last_time1": "最近1小時",
+    "comm_last_time12": "最近12小時",
+    "comm_last_time24": "最近24小時",
+    "comm_last_time1524": "最近15天",
+    "comm_last_time3024": "最近30天",
+    "comm_alarms_count": "number 條告警"
   },
   "Configuration": {
     "conf_advanced_features": "高級功能",
@@ -251,10 +264,16 @@
     "mon_live": "實時",
     "mon_playback": "回放"
   },
+  "Partition": {
+    "part_name": "分區名稱",
+    "part_id": "分區ID",
+    "part_parent": "父分區"
+  },
   "Router": {
     "router_analytics": "分析",
     "router_basic": "基本",
     "router_configuration": "配置",
+    "router_device_partition": "設備分區",
     "router_image_storage": "圖片儲存",
     "router_local_obj_storage": "本地對象儲存",
     "router_meta_storage": "元數據存儲",
@@ -378,6 +397,9 @@
     "live_playing": "正在播放",
     "live_video": "視頻",
     "live_ptz": "云台",
+    "live_expendarea": "區域放大",
+    "live_expendarea_enter": "進入區域放大模式，請拖拽選擇放大區域",
+    "live_expendarea_exit": "退出區域放大模式",
     "live_codec": "編碼格式",
     "live_sampleRate": "採樣率",
     "live_sampleBit": "採樣位",

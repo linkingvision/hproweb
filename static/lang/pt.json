@@ -141,7 +141,20 @@
     "comm_select_date_time": "Selecionar Data",
     "comm_width": "Largura",
     "comm_height": "Altura",
-    "comm_fps": "FPS"
+    "comm_fps": "FPS",
+    "comm_home": "Início",
+    "comm_good_midnight": "Boa madrugada",
+    "comm_good_early_morning": "Bom dia",
+    "comm_good_morning": "Bom dia",
+    "comm_good_noon": "Boa tarde",
+    "comm_good_afternoon": "Boa tarde",
+    "comm_good_evening": "Boa noite",
+    "comm_last_time1": "Última hora",
+    "comm_last_time12": "Últimas 12 horas",
+    "comm_last_time24": "Últimas 24 horas",
+    "comm_last_time1524": "Últimos 15 dias",
+    "comm_last_time3024": "Últimos 30 dias",
+    "comm_alarms_count": "number alarme(s)"
   },
   "Configuration": {
     "conf_advanced_features": "Recursos avançados",
@@ -250,10 +263,16 @@
     "mon_live": "Ao vivo",
     "mon_playback": "Reprodução"
   },
+  "Partition": {
+    "part_name": "Nome da Partição",
+    "part_id": "ID da Partição",
+    "part_parent": "Partição Pai"
+  },
   "Router": {
     "router_analytics": "Análise",
     "router_basic": "Básico",
     "router_configuration": "Configuração",
+    "router_device_partition": "Partição de Dispositivo",
     "router_image_storage": "Armazenamento de imagens",
     "router_local_obj_storage": "Armazenamento de objetos local",
     "router_meta_storage": "Armazenamento de metadados",
@@ -377,6 +396,9 @@
     "live_playing": "Reproduzindo",
     "live_video": "Vídeo",
     "live_ptz": "PTZ",
+    "live_expendarea": "Ampliação de Região",
+    "live_expendarea_enter": "Entrar no modo de zoom de região, arraste para selecionar a área",
+    "live_expendarea_exit": "Sair do modo de zoom de região",
     "live_codec": "Codec",
     "live_sampleRate": "Taxa de amostragem",
     "live_sampleBit": "Bits de amostra",

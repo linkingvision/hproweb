@@ -3,7 +3,6 @@
     <div class="upperPart">
       <div style="width:50%;">
 
-        <!-- 标题行：左侧标题，右侧头像+用户名 -->
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div class="Aside_title">{{ t('SetUser.set_user_config') }}</div>
           <div style="margin-right:10%; margin-bottom:20px; display:flex; align-items:center;">
@@ -23,7 +22,7 @@
 
         <div class="Aside_content">
 
-          <!-- ── 协议（锁死 WS2）+ WS2 专属 ────────────────────── -->
+          <!-- ── Protocol (locked to WS2) + WS2-specific settings ──── -->
           <div class="Aside_content_part">
             <div class="Aside_content_top">
               <div class="Aside_content_title">{{ t('SetUser.set_liveview_protocol') }}: {{ proto }}</div>
@@ -43,7 +42,7 @@
             </div>
           </div>
 
-          <!-- WS2 专属（协议锁死，始终显示） -->
+          <!-- WS2-specific settings (protocol locked, always shown) -->
           <div class="Aside_content_part">
             <div class="Aside_content_buttom">
               <div class="Aside_content_title">{{ t('SetUser.set_buffertime') }}</div>
@@ -60,7 +59,7 @@
             </div>
           </div>
 
-          <!-- ── 水印 ───────────────────────────────────────────── -->
+          <!-- ── Watermark ─────────────────────────────────────────── -->
           <div class="Aside_content_part">
             <div class="Aside_content_buttom">
               <div class="Aside_content_title">{{ t('SetUser.set_watermark') }}</div>
@@ -93,7 +92,7 @@
             </div>
           </div>
 
-          <!-- ── 显示 / 画质 ────────────────────────────────────── -->
+          <!-- ── Display / Image quality ───────────────────────────── -->
           <div class="Aside_content_part">
             <div class="Aside_content_buttom">
               <div class="Aside_content_title">{{ t('SetUser.set_display_disable') }}</div>
@@ -115,7 +114,7 @@
             </div>
           </div>
 
-          <!-- ── 自动登出 ───────────────────────────────────────── -->
+          <!-- ── Auto logout ────────────────────────────────────────── -->
           <div class="Aside_content_part">
             <div class="Aside_content_buttom">
               <div class="Aside_content_title">{{ t('SetUser.set_web_client_auto-logout_time') }}</div>
@@ -134,7 +133,7 @@
             </div>
           </div>
 
-          <!-- ── 解码器（只读）/ 宽高比 / 视频背景 ───────────────── -->
+          <!-- ── Decoder (read-only) / Aspect ratio / Video background ── -->
           <div class="Aside_content_part">
             <div class="Aside_content_buttom" style="margin-bottom:26px;">
               <div class="Aside_content_title1">
@@ -255,7 +254,6 @@
       </div>
     </div>
 
-    <!-- 底部按钮，居中对齐 -->
     <div class="Cluster_but LowerPart" style="display:flex; justify-content:center;">
       <el-button class="cancelBtn" @click="loadAll">{{ t('CommTableEdit.comm_cancel') }}</el-button>
       <el-button class="saveBtn" @click="updateConfig">{{ t('CommTableEdit.comm_save') }}</el-button>
@@ -278,42 +276,42 @@ const { t } = useI18n()
 const store = useStore()
 const userStore = useUserStore()
 
-// ─── 用户头像 ─────────────────────────────────────────────────────────────────
+// ─── User avatar ─────────────────────────────────────────────────────────────
 const avatar     = ref('')
 const acronym    = ref(userStore.username.charAt(0).toUpperCase())
 const background = ref('#222222')
 
-// ─── 协议（锁死 WS2）─────────────────────────────────────────────────────────
+// ─── Protocol (locked to WS2) ────────────────────────────────────────────────
 const proto  = ref('WS2')
 const proto1 = ref('WS2')
 
-// ─── WS2 专属 ─────────────────────────────────────────────────────────────────
+// ─── WS2-specific settings ───────────────────────────────────────────────────
 const RBufferTime   = ref(String(store.RBufferTime || 0))
 const H264CpuDecode = ref(store.H264CpuDecode === 'true' || store.H264CpuDecode === true)
 
-// ─── 水印 ─────────────────────────────────────────────────────────────────────
+// ─── Watermark ────────────────────────────────────────────────────────────────
 const watermarkstring = ref(store.watermarkstring)
 const watermarktoggle = ref(store.watermarktoggle)
 
-// ─── RTC 引擎 ─────────────────────────────────────────────────────────────────
+// ─── RTC engine ───────────────────────────────────────────────────────────────
 const rtcEngine = ref(store.H5sRtcengine || 'v1')
 
-// ─── 显示 / 画质 ──────────────────────────────────────────────────────────────
+// ─── Display / Image quality ──────────────────────────────────────────────────
 const devicemarktoggle = ref(store.devicemarktoggle)
 const elqualitytoggle  = ref(store.elqualitytoggle)
 
-// ─── 自动登出 ─────────────────────────────────────────────────────────────────
+// ─── Auto logout ──────────────────────────────────────────────────────────────
 const WebclientAutoLogoutTime       = ref(store.WebclientAutoLogoutTime)
 const WebclientAutoLogoutTimeEnable = ref(store.WebclientAutoLogoutTimeEnable === 'true')
 
-// ─── 解码器（只读）────────────────────────────────────────────────────────────
+// ─── Decoder (read-only) ──────────────────────────────────────────────────────
 const websocketDecoder = ref('')
 const rtcDecoder       = ref('')
 
-// ─── 宽高比 ──────────────────────────────────────────────────────────────────
+// ─── Aspect ratio ─────────────────────────────────────────────────────────────
 const keepAspectRatio = ref(store.keepAspectRatio === 'true')
 
-// ─── 视频背景 ─────────────────────────────────────────────────────────────────
+// ─── Video background ─────────────────────────────────────────────────────────
 const VideoBackground = ref(2)   // 1=white 2=black 3=darkblue
 const bgColor         = ref(store.VideoBackgroundBlack)
 const predefineColors = ['#222222', '#494A4B', '#202731']
@@ -329,14 +327,14 @@ function resetBgColor() {
                 : '#494A4B'
 }
 
-// ─── 聚合 / 级联 ──────────────────────────────────────────────────────────────
+// ─── Map cluster / Cascade ────────────────────────────────────────────────────
 const mapCluster          = ref(store.mapCluster)
 const CascadeLoadingLevel = ref(String(store.CascadeLoadingLevel || 3))
 
-// ─── 回放模式 ─────────────────────────────────────────────────────────────────
+// ─── Playback mode ────────────────────────────────────────────────────────────
 const DefaultStorage = ref(store.DefaultStorage)
 
-// ─── 默认视图 ─────────────────────────────────────────────────────────────────
+// ─── Default view ─────────────────────────────────────────────────────────────
 const DefaultView = ref<string | number>(store.DefaultView)
 const canvasItems = [
   { icon: 'iconfont icon-a-1gongge',  value: 1 },
@@ -351,7 +349,7 @@ const canvasItems = [
   { icon: 'iconfont icon-a-25gongge', value: 25 },
 ]
 
-// ─── 默认地图（接口不存在时静默忽略）─────────────────────────────────────────
+// ─── Default map (silently ignored if API does not exist) ────────────────────
 const DefaultMap = ref<string | number>('')
 const mapList    = ref<{ mapId: number; mapName: string }[]>([])
 
@@ -364,7 +362,7 @@ async function loadMapList() {
   } catch { /* may not exist */ }
 }
 
-// ─── 默认分区 ─────────────────────────────────────────────────────────────────
+// ─── Default partition ────────────────────────────────────────────────────────
 const partitionTreeRef   = ref<InstanceType<typeof ElTree> | null>(null)
 const partitionType      = ref('')
 const partitionData      = ref<any[]>([])
@@ -374,7 +372,7 @@ const devData            = ref<any[]>([])
 const logicData          = ref<any[]>([])
 const treeProps          = { children: 'children', label: 'label' }
 
-// 将 DevPartition/List 返回的节点字段统一映射为 el-tree 所需格式
+// Maps node fields returned by DevPartition/List to the format required by el-tree
 function mapPartitionTree(nodes: any[]): any[] {
   return (nodes || []).map((n: any) => ({
     uuid:      String(n.devPartitionId ?? n.uuid ?? ''),
@@ -386,14 +384,14 @@ function mapPartitionTree(nodes: any[]): any[] {
 
 async function loadPartitions() {
   try {
-    // 设备分区：使用 hproweb 已有接口
+    // Device partition: uses the existing hproweb API endpoint
     const devRes: any = await axios({ url: '/uapi/v1/DevPartition/List?pageSize=100000', method: 'GET' })
     if (devRes?.status === 200 && devRes.data.code === 0) {
       devData.value = mapPartitionTree(devRes.data.result || [])
     }
   } catch { /* may not exist */ }
   try {
-    // 逻辑分区：接口暂不存在，静默忽略
+    // Logic partition: API does not exist yet, silently ignore
     const logicRes: any = await axios({ url: '/uapi/v1/LogicPartition/Tree', method: 'GET' })
     if (logicRes?.status === 200) logicData.value = logicRes.data.result || []
   } catch { /* may not exist */ }
@@ -416,7 +414,7 @@ function onTreeCheck(node: any, list: any) {
   defaultCheckedKeys.value = []
 }
 
-// ─── 读取用户头像 + 默认分区 ──────────────────────────────────────────────────
+// ─── Load user avatar + default partition ────────────────────────────────────
 async function loadUserInfo() {
   try {
     const res: any = await axios({
@@ -441,7 +439,7 @@ async function loadUserInfo() {
   } catch { /* may not exist */ }
 }
 
-// ─── 读取服务端用户配置 ───────────────────────────────────────────────────────
+// ─── Load server-side user config ────────────────────────────────────────────
 async function loadUserConfig() {
   try {
     const res: any = await GetUserConfigApi()
@@ -483,7 +481,7 @@ async function loadUserConfig() {
             DefaultMap.value = item.value ? Number(item.value) : ''; break
         }
       }
-      // 同步背景色选项
+      // Sync background color selection to match current theme
       if (store.darkMode === 'c-dark-theme') {
         VideoBackground.value = 2; bgColor.value = store.VideoBackgroundBlack
       } else if (store.darkMode === 'darkblue') {
@@ -497,7 +495,7 @@ async function loadUserConfig() {
   }
 }
 
-// ─── 保存 ─────────────────────────────────────────────────────────────────────
+// ─── Save ─────────────────────────────────────────────────────────────────────
 async function updateConfig() {
   const bgKey = VideoBackground.value === 3 ? 'VideoBackgroundDarkblue'
               : VideoBackground.value === 1 ? 'VideoBackgroundWhite'
@@ -565,7 +563,7 @@ async function updateConfig() {
   })
 }
 
-// ─── 初始化 ───────────────────────────────────────────────────────────────────
+// ─── Initialization ───────────────────────────────────────────────────────────
 async function loadAll() {
   websocketDecoder.value = H5sGetClientWSDecoder() || ''
   rtcDecoder.value       = H5sGetClientRTCDecoder() || ''
@@ -577,13 +575,13 @@ onMounted(loadAll)
 
 <style lang="scss" scoped>
 .Aside {
-  height: calc(100vh - 30px);  /* 30px = header 高度，撑满视口 */
+  height: calc(100vh - 30px);  /* 30px = header height, fills the full viewport */
   display: flex;
   flex-direction: column;
 
   .upperPart {
     flex: 1;
-    min-height: 0;       /* flex 子项必须，允许压缩后滚动 */
+    min-height: 0;       /* required for flex child to allow shrink-then-scroll */
     width: 100%;
     padding-left: 2%;
     padding-top: 2%;
@@ -673,7 +671,7 @@ onMounted(loadAll)
         }
 
         .button_watermark {
-          // 激活态：保留 primary 蓝色填充，去掉边框
+          // Active state: keeps primary blue fill, removes border
           font-size: 12px;
           padding: 2px 12px;
           border: none;
@@ -681,7 +679,7 @@ onMounted(loadAll)
         }
 
         .button_watermark1 {
-          // 非激活态：透明背景 + 蓝色边框（与主题色 #0399FE 一致）
+          // Inactive state: transparent background + blue border (matches theme color #0399FE)
           font-size: 12px;
           padding: 2px 12px;
           line-height: 25px;
@@ -724,7 +722,7 @@ onMounted(loadAll)
 
       .ResetDefaultMap { margin-left: 10px; }
 
-      /* 默认分区树 */
+      /* Default partition tree */
       .DefaultPartition {
         width: 252px;
         height: 150px;
@@ -750,14 +748,14 @@ onMounted(loadAll)
   }
 }
 
-/* 水印按钮组 */
+/* Watermark button group */
 .WatermarkStatus {
   display: flex;
   button:nth-child(1) { border-radius: 3px 0 0 3px; }
   button:nth-child(2) { margin-left: 0; border-radius: 0 3px 3px 0; }
 }
 
-/* 默认视图选择器 */
+/* Default view selector */
 .DefaultView {
   width: 252px;
   height: 150px;
@@ -782,7 +780,7 @@ onMounted(loadAll)
   }
 }
 
-/* 底部按钮区：flex-shrink:0 确保始终贴底显示 */
+/* Bottom button area: flex-shrink:0 ensures it always stays pinned to the bottom */
 .LowerPart {
   flex-shrink: 0;
   display: flex;
@@ -792,7 +790,7 @@ onMounted(loadAll)
   gap: 12px;
 }
 
-/* 取消按钮：深色底 + 蓝色边框，对齐 uscweb cancelBtn */
+/* Cancel button: dark background + blue border, aligned with uscweb cancelBtn style */
 .cancelBtn {
   min-width: 78px;
   height: 32px;
@@ -805,7 +803,7 @@ onMounted(loadAll)
   box-sizing: border-box;
 }
 
-/* 保存按钮：蓝色填充，对齐 uscweb saveBtn */
+/* Save button: blue fill, aligned with uscweb saveBtn style */
 .saveBtn {
   min-width: 78px;
   height: 32px;
@@ -822,7 +820,7 @@ onMounted(loadAll)
   color: #fff;
 }
 
-/* 通用小按钮（重置等） */
+/* Generic small button (reset, etc.) */
 .single_button {
   height: 29px;
   line-height: 29px;

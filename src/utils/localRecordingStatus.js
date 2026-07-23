@@ -1,6 +1,5 @@
 import * as d3 from 'd3';
 
-// import { useI18n } from 'vue-i18n';
 import i18n from '../../static/i18n.ts';
 
 const { t } = i18n.global;
@@ -28,10 +27,9 @@ export class RecordingStatus {
         this.data = [];
 
         this._initSVG(containerId);
-        this._initTooltip(); // init tooltip
+        this._initTooltip();
     }
 
-    // Initialise SVG canvas
     _initSVG(containerId) {
         this.svg = d3.select(containerId)
             .append("svg")
@@ -45,7 +43,6 @@ export class RecordingStatus {
         };
     }
 
-    // Initialise tooltip
     _initTooltip() {
         this.tooltip = d3.select("body")
             .append("div")
@@ -72,7 +69,6 @@ export class RecordingStatus {
     SetRecordData(data) {
         this.data = data;
     }
-    // Initialise time scale
     _initTimeScale() {
         const { startTime, endTime, width, modeType } = this.options;
         const now = new Date();
@@ -106,7 +102,6 @@ export class RecordingStatus {
             .range([0, width]);
     }
 
-    // Draw time-label backgrounds and text
     _drawTimeLabels() {
         const group = this.layers.timeLabels;
         group.selectAll("*").remove();
@@ -118,7 +113,6 @@ export class RecordingStatus {
             .attr("width", this.options.width)
             .attr("height", 48)
             .attr("fill", this.options.backgroundColor)
-        // .attr("stroke", "#ccc");
 
         let ticks;
         switch (this.options.modeType) {
@@ -147,7 +141,6 @@ export class RecordingStatus {
             .text(d => this._formatTimeLabel(d));
     }
 
-    // Draw highlight for a single recording segment
     _addRecordingHighlight(record, channelIndex, devName, rowY, rowHeight) {
         const start = new Date(record.strStartTime);
         const end = new Date(record.strEndTime);
@@ -158,7 +151,6 @@ export class RecordingStatus {
         const intX1 = Math.floor(x1);
         const intX2 = Math.ceil(x2);
         const width = Math.max(1, intX2 - intX1); // ensure min width of 1px
-        // Same colour for all segments of the same channel
         let fillColor;
         if (this.options.router === 'recordInfo') {
             const types = [
@@ -189,7 +181,6 @@ export class RecordingStatus {
         } else {
             fillColor = this.colors[channelIndex % this.colors.length];
         }
-        // const fillColor = this.colors[channelIndex % this.colors.length];
 
         this.layers.highlights.append("rect")
             .attr("x", x1)
@@ -217,7 +208,6 @@ export class RecordingStatus {
                 this.tooltip.transition().duration(0).style("opacity", 0);
             });
     }
-    // Build tooltip HTML
     _createTooltipHtml(event, record, fillColor, devName) {
         const start = new Date(record.strStartTime);
         const end = new Date(record.strEndTime);
@@ -236,7 +226,6 @@ export class RecordingStatus {
     `;
         return html;
     }
-    // Draw all segments for a channel
     _addChannelHighlights(channelData, index) {
         if (!channelData) {
             return;
@@ -245,13 +234,11 @@ export class RecordingStatus {
         const rowHeight = 24;
         const rowY = labelWidth + index * rowHeight;
 
-        // Draw all segments for this channel
         if (channelData.record && Array.isArray(channelData.record)) {
             channelData.record.forEach((record) => {
                 this._addRecordingHighlight(record, index, channelData.devName, rowY, rowHeight);
             });
         }
-        // Draw channel label (first row only)
         if (channelData.record) {
             this.layers.highlights.append("text")
                 .attr("x", 5)
@@ -279,21 +266,18 @@ export class RecordingStatus {
                 `;
         return html;
     }
-    // Create channel axis
     _createChannelAxis(data) {
         const group = this.layers.highlights;
         group.selectAll("*").remove();
         data.forEach((el, i) => this._addChannelHighlights(el, i));
     }
 
-    // Format time labels
     _formatTimeLabel(date) {
         const { modeType } = this.options;
         const formats = { month: "%m/%d", week: "%m/%d", date: "%H:%M" };
         return d3.timeFormat(formats[modeType] || "%m/%d")(date);
     }
 
-    // Toggle mode and redraw
     setMode(mode, time) {
         if (!["month", "week", "date"].includes(mode)) {
             console.warn("Invalid mode:", mode);
@@ -313,7 +297,6 @@ export class RecordingStatus {
         this._drawTimeLabels();
         this._createChannelAxis(this.data);
     }
-    // Destroy and clean up
     destroy() {
         this.svg?.remove();
         this.tooltip?.remove();

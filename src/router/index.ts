@@ -20,6 +20,7 @@ const LocalObjectStorage = () => import('@/views/Configuration/Basic/StorageSett
 const S3Storage = () => import('@/views/Configuration/Basic/StorageSetting/S3Storage.vue')
 const RegularStorage = () => import('@/views/Configuration/Basic/StorageSetting/RegularStorage.vue')
 const UserConfigPage = () => import('@/views/Configuration/Basic/User/UserConfig.vue')
+const DevicePartition = () => import('@/views/Configuration/Basic/DevicePartition/DevicePartition.vue')
 const Device = () => import('@/views/Configuration/Device/Device.vue')
 const DeviceSDK = () => import('@/views/Configuration/Device/DeviceSDK.vue')
 const System = () => import('@/views/System/System.vue')
@@ -145,7 +146,7 @@ const router = createRouter({
       path: 'Configuration',
       name: 'Configuration',
       component: Configuration,
-      redirect: '/Configuration/Basic/StorageMode',
+      redirect: '/Configuration/Basic/DevicePartition',
       meta: {
         title: '/Configuration',
         name: 'Router.router_configuration',
@@ -156,7 +157,7 @@ const router = createRouter({
         path: 'Basic',
         name: 'Basic',
         component: Basic,
-        redirect: '/Configuration/Basic/StorageMode',
+        redirect: '/Configuration/Basic/DevicePartition',
         meta: {
           title:'/Configuration/Basic',
           name: 'Router.router_basic',
@@ -220,6 +221,16 @@ const router = createRouter({
           meta: {
             title: '/Configuration/Basic/User/UserConfig',
             name: 'Router.router_user_config',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'DevicePartition',
+          name: 'DevicePartition',
+          component: DevicePartition,
+          meta: {
+            title: '/Configuration/Basic/DevicePartition',
+            name: 'Router.router_device_partition',
             icon: '',
             type: 'Operator'
           }

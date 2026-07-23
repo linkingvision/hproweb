@@ -29,7 +29,6 @@ export const GetLogApi = (data: GetLogParamType) => axios({
 // System upgrade file upload URL
 export const UploadUrl = '/uapi/v1/System/Bin/Patcher?session=';
 
-// Get system upgrade status
 export const GetUpgradeStatusApi = () => axios({
   url: '/uapi/v1/System/GetUpgradeStatus',
   method: 'GET'
@@ -44,10 +43,8 @@ export const ResetServiceApi = () => axios({
   method: 'GET'
 })
 
-// Export config file
 export const ConfigExportUrl = '/uapi/v1/Conf/Export?session=';
 
-// Export database
 export const SqlExportApi = (isEvent: boolean) => axios({
   url: '/uapi/v1/DB/Migration/Start?isEvent=' + isEvent,
   method: 'GET'
@@ -59,7 +56,6 @@ export const SetDBStatus = (key: string) => axios({
   method: 'GET'
 })
 
-// Database download URL
 export const DBDownloadUrl = '/uapi/v1/DB/Download?session=';
 
 export const GetSysConfigApi = (module: string) => axios({

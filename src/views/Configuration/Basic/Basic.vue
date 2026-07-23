@@ -42,6 +42,10 @@ onMounted(() => {
         :collapse="isCollapse"
         router
         :teleported="false">
+        <el-menu-item index="/Configuration/Basic/DevicePartition">
+          <i class="iconfont icon-shebeifenqu"></i>
+          <span>{{ t('Router.router_device_partition') }}</span>
+        </el-menu-item>
         <el-sub-menu index="/Configuration/Basic/StorageMode">
           <template #title>
             <i class="iconfont icon-cunchupeizhi"></i>
@@ -77,7 +81,7 @@ onMounted(() => {
     width: 11%;
     max-width: 278px;
     height: calc(100vh - 30px);
-    background-color: #212121;
+    background-color: #181818;
     transition: 0.4s;
     .collapse-box {
       width: 100%;
@@ -96,6 +100,7 @@ onMounted(() => {
     .el-menu-item, .el-sub-menu {
       i {
         font-size: 16px;
+        margin-right: 10px;
       }
     }
   }
@@ -109,19 +114,35 @@ onMounted(() => {
 </style>
 
 <style lang="scss">
-.el-popper {
+.basic-left {
   .el-menu {
-    background-color: #212121;
-    .el-menu-item {
-      color: #fff;
-    }
-    .el-menu-item:hover {
+    background-color: transparent;
+    border: none;
+  }
+  .el-menu-item.is-active {
+    color: #0399FE !important;
+    background-color: rgba(3, 153, 254, 0.2) !important;
+    border-right: 2px solid #0399FE !important;
+    span, i { color: #0399FE; }
+  }
+  .el-sub-menu.is-active > .el-sub-menu__title {
+    color: #0399FE !important;
+    span, i { color: #0399FE; }
+  }
+  .el-menu-item:hover,
+  .el-sub-menu__title:hover {
+    background-color: rgba(3, 153, 254, 0.08) !important;
+  }
+  .el-popper {
+    .el-menu {
       background-color: #181818;
-    }
-    .is-active {
-      color: #0399FE;
-      border-right: #0399FE 3px solid;
-      background-color: #282D33;
+      .el-menu-item { color: #fff; }
+      .el-menu-item:hover { background-color: rgba(3, 153, 254, 0.08); }
+      .is-active {
+        color: #0399FE;
+        border-right: 2px solid #0399FE;
+        background-color: rgba(3, 153, 254, 0.2);
+      }
     }
   }
 }

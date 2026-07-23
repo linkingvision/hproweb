@@ -22,14 +22,13 @@ const { t } = useI18n()
 const filterText = ref<string>('')
 let activeCollapse = ref<string>('device')
 let treeData = ref<TreeNode[]>([]);
-const expandedKeys = ref<string[]>([]); // track expanded nodes
+const expandedKeys = ref<string[]>([]);
 
 const recordData = ref<any>({
   type: "",
   token: "",
 })
 
-// Convert flat data to tree structure
 const transformToTreeData = (partitions: any[]): TreeNode[] => {
   const result: TreeNode[] = [];
   
@@ -43,11 +42,10 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
       type: 'partition',
       children: hasChildren ? [] : [{ id: 'placeholder', label: '', type: 'partition', data: null }], // placeholder so all nodes show expand icon
       data: partition,
-      isLeaf: false, // no node is a leaf initially
-      loaded: false // none loaded initially
+      isLeaf: false,
+      loaded: false
     };
     
-    // Load immediately if sub-data is available
     if (hasChildren) {
       // 1. Sub-partitions first
       if (partition.children && partition.children.length > 0) {
@@ -106,7 +104,6 @@ const transformToTreeData = (partitions: any[]): TreeNode[] => {
   return result;
 };
 
-// Filter tree data
 const filteredTreeData = computed(() => {
   if (!filterText.value) return treeData.value;
   
@@ -124,7 +121,6 @@ const filteredTreeData = computed(() => {
   return filterTree(JSON.parse(JSON.stringify(treeData.value)));
 });
 
-// Get node icon
 const getNodeIcon = (node: TreeNode) => {
   switch (node.type) {
     case 'partition':
@@ -145,7 +141,6 @@ const getNodeIcon = (node: TreeNode) => {
   }
 };
 
-// Get node CSS class
 const getNodeClass = (node: TreeNode) => {
   const classes = ['tree-node'];
   if (node.type === 'device') {
@@ -161,40 +156,33 @@ const getNodeClass = (node: TreeNode) => {
   return classes.join(' ');
 };
 
-// Node click handler
 const handleNodeClick = (data: TreeNode) => {
-  // console.log('Node clicked:', data);
-  // Add click handling logic here
 };
 
-// API call for lazy-loading child data
 const loadChildrenData = async (nodeData: TreeNode): Promise<TreeNode[]> => {
   try {
-    // Call different APIs by node type
     if (nodeData.type === 'partition') {
       // Partition nodes may need a dedicated API
       // Example using existing API — adapt as needed
       const res = await GetDevPartitionApi();
       if (res.status === 200 && res.data.code === 0) {
         // Handle response — adjust to actual API format
-        return []; // return processed child nodes
+        return [];
       }
     } else if (nodeData.type === 'device') {
-      // Device nodes may need channel info
       if (nodeData.data && nodeData.data.token) {
         const res = await GetDeviceChannels( nodeData.data.token );
         if (res.status === 200 && res.data.code === 0) {
-          // Handle device channel data
           const channels = res.data.result || [];
           return channels.map((channel: any, index: number) => ({
             id: `channel_${nodeData.data.devId}_${index}`,
             label: channel.name || `Channel ${index + 1}`,
             type: 'device' as const,
             data: channel,
-            online: channel.online, // set channel online status
+            online: channel.online,
             isLeaf: true,
             loaded: true,
-            isDeviceChannel: true // mark as device channel
+            isDeviceChannel: true
           }));
         }
       }
@@ -205,7 +193,6 @@ const loadChildrenData = async (nodeData: TreeNode): Promise<TreeNode[]> => {
   }
 };
 
-// Node expand handler
 const handleNodeExpand = async (data: TreeNode, node: any) => {
   // Skip placeholder nodes (data.data is null)
   if (!data.data) return;
@@ -215,18 +202,16 @@ const handleNodeExpand = async (data: TreeNode, node: any) => {
     token: data.data.token,
     name: data.label
   };
-  // Return early if already loaded
   if (data.loaded) {
     return;
   }
-  
+
   // Lazy-load on placeholder node expand
   if (data.children && data.children.length === 1 && data.children[0] && data.children[0].id === 'placeholder') {
     try {
       const childrenData = await loadChildrenData(data);
-      
+
       if (childrenData.length > 0) {
-        // Replace placeholder with actual children
         data.children = childrenData;
         data.loaded = true;
       } else {
@@ -235,11 +220,10 @@ const handleNodeExpand = async (data: TreeNode, node: any) => {
         data.isLeaf = true;
         data.loaded = true;
       }
-      
+
       // Force tree component update
       treeData.value = [...treeData.value];
     } catch (error) {
-      // Clear placeholder on error
       data.children = [];
       data.isLeaf = true;
       data.loaded = true;
@@ -249,8 +233,6 @@ const handleNodeExpand = async (data: TreeNode, node: any) => {
 };
 
 const handleNodeCollapse = (data: TreeNode, node: any) => {
-  // console.log('Node collapsed:', data, node);
-  // Add collapse handling logic here
 };
 
 // Flatten root, display contents directly
@@ -319,7 +301,6 @@ const GetDevPartition = async () => {
   if (res.status == 200 && res.data.code === 0) {
     // Use flatten helper, skip root
     treeData.value = flattenRootNodes(res.data.result);
-    // console.log('TreeData => ', treeData.value);
   }
 }
 
@@ -386,15 +367,12 @@ onMounted(() => {
     height: 100%;
     background-color: #2b2b2b;
     margin-right: 6px;
-    // padding: 10px;
     :deep(.el-input) {
-      // border-radius: 12px;
       .el-input__wrapper {
         border-radius: 16px;
       }
     }
     :deep(.el-collapse) {
-      // background-color: #424242;
       border: 0;
       .el-collapse-item__header {
         background-color: #404040;
@@ -403,7 +381,6 @@ onMounted(() => {
         height: 48px;
         .liveview-colltitle{
           display: flex;
-          // width: ;
           div {
             margin-left: 12px;
             width: 26px;

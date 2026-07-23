@@ -8,7 +8,6 @@
     class="user-config-drawer"
   >
     <div class="userconfig-body">
-      <!-- 用户头像与名称 -->
       <div class="userconfig-header">
         <div class="avatar-wrap">
           <div v-if="avatar">
@@ -21,7 +20,7 @@
 
       <el-divider />
 
-      <!-- 协议区：锁死为 WS2 -->
+      <!-- Protocol section: locked to WS2 -->
       <div class="config-section">
         <div class="config-row">
           <span class="config-label">{{ t('SetUser.set_liveview_protocol') }}</span>
@@ -37,7 +36,7 @@
         </div>
       </div>
 
-      <!-- WS2 专属配置（始终显示因为协议锁死 WS2） -->
+      <!-- WS2-specific config (always shown because protocol is locked to WS2) -->
       <div class="config-section">
         <div class="config-row">
           <span class="config-label">{{ t('SetUser.set_buffertime') }}</span>
@@ -54,7 +53,6 @@
 
       <el-divider />
 
-      <!-- 水印 -->
       <div class="config-section">
         <div class="config-row" style="align-items:flex-start;">
           <span class="config-label">{{ t('SetUser.set_watermark') }}</span>
@@ -85,7 +83,6 @@
 
       <el-divider />
 
-      <!-- 显示 / 画质 -->
       <div class="config-section">
         <div class="config-row">
           <span class="config-label">{{ t('SetUser.set_display_disable') }}</span>
@@ -105,7 +102,6 @@
 
       <el-divider />
 
-      <!-- 自动登出 -->
       <div class="config-section">
         <div class="config-row">
           <span class="config-label">{{ t('SetUser.set_web_client_auto-logout_time') }}</span>
@@ -122,7 +118,7 @@
 
       <el-divider />
 
-      <!-- 解码器信息（只读） -->
+      <!-- Decoder info (read-only) -->
       <div class="config-section">
         <div class="config-row">
           <span class="config-label config-label-sm">{{ t('SetUser.set_ws_decoder') }}</span>
@@ -140,7 +136,6 @@
 
       <el-divider />
 
-      <!-- 视频背景颜色 -->
       <div class="config-section">
         <div class="config-row">
           <span class="config-label">{{ t('SetUser.set_video_background_color') }}</span>
@@ -159,7 +154,6 @@
 
       <el-divider />
 
-      <!-- 地图聚合 / 级联层级 -->
       <div class="config-section">
         <div class="config-row">
           <span class="config-label config-label-sm">{{ t('SetUser.set_map_cluster') }}</span>
@@ -173,7 +167,6 @@
 
       <el-divider />
 
-      <!-- 回放模式 / 默认视图 -->
       <div class="config-section">
         <div class="config-row">
           <span class="config-label">{{ t('SetUser.set_playback_mode') }}</span>
@@ -200,7 +193,6 @@
 
       <el-divider />
 
-      <!-- 默认地图 -->
       <div class="config-section">
         <div class="config-row">
           <span class="config-label">{{ t('SetUser.set_default_map') }}</span>
@@ -215,7 +207,6 @@
 
       <el-divider />
 
-      <!-- 默认分区 -->
       <div class="config-section">
         <div class="config-row" style="align-items:flex-start;">
           <span class="config-label">{{ t('SetUser.set_default_partition') }}</span>
@@ -248,7 +239,6 @@
       </div>
     </div>
 
-    <!-- 底部按钮 -->
     <template #footer>
       <div class="drawer-footer">
         <el-button @click="drawerVisible = false">{{ t('CommTableEdit.comm_cancel') }}</el-button>

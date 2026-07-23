@@ -72,7 +72,6 @@ const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n();
 
-// const Router = ref('');
 const RouterList = ref<any>([])
 
 const activeRouter = ref('Liveview')
@@ -82,8 +81,8 @@ acronym.value = userStore.username.charAt(0).toUpperCase();
 
 const title = ref<string>('')
 
-const aboutVisiable = ref<boolean>(false);  // about-dialog visibility
-const information = ref<string>('') // version string
+const aboutVisiable = ref<boolean>(false);
+const information = ref<string>('')
 
 const handleSelect= (key: string) => {
   router.push(key)
@@ -101,7 +100,7 @@ const routes = () => {
   const matchedRoutes: any = route.matched
   if (!matchedRoutes || matchedRoutes.length < 2) return []
 
-  // matchedRoutes[1] 是顶级导航路由（如 Monitoring、Configuration 等）
+  // matchedRoutes[1] is the top-level navigation route (e.g. Monitoring, Configuration)
   const parentRoute = matchedRoutes[1]
   if (parentRoute?.meta?.name) {
     title.value = t(parentRoute.meta.name)
@@ -126,10 +125,8 @@ const getRouterList = () => {
   }
 }
 const  KeepSession = async () => {
-  // const 
   let res:any = await KeepAlive();
   if (res.status == 200 && res.data.code == 0) {
-    // console.log('keepSession =>', res)
   }
 }
 
@@ -150,7 +147,7 @@ const SystemInfo = async () => {
   }
 }
 
-// 从服务端读取存储配置（UserConfig: DefaultStorage / DefaultView；SysConfig: PlaybackShowStorageMode）
+// Fetch storage config from server (UserConfig: DefaultStorage / DefaultView; SysConfig: PlaybackShowStorageMode)
 const initStorageConfig = async () => {
   try {
     const [userRes, sysRes] = await Promise.all([
@@ -178,7 +175,6 @@ const path = computed(() => route.fullPath);
 
 watch(path, (newVal) => {
   getRouterList()
-  // activeRouter.value = newVal;
   getAtciveRouter(newVal)
 })
 
@@ -200,7 +196,7 @@ onBeforeMount(() => {
   width: 100%;
   height: 30px;
   display: flex;
-  background-color: #F2F1F1;  // 浅色默认
+  background-color: #F2F1F1;
   color: #000;
   .header-title { color: #000; border-right-color: #D0D0D0; }
 
@@ -217,7 +213,6 @@ onBeforeMount(() => {
   .header-left {
     width: 256px;
     height: 100%;
-    // background-color: grey;
     display: flex;
     align-items: center;
     padding: 0 10px;
@@ -239,7 +234,7 @@ onBeforeMount(() => {
       font-size: 14px;
       line-height: 20px;
       height: 20px;
-      border-right: 2px solid;  // 颜色由父级主题规则控制
+      border-right: 2px solid;  // color is inherited from the parent theme rules above
       margin-right: 20px;
       margin-top: 5px;
     }
@@ -274,7 +269,6 @@ onBeforeMount(() => {
   .header-right {
     width: 256px;
     height: 100%;
-    // background-color: skyblue;
     display: flex;
     justify-content: right;
     align-items: center;
@@ -324,9 +318,6 @@ onBeforeMount(() => {
   height: 320px;
   background-image: url('../assets/imgs/Header_on.png') !important;
   background-size: 100% 100% !important;
-  // .el-dialog__header {
-
-  // }
   .el-dialog__body {
     .about_flex {
       width: 100%;

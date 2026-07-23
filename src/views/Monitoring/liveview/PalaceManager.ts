@@ -1,8 +1,9 @@
 /**
- * PalaceManager — 对照 GridLayoutManager SDK，为 View.vue 的 .palace 格子
- * 动态注入悬浮按钮层（float-layer）及关闭按钮，并通过 CustomEvent 派发动作。
+ * PalaceManager — mirrors the GridLayoutManager SDK to dynamically inject a
+ * floating button layer (float-layer) and a close button into each .palace cell
+ * in View.vue, dispatching actions via CustomEvent.
  *
- * 事件列表（与 GridLayoutManager 保持一致）：
+ * Events (kept consistent with GridLayoutManager):
  *   closeCell       detail: cellId (string)
  *   cellClick       detail: cellId (string)
  *   Information     detail: { id: cellId }
@@ -27,31 +28,30 @@ export interface PalaceManagerOptions {
 }
 
 export interface InjectOptions {
-  recEnable?:    boolean   // 初始手动录像状态
-  audio?:        boolean   // 初始对讲状态
-  playModeText?: string    // 覆盖全局 playModeText
+  recEnable?:    boolean   // initial manual recording state
+  audio?:        boolean   // initial intercom state
+  playModeText?: string    // overrides the global playModeText
 }
 
 export class PalaceManager extends EventTarget {
   private options:     PalaceManagerOptions
-  private layers  = new Map<string, HTMLElement>()  // cellId → float-layer
+  private layers  = new Map<string, HTMLElement>()  // cellId → float-layer element
 
   constructor(options: PalaceManagerOptions = {}) {
     super()
     this.options = options
   }
 
-  // ─── 注入单个格子的悬浮层 ──────────────────────────────────────────────
+  // ─── Inject float layer into a single cell ───────────────────────────────
   injectFloatLayer(cellId: string, opts: InjectOptions = {}) {
     const container = document.getElementById('h' + cellId)
     if (!container) return
 
-    // 幂等：先移除旧层
+    // Idempotent: remove any existing layer before injecting a new one
     this.removeFloatLayer(cellId)
 
     const icons = this.options.createIcons ?? {}
 
-    // ── float-layer ──
     const layer = document.createElement('div')
     layer.className = 'float-layer'
 
@@ -76,7 +76,7 @@ export class PalaceManager extends EventTarget {
     layer.addEventListener('click', (e) => this._onLayerClick(e, cellId))
     container.appendChild(layer)
 
-    // ── 关闭按钮（左上角，对照 GridLayoutManager closeCell） ──
+    // Close button (top-left corner, mirrors GridLayoutManager closeCell)
     const closeBtn = document.createElement('button')
     closeBtn.className = 'pm-cell-close'
     closeBtn.textContent = '×'
@@ -89,18 +89,18 @@ export class PalaceManager extends EventTarget {
     this.layers.set(cellId, layer)
   }
 
-  // ─── 移除单个格子的悬浮层 ─────────────────────────────────────────────
+  // ─── Remove float layer from a single cell ───────────────────────────────
   removeFloatLayer(cellId: string) {
     const layer = this.layers.get(cellId)
     if (layer) {
-      // 同时移除 close 按钮（紧随 layer 之后插入，parentElement 相同）
+      // Also remove the close button, which is inserted immediately after the layer under the same parentElement
       layer.parentElement?.querySelector('.pm-cell-close')?.remove()
       layer.remove()
       this.layers.delete(cellId)
     }
   }
 
-  // ─── 切换对讲激活状态图标 ─────────────────────────────────────────────
+  // ─── Toggle intercom active-state icon ───────────────────────────────────
   changeAudio(cellId: string, isActive: boolean) {
     const icon = this.layers.get(cellId)?.querySelector<HTMLElement>('[data-action="shoutwheat"]')
     if (!icon) return
@@ -108,7 +108,7 @@ export class PalaceManager extends EventTarget {
     icon.setAttribute('data-audio', isActive ? 'true' : 'false')
   }
 
-  // ─── 切换手动录像激活状态图标 ─────────────────────────────────────────
+  // ─── Toggle manual recording active-state icon ───────────────────────────
   changeRecEnable(cellId: string, recEnable: boolean) {
     const icon = this.layers.get(cellId)?.querySelector<HTMLElement>('[data-action="rec"]')
     if (!icon) return
@@ -116,7 +116,7 @@ export class PalaceManager extends EventTarget {
     icon.setAttribute('data-rec', recEnable ? 'true' : 'false')
   }
 
-  // ─── 更新所有格子的播放模式文字 ───────────────────────────────────────
+  // ─── Update play mode text across all cells ──────────────────────────────
   changePlayModeText(text: string) {
     this.layers.forEach(layer => {
       const span = layer.querySelector<HTMLElement>('.pm-text')
@@ -124,13 +124,13 @@ export class PalaceManager extends EventTarget {
     })
   }
 
-  // ─── 销毁全部 ─────────────────────────────────────────────────────────
+  // ─── Destroy all layers ───────────────────────────────────────────────────
   destroy() {
     ;[...this.layers.keys()].forEach(id => this.removeFloatLayer(id))
     this.layers.clear()
   }
 
-  // ─── 私有工具 ─────────────────────────────────────────────────────────
+  // ─── Private utilities ────────────────────────────────────────────────────
   private _icon(cls: string, action: string, attrs: Record<string, string> = {}): HTMLElement {
     const i = document.createElement('i')
     i.className = `iconfont ${cls}`

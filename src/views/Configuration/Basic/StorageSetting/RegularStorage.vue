@@ -120,14 +120,12 @@ const handleEdit = (row: any) => {
 };
 
 const back = () => {
-  // 清理所有卡片的 ResizeObserver
   resizeObservers.forEach(obs => obs.disconnect());
   resizeObservers.clear();
   addMaxSizeMap.clear();
   editPopup.value = false;
 };
 
-// 展开 / 折叠分区详情
 const IsRecordName = (_item: any, index: number) => {
   const $bottom = $(`#IsShowBottom${index}`);
   const $content = $(`#RecordContent${index}`);
@@ -145,21 +143,18 @@ const IsRecordName = (_item: any, index: number) => {
   }
 };
 
-// 高亮点击行
 const handleClick = (index: number, index2: number) => {
   $('.RecordBottom_Container').eq(index).find('.record_name').removeClass('active');
   $('.RecordBottom_Container').eq(index).find('.record_name').eq(index2).addClass('active');
 };
 
-// 改变颜色
 const ChangeColor = (_item: any, index: number, val: string) => {
   if (val) $(`#RecordContent${index}`).find('.progress-bar-inner1').css('background-color', val);
 };
 
-// 添加录像分区（拖拽块）
 const AddRecord = (item: any, index: number) => {
   if ($(`#RecordContent${index}`).find('.progress-bar-inner1').length > 0) {
-    // 已有未保存的分区，提示先保存
+    // An unsaved partition already exists; prompt the user to save it first
     ElMessage({ message: t('Configuration.conf_save_record_first'), type: 'warning', duration: 3000 });
     return;
   }
@@ -183,7 +178,7 @@ const AddRecord = (item: any, index: number) => {
   nextTick(() => {
     const el = $(`#RecordContent${index}`).find('.progress-bar-inner1').get(0);
     if (!el) return;
-    // 每张卡片独立 Observer，互不干扰
+    // Disconnect the previous observer for this card before creating a new one to avoid duplicate listeners
     resizeObservers.get(index)?.disconnect();
     const obs = new ResizeObserver(() => {
       const barWidth = $(`#RecordContent${index}`).find('.progress-bar').width() || 1;
@@ -198,7 +193,6 @@ const AddRecord = (item: any, index: number) => {
   });
 };
 
-// 保存分区
 const SaveRecord = async (item: any, index: number) => {
   if ($(`#RecordContent${index}`).find('.progress-bar-inner1').length < 1) return;
 
@@ -245,7 +239,6 @@ const SaveRecord = async (item: any, index: number) => {
   }
 };
 
-// 重置进度条宽度
 const Reset = (item: any, index: number) => {
   if ($(`#RecordContent${index}`).find('.progress-bar-inner1').length < 1) return;
   const used = item.record?.reduce((acc: number, r: any) => acc + r.nMaxSizeInM, 0) ?? 0;
@@ -254,7 +247,6 @@ const Reset = (item: any, index: number) => {
   $(`#RecordContent${index}`).find('.progress-bar-inner1').css('width', `${w}%`);
 };
 
-// 格式化分区
 const FormatRecord = async (item: any, index: number) => {
   try {
     await ElMessageBox.confirm(
@@ -277,10 +269,9 @@ const FormatRecord = async (item: any, index: number) => {
     } else {
       ElMessage({ message: t('CommTableEdit.comm_modify_failed'), type: 'error', duration: 3000 });
     }
-  } catch { /* 取消 */ }
+  } catch { /* user cancelled */ }
 };
 
-// 卸载分区
 const DeleteRecord = async (item: any, index: number) => {
   try {
     await ElMessageBox.confirm(
@@ -299,7 +290,7 @@ const DeleteRecord = async (item: any, index: number) => {
     } else {
       ElMessage({ message: t('CommTableEdit.comm_delete_failed'), type: 'error', duration: 3000 });
     }
-  } catch { /* 取消 */ }
+  } catch { /* user cancelled */ }
 };
 
 // ─── Pagination ─────────────────────────────────────────
