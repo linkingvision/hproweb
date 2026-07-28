@@ -309,14 +309,16 @@
       </div><!-- /view-right-main -->
 
       <!-- ── Event 面板（对照 uscweb Liveview alarm_right_right） ── -->
-      <div v-show="eventPanelShow" class="event-panel-right" style="width:22%;flex-shrink:0;">
+      <div v-show="eventPanelShow" class="event-panel-right">
         <div class="alarm_right_right">
           <div class="alarm_right_right_header">
             <div>{{ t('Analytics.ana_event') }}</div>
           </div>
           <div class="alarm_right_right_body">
-            <div v-for="(item, index) in eventTableData.slice((eventCurrentPage-1)*eventPageSize, eventCurrentPage*eventPageSize)"
-                 :key="index" class="alarm_right_right_content">
+            <el-empty v-if="!eventTableData.length" description="No Data" />
+            <template v-else>
+              <div v-for="(item, index) in eventTableData.slice((eventCurrentPage-1)*eventPageSize, eventCurrentPage*eventPageSize)"
+                   :key="index" class="alarm_right_right_content">
               <!-- 彩色 header：channel名 + 目标类型图标 -->
               <div class="content_header"
                    v-if="item.ruleType === 'USC_ANA_RULE_LPRE'"
@@ -365,6 +367,7 @@
                 </div>
               </div>
             </div>
+            </template>
           </div>
           <div class="alarm_right_right_footer">
             <el-pagination layout="prev, pager, next" :pager-count="5"
@@ -393,7 +396,10 @@
                 <i class="iconfont icon-sousuo1"></i>
               </div>
               <el-input v-else class="snap_zuo_input" :placeholder="t('Common.comm_filtration')"
-                v-model="layoutFilterText" prefix-icon="iconfont icon-sousuo1" style="width:50%">
+                v-model="layoutFilterText" style="width:50%">
+                <template #prefix>
+                  <i class="iconfont icon-sousuo1"></i>
+                </template>
                 <template #suffix>
                   <i class="iconfont icon-guanbi" @click="layoutFilter = true; layoutFilterText = ''"></i>
                 </template>
@@ -498,30 +504,43 @@
     </el-dialog>
 
     <!-- 布局管理对话框 -->
-    <el-dialog v-model="layoutMgmtVisible" :title="t('Liveview.live_view_layout')" width="500px">
+    <el-dialog v-model="layoutMgmtVisible" :title="t('Liveview.live_view_layout')" width="500px" class="ViewLayoutDialog">
       <div class="layout-mgmt-bar">
-        <div>
-          <el-button size="small" type="primary" @click="showGird1=true">{{ t('Liveview.live_new_view_layout') }}</el-button>
-          <el-button size="small" @click="deleteCustomLayout" :disabled="!selectedLayoutId">🗑</el-button>
+        <div class="button_edi">
+          <el-button size="small" class="btn-new-layout" @click="showGird1=true">
+            <i class="iconfont icon-xinjian" style="margin-right:4px;"></i>{{ t('Liveview.live_new_view_layout') }}
+          </el-button>
+          <el-button size="small" class="btn-delete-layout" @click="deleteCustomLayout">
+            <i class="iconfont icon-lajitong"></i>
+          </el-button>
         </div>
-        <el-button size="small" @click="restoreDefaultLayouts">{{ t('Liveview.live_restore_defaults') }}</el-button>
+        <div class="button_default">
+          <el-button size="small" class="btn-restore-layout" @click="restoreDefaultLayouts">
+            <i class="iconfont icon-huifu" style="margin-right:4px;"></i>{{ t('Liveview.live_restore_defaults') }}
+          </el-button>
+        </div>
       </div>
-      <div class="custom-layout-list">
-        <template v-for="(item, index) in layoutList" :key="item.layoutId">
-          <div class="custom-layout-item"
-            :class="{ selected: selectedLayoutId===item.layoutId }"
-            @click="selectedLayoutId=item.layoutId; applyCustomLayout(item)">
-            {{ item.layoutName }}
-          </div>
-        </template>
+      <div class="customIcon">
+        <p>{{ t('Liveview.live_customization') }}</p>
+        <div class="DialogLayout">
+          <template v-for="(item, index) in layoutList.slice(10)" :key="item.layoutId">
+            <div class="LayoutCanvas"
+              :class="{ selected: selectedLayoutId===item.layoutId }"
+              @click="selectedLayoutId=item.layoutId; applyCustomLayout(item)">
+              <canvas :id="'dialogCanvas' + index" width="25px" height="25px"
+                style="margin:15px 20px;" :title="item.layoutName" class="title"></canvas>
+              <span>{{ item.layoutName }}</span>
+            </div>
+          </template>
+        </div>
       </div>
       <template v-if="showGird1">
         <el-input v-model="customLayoutForm.layoutName" :placeholder="t('Liveview.live_view_name')" style="margin:8px 0;" />
         <Gird1 ref="gird1Ref" @get-layout-data="onLayoutData" />
       </template>
       <template #footer>
-        <el-button @click="layoutMgmtVisible=false; showGird1=false">{{ t('CommTableEdit.comm_cancel') }}</el-button>
-        <el-button v-if="showGird1" type="primary" @click="submitCustomLayout">{{ t('CommTableEdit.comm_save') }}</el-button>
+        <el-button class="btn-cancel-layout" @click="layoutMgmtVisible=false; showGird1=false">{{ t('CommTableEdit.comm_cancel') }}</el-button>
+        <el-button type="primary" @click="submitCustomLayout">{{ t('CommTableEdit.comm_save') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -534,6 +553,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { UPlayerSDK as UPlayerSDKClass, UPlayerList as UPlayerListClass, H5sPlayerWS2, Timeline } from '@/assets/js/uplayersdk.esm.js'
 import { useUserStore } from '@/store/user'
 import { useStore } from '@/store'
+import { useAlarmStore } from '@/store/alarm'
 import { GetDevPartitionApi } from '@/api/configuration/device'
 import { H5sPlayerAudBack } from '@/assets/js/h5splayer.js'
 import {
@@ -551,6 +571,7 @@ import http from '@/api/http'
 const { t } = useI18n()
 const userStore = useUserStore()
 const store = useStore()
+const alarmStore = useAlarmStore()
 
 // ─── Types ────────────────────────────────────────────────────────────────
 interface GridCell { id: string; rowStart: number; rowEnd: number; colStart: number; colEnd: number; merged: boolean }
@@ -640,11 +661,13 @@ const layoutMgmtVisible    = ref(false)
 const layoutFilter         = ref(true)    // true=显示搜索图标, false=显示输入框
 const layoutFilterText     = ref('')
 const layoutList           = ref<any[]>([])   // 全量布局（前10条为预设，10条后为自定义）
-const filteredLayoutList   = computed(() =>
-  layoutFilterText.value
-    ? layoutList.value.filter(i => i.layoutName?.includes(layoutFilterText.value))
-    : layoutList.value
-)
+// 右侧自定义布局：跳过前10条预设（对照 uscweb v-if="index > 9"），再按关键词过滤
+const filteredLayoutList = computed(() => {
+  const customLayouts = layoutList.value.slice(10)
+  return layoutFilterText.value
+    ? customLayouts.filter(i => i.layoutName?.includes(layoutFilterText.value))
+    : customLayouts
+})
 const selectedLayoutId     = ref<number | null>(null)
 const partitionList        = ref<Array<{id:number; name:string}>>([{ id:10000, name:'Root' }])
 const showGird1            = ref(false)
@@ -703,7 +726,9 @@ const computeCellStyle = (cell: GridCell) => {
     width:  `calc(${cW*cSpan}% - 1px)`,
     height: `calc(${rH*rSpan}% - 1px)`,
     boxSizing: 'border-box',
-    border: selectedCellId.value === cell.id ? '2px solid #f44336' : '1px solid #2a2a2a',
+    border: alertCells.value.includes(cell.id) ? '2px solid #ff6600'
+          : selectedCellId.value === cell.id   ? '2px solid #f44336'
+          : '1px solid #2a2a2a',
     overflow: 'hidden',
   }
 }
@@ -1234,27 +1259,40 @@ const deleteCurrentView = async () => {
 // ─── Layout management dialog ─────────────────────────────────────────────
 // ─── Canvas thumbnail (mirrors uscweb Canvas()) ───────────────────────────
 const drawCanvas = () => {
+  const customLayouts = layoutList.value.slice(10)
+  // popover 里的缩略图（viewCanvas + index，基于filteredLayoutList）
   layoutList.value.forEach((item: any, index: number) => {
     nextTick(() => {
       const canvas = document.getElementById('viewCanvas' + index) as HTMLCanvasElement | null
-      if (!canvas?.getContext) return
-      const ctx = canvas.getContext('2d')!
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      const [rows, cols] = (item.layoutType ?? '3|3').split('|').map(Number)
-      const cellW = canvas.width / cols
-      const cellH = canvas.height / rows
-      ;(item.setting?.layoutView ?? []).forEach((cell: any) => {
-        const x = (cell.colStart - 1) * cellW
-        const y = (cell.rowStart - 1) * cellH
-        const w  = (cell.colEnd  - cell.colStart) * cellW
-        const h  = (cell.rowEnd  - cell.rowStart) * cellH
-        ctx.fillStyle   = '#999999'
-        ctx.fillRect(x, y, w, h)
-        ctx.strokeStyle = 'rgb(35,35,35)'
-        ctx.lineWidth   = 1
-        ctx.strokeRect(x, y, w, h)
-      })
+      drawLayoutCanvas(canvas, item)
     })
+  })
+  // 对话框里的缩略图（dialogCanvas + index，基于自定义布局 slice(10)）
+  customLayouts.forEach((item: any, index: number) => {
+    nextTick(() => {
+      const canvas = document.getElementById('dialogCanvas' + index) as HTMLCanvasElement | null
+      drawLayoutCanvas(canvas, item)
+    })
+  })
+}
+
+const drawLayoutCanvas = (canvas: HTMLCanvasElement | null, item: any) => {
+  if (!canvas?.getContext) return
+  const ctx = canvas.getContext('2d')!
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  const [rows, cols] = (item.layoutType ?? '3|3').split('|').map(Number)
+  const cellW = canvas.width / cols
+  const cellH = canvas.height / rows
+  ;(item.setting?.layoutView ?? []).forEach((cell: any) => {
+    const x = (cell.colStart - 1) * cellW
+    const y = (cell.rowStart - 1) * cellH
+    const w  = (cell.colEnd  - cell.colStart) * cellW
+    const h  = (cell.rowEnd  - cell.rowStart) * cellH
+    ctx.fillStyle   = '#999999'
+    ctx.fillRect(x, y, w, h)
+    ctx.strokeStyle = 'rgb(35,35,35)'
+    ctx.lineWidth   = 1
+    ctx.strokeRect(x, y, w, h)
   })
 }
 
@@ -1264,15 +1302,16 @@ const openLayoutMgmtDialog = async () => {
   layoutMgmtVisible.value = true
 }
 const deleteCustomLayout = async () => {
-  if (!selectedLayoutId.value) return
+  if (!selectedLayoutId.value) { ElMessage.warning(t('Liveview.live_select_layout_first') || '请先选择一个布局'); return }
   const res = await DeleteLayoutApi([selectedLayoutId.value])
   if (res.status === 200 && res.data.code === 0) { await loadLayoutList(); selectedLayoutId.value = null }
 }
 const restoreDefaultLayouts = async () => { await loadLayoutList() }
 const onLayoutData = async (data: { layoutType:string; rows:number; cols:number; grid:any[] }) => {
-  if (!customLayoutForm.layoutName.trim()) { ElMessage.warning(t('Liveview.live_view_name')); return }
+  // 名称可选，为空时自动生成默认名（对照 uscweb 不强制要求名字）
+  const name = customLayoutForm.layoutName.trim() || `Layout ${layoutList.value.slice(10).length + 1}`
   const setting = { layoutView: data.grid.map((c:any) => ({ position:`${c.rowStart}-${c.colStart}`, rowStart:c.rowStart, rowEnd:c.rowEnd, colStart:c.colStart, colEnd:c.colEnd, merged:c.merged })) }
-  const res = await CreateLayoutApi({ layoutName: customLayoutForm.layoutName, layoutType: data.layoutType, setting })
+  const res = await CreateLayoutApi({ layoutName: name, layoutType: data.layoutType, setting })
   if (res.status === 200 && res.data.code === 0) {
     ElMessage.success(t('CommTableEdit.comm_add_successfully'))
     showGird1.value = false; gird1Ref.value?.resetToDefault?.()
@@ -1785,13 +1824,30 @@ const stopCellExtra = (cellId: string) => {
 }
 
 // ─── Event 面板状态 ────────────────────────────────────────────────────────
-const eventPanelShow   = ref(localStorage.getItem('hpro-event-show') === 'true')
-const eventTableData   = ref<any[]>([])
+const eventPanelShow   = ref(localStorage.getItem('hpro-event-show') !== 'false')
+// eventTableData / eventTotal 读写走全局 alarmStore（对照 uscweb alarmData in Vuex）
+const eventTableData   = computed(() => alarmStore.tableData)
+const eventTotal       = computed(() => alarmStore.total)
 const eventCurrentPage = ref(1)
 const eventPageSize    = 7
-const eventTotal       = computed(() => eventTableData.value.length)
 let   anaEventWS: any  = null
 const faceList         = ref<any[]>([])
+
+// 事件到达时闪烁对应格子边框（对照 uscweb setAlertState）
+const alertCells       = ref<string[]>([])
+const _alertTimers     = new Map<string, ReturnType<typeof setTimeout>>()
+
+const flashAlertCell = (channelToken: string) => {
+  const entry = [...cameraMap.value.entries()].find(([, c]) => c.token === channelToken)
+  if (!entry) return
+  const cellId = entry[0]
+  if (!alertCells.value.includes(cellId)) alertCells.value.push(cellId)
+  if (_alertTimers.has(cellId)) clearTimeout(_alertTimers.get(cellId)!)
+  _alertTimers.set(cellId, setTimeout(() => {
+    alertCells.value = alertCells.value.filter(id => id !== cellId)
+    _alertTimers.delete(cellId)
+  }, 1500))
+}
 
 const eventRuleTypes: Record<string, string> = {
   'USC_ANA_RULE_MIAA': t('Analytics.ana_rule_miaa'),
@@ -1837,13 +1893,15 @@ const eventPriorityGradient = (priority: string): string => {
 const eventPriorityGradient1 = (confidence: number): string => {
   const colors = ['#6B84EE','#4F99E8','#33BA7F','#FF7C00','#FE5003']
   const idx = Math.min(Math.floor(confidence / 20), 4)
-  return `linear-gradient(270deg, ${colors[idx]} 0%, rgba(0,0,0,0.1) 100%)`
+  const color = colors[idx] ?? colors[0]
+  return `linear-gradient(270deg, ${color} 0%, rgba(0,0,0,0.1) 100%)`
 }
 
 // 置信度文字颜色
 const eventConfidenceColor = (confidence: number): string => {
   const colors = ['#6B84EE','#4F99E8','#33BA7F','#FF7C00','#FE5003']
-  return colors[Math.min(Math.floor(confidence / 20), 4)]
+  const idx = Math.min(Math.floor(confidence / 20), 4)
+  return colors[idx] ?? colors[0]
 }
 
 // ─── Event 面板数据方法 ───────────────────────────────────────────────────
@@ -1871,7 +1929,7 @@ const getAnaEventList = async () => {
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
   try {
     const res = await GetAnaEventApi({
-      pageIndex: 0,
+      pageIndex: 1,
       pageSize: 20,
       beginTime: formatTime(yesterday),
       endTime: formatTime(now),
@@ -1880,7 +1938,7 @@ const getAnaEventList = async () => {
     })
     if (res.status === 200 && res.data.code === 0) {
       const raw: any[] = res.data.result.list ?? []
-      eventTableData.value = raw.map((item: any) => {
+      const mapped = raw.map((item: any) => {
         const row = { ...item, img: item.strJpeg || '' }
         if (item.ruleType === 'USC_ANA_RULE_FARE') {
           const person = faceList.value.find((p: any) => p.id === item.strEntity)
@@ -1888,6 +1946,7 @@ const getAnaEventList = async () => {
         }
         return row
       })
+      alarmStore.updateAlarmData(mapped)
     } else {
       console.warn('[getAnaEventList] unexpected response', res.data)
     }
@@ -1897,6 +1956,10 @@ const getAnaEventList = async () => {
 const anaEventCB = (event: string) => {
   try {
     const msg = JSON.parse(event).msg
+    // 越线/区域入侵计数类事件不进入告警列表（对照 uscweb anaEventCB）
+    if (msg.strRuleType === 'USC_ANA_RULE_VECT' || msg.strRuleType === 'USC_ANA_RULE_PECT') return
+    // 闪烁对应摄像头格子边框（对照 uscweb setAlertState）
+    flashAlertCell(msg.strChannelToken)
     const row: any = {
       anaName:      msg.strAnaName,
       channelName:  msg.strChannelName,
@@ -1915,8 +1978,7 @@ const anaEventCB = (event: string) => {
       const person = faceList.value.find((p: any) => p.id === row.strEntity)
       row.strEntity = person ? person.personName : row.strEntity
     }
-    if (eventTableData.value.length >= 70) eventTableData.value.pop()
-    eventTableData.value.unshift(row)
+    alarmStore.addAlarmItem(row)
   } catch {}
 }
 
@@ -2249,6 +2311,9 @@ onBeforeUnmount(() => {
   cellEZoomTimers.clear()
   document.removeEventListener('fullscreenchange', _onFullscreenChange)
   document.removeEventListener('webkitfullscreenchange', _onFullscreenChange)
+  // 清理 alert 闪烁定时器
+  _alertTimers.forEach(t => clearTimeout(t))
+  _alertTimers.clear()
   // 清理 Event 面板 WebSocket
   closeAnaEvent()
 })
@@ -2300,6 +2365,10 @@ onBeforeUnmount(() => {
 }
 // Event 面板右侧布局（对照 uscweb alarm_right_right）
 .event-panel-right {
+  width: 22%;
+  min-width: 300px;
+  max-width: 360px;
+  flex: 0 0 22%;
   height: 100%;
   border-left: 1px solid #333;
   background: #1b1b1b;
@@ -2310,12 +2379,13 @@ onBeforeUnmount(() => {
       display: flex; justify-content: space-between; align-items: center;
       height: 37px; flex-shrink: 0; padding: 0 10px;
       font-size: 14px; font-weight: 500; border-bottom: 1px solid #2a2a2a;
+      .iconfont { cursor: pointer; &:hover { color: #0399FE; } }
     }
     .alarm_right_right_body {
-      flex: 1; overflow-y: auto; padding: 4px 6px;
-      &::-webkit-scrollbar { width: 6px; }
-      &::-webkit-scrollbar-thumb { border-radius: 3px; background: rgba(218,218,218,0.2); }
-      &::-webkit-scrollbar-track { background: rgba(218,218,218,0.05); }
+      flex: 1; overflow: auto; padding: 4px 6px;
+      &::-webkit-scrollbar { width: 8px; height: 8px; }
+      &::-webkit-scrollbar-thumb { border-radius: 5px; background: rgba(218,218,218,0.2); }
+      &::-webkit-scrollbar-track { border-radius: 0; background: rgba(218,218,218,0.05); }
       .alarm_right_right_content {
         height: 338px; padding: 0 8px; margin: 4px 0;
         display: flex; flex-direction: column;
@@ -2330,7 +2400,7 @@ onBeforeUnmount(() => {
         .content_body {
           flex: 1; padding: 8px; display: flex; flex-direction: column;
           .content_body_top {
-            height: 173px; display: flex; align-items: center; justify-content: center;
+            height: 173px; text-align: center; display: flex; align-items: center; justify-content: center;
             background: rgba(0,0,0,0.2); border-radius: 4px; overflow: hidden; flex-shrink: 0;
             img { cursor: pointer; max-height: 100%; max-width: 100%; object-fit: contain; }
           }
@@ -2346,7 +2416,13 @@ onBeforeUnmount(() => {
     .alarm_right_right_footer {
       flex-shrink: 0; padding: 4px 0;
       :deep(.el-pagination) {
-        .btn-prev, .btn-next, .el-pager li { border: none !important; }
+        .btn-prev, .btn-next, .el-pager li {
+          border: none !important;
+          background: transparent !important;
+          color: #ccc;
+        }
+        .el-pager li.is-active { color: #0399FE; }
+        .btn-prev:hover, .btn-next:hover, .el-pager li:hover { color: #0399FE; }
       }
     }
   }
@@ -2648,7 +2724,123 @@ onBeforeUnmount(() => {
   }
 }
 
-// 音量控制器（完全对照 GridCloudView.vue，保证一致）
+/* ── ViewLayoutDialog ── */
+.ViewLayoutDialog {
+  .layout-mgmt-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+
+    .button_edi {
+      display: flex;
+      align-items: center;
+    }
+
+    /* 新建按钮 */
+    .btn-new-layout {
+      height: 29px;
+      color: #9ee577 !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      display: flex; align-items: center; padding: 0 5px;
+      font-size: 14px;
+      i { margin-right: 6px; }
+      &:hover { opacity: 0.85; }
+    }
+    /* 删除按钮 */
+    .btn-delete-layout {
+      width: 32px; height: 29px;
+      color: #fe5003 !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      font-size: 16px; padding: 0;
+      &:hover { opacity: 0.85; background: rgba(254,80,3,0.1) !important; }
+      &.is-disabled {
+        opacity: 0.6;
+        color: #fe5003 !important;
+        * { color: #fe5003 !important; }
+      }
+    }
+    /* 恢复默认按钮 */
+    .btn-restore-layout {
+      height: 29px;
+      color: #0399FE !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      display: flex; align-items: center; padding: 0 5px;
+      font-size: 14px;
+      i { margin-right: 6px; }
+      &:hover { opacity: 0.85; }
+    }
+  }
+
+  /* 自定义布局列表区 */
+  .customIcon {
+    padding-top: 10px;
+    height: 145px;
+    overflow-y: auto;
+
+    p {
+      margin-bottom: 5px !important;
+      padding-left: 10px;
+      height: 18px;
+      line-height: 18px;
+      font-size: 12px;
+    }
+
+    /* 布局缩略图列表 */
+    .DialogLayout {
+      display: flex;
+      flex-wrap: wrap;
+      padding-left: 12px;
+
+      .LayoutCanvas {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        margin: 0 15px 0 0;
+        cursor: pointer;
+        border-radius: 2px;
+
+        canvas { margin: 5px; }
+
+        &:hover {
+          background: #0e0e0e;
+          span { display: block; }
+        }
+        &.selected { outline: 2px solid #0399FE; border-radius: 2px; }
+
+        span {
+          color: #06e8ea;
+          font-size: 12px;
+          position: absolute;
+          top: 30%;
+          display: none;
+          max-width: 60px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-align: center;
+        }
+      }
+    }
+  }
+
+  /* footer 按钮 */
+  .btn-cancel-layout {
+    color: #fe5003 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
+// 音量控制器
 .Audio_slider-bottom {
   display: flex;
   flex-direction: row;
@@ -2672,8 +2864,21 @@ onBeforeUnmount(() => {
 </style>
 
 <style lang="scss">
-/* ── GongGePopover（对照uscweb，非scoped才能命中popper-class） ── */
+/* ── GongGePopover ── */
 .GongGePopover {
+  /* 强制深色背景，不依赖 CSS 变量继承 */
+  background-color: #1e1e1e !important;
+  border-color: #333 !important;
+  color: #ccc;
+  /* 覆盖 Element Plus 默认宽度限制 */
+  width: 510px !important;
+  padding: 12px;
+
+  /* 箭头也跟着变深色 */
+  .el-popper__arrow::before {
+    background: #1e1e1e !important;
+    border-color: #333 !important;
+  }
   .LayoutSearch {
     display: flex;
     justify-content: space-between;
@@ -2751,11 +2956,17 @@ onBeforeUnmount(() => {
       position: relative;
       cursor: pointer;
       border-radius: 4px;
-      &:hover { background: #0e0e0e; }
+      &:hover {
+        background: #0e0e0e;
+        span { display: block; }
+      }
 
       span {
         color: #06e8ea;
         font-size: 12px;
+        position: absolute;
+        top: 30%;
+        display: none;
         max-width: 60px;
         overflow: hidden;
         text-overflow: ellipsis;

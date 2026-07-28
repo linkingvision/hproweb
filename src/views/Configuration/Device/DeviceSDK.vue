@@ -134,14 +134,14 @@ const GetDeviceList = async () => {
 const GetDevPartition = async () => {
   const res = await GetDevPartitionApi();
   if (res.status == 200 && res.data.code === 0) {
-    devData = res.data.result;
+    devData.splice(0, devData.length, ...(res.data.result ?? []))
   }
 }
 
 const DevFile = async () => {
   const res = await GetDevFileApi();
   if (res.status == 200 && res.data.code == 0) {
-    fileData = [];
+    fileData.splice(0)        // 原地清空，保持响应式代理不变
     const result = res.data.result;
     const srcGroup: any = { children: [] };
     if (!result) return;

@@ -4,41 +4,36 @@
 
       <!-- ── Left device tree ── -->
       <div class="liveview_left" :class="{'liveview_lefts': isTreeFold}">
-        <div class="liveview_left_input" style="display:flex;align-items:center;padding:4px 8px;gap:6px;">
-          <el-input :placeholder="t('Common.comm_filtration')" v-model="filterText" size="small" style="flex:1">
+        <div class="liveview_left_input">
+          <el-input class="tree-search" :placeholder="t('Common.comm_filtration')" v-model="filterText">
             <template #suffix><i class="iconfont icon-sousuo1"></i></template>
           </el-input>
-          <i class="iconfont icon-liebiao" style="cursor:pointer;font-size:18px;" @click="toggleFold"></i>
+          <i class="iconfont icon-liebiao fold-btn" @click="toggleFold"></i>
         </div>
         <el-collapse v-model="activeNames">
           <el-collapse-item name="device">
             <template #title>
-              <div style="display:flex;justify-content:space-between;width:90%;align-items:center;">
+              <div class="collapse-title">
                 <span>{{ t('Common.comm_device_partition') }}</span>
-                <div class="liveview_colltitle">
-                  <i class="liveview_titleicon1 iconfont icon-shuaxin1" @click.stop="refreshTree"></i>
-                </div>
+                <div @click.stop="refreshTree"><i class="iconfont icon-shuaxin"></i></div>
               </div>
             </template>
             <el-tree ref="treeRef" :data="treeData" :props="treeProps" node-key="id"
               :default-expanded-keys="expandedKeys" :filter-node-method="filterNode"
-              style="overflow:auto;">
+              style="overflow:auto;height:calc(100% - 10px);">
               <template #default="{ node, data }">
-                <div style="width:100%;display:flex;justify-content:space-between;align-items:center;"
-                  draggable="true" @dragstart="onDragStart($event, data)">
-                  <span class="size_color" style="display:flex;align-items:center;flex:1;overflow:hidden;">
-                    <i :class="`iconfont ${getNodeIcon(data)}`"
-                      style="margin-right:6px;font-size:19px;flex-shrink:0;"></i>
+                <div class="tree-node" :class="getNodeClass(data)" draggable="true" @dragstart="onDragStart($event, data)">
+                  <span :class="isNodePlaying(data) ? 'node-playing-label' : ''"
+                    style="display:flex;align-items:center;flex:1;overflow:hidden;">
+                    <i :class="`iconfont ${getNodeIcon(data)}`" style="margin-right:6px;font-size:19px;flex-shrink:0;"></i>
                     <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ node.label }}</span>
                     <span v-if="data.totalCount !== undefined" style="padding-left:4px;flex-shrink:0;">
                       {{ data.onlineCount }}/{{ data.totalCount }}
                     </span>
                   </span>
-                  <span v-if="isNodePlaying(data)" class="nowplay">
+                  <span v-if="isNodePlaying(data)" class="node-playing">
                     <span class="dot">●</span>
-                    <span class="nowplayText">
-                      {{ data.isDeviceChannel ? t('Liveview.live_playing') : t('Liveview.live_displaying') }}
-                    </span>
+                    {{ data.isDeviceChannel ? t('Liveview.live_playing') : t('Liveview.live_displaying') }}
                   </span>
                 </div>
               </template>
@@ -217,7 +212,7 @@ const store     = useStore()
 // ─── Tree state ─────────────────────────────────────────────────────────────
 interface TreeNode {
   id: string; label: string; type: string; data: any
-  token?: string; isDeviceChannel?: boolean; online?: boolean
+  token?: string; isDeviceChannel?: boolean; isLeaf?: boolean; online?: boolean
   totalCount?: number; onlineCount?: number; children?: TreeNode[]
 }
 const treeRef        = ref<any>(null)
@@ -284,49 +279,80 @@ const getNodeIcon = (n: TreeNode) => {
   if (n.type === 'device') return 'icon-Device'
   return 'icon-gen'
 }
+const getNodeClass = (n: TreeNode) => {
+  if (n.type !== 'device') return ''
+  return (n.online ?? n.data?.online) ? 'device-online' : 'device-offline'
+}
 const isNodePlaying = (n: TreeNode) => playingNodeIds.value.includes(n.id)
 const filterNode = (query: string, data: TreeNode) => !query || (data.label?.includes(query) ?? false)
 watch(filterText, v => treeRef.value?.filter(v))
 
 // ─── Load device tree ─────────────────────────────────────────────────────────
+const buildTree = (parts: any[]): TreeNode[] => {
+  return parts.map(p => {
+    const children: TreeNode[] = []
+    if (p.children?.length) children.push(...buildTree(p.children))
+    p.dev?.forEach((d: any) => children.push({
+      id: `dev_${d.devId}`, label: d.name, type: 'device', online: d.online, data: d,
+      children: [], isLeaf: false,
+    }))
+    p.view?.forEach((v: any) => children.push({
+      id: `view_${v.viewId}`, label: v.viewName, type: 'view', data: v, isLeaf: true,
+    }))
+    return {
+      id: `part_${p.devPartitionId}`,
+      label: p.devPartitionName,
+      type: 'partition',
+      data: p,
+      isLeaf: false,
+      children,
+    } as TreeNode
+  })
+}
+
+const extractDevices = (nodes: TreeNode[]): TreeNode[] => {
+  const out: TreeNode[] = []
+  nodes.forEach(n => {
+    if (n.type === 'device' && !n.isDeviceChannel) out.push(n)
+    if (n.children?.length) out.push(...extractDevices(n.children))
+  })
+  return out
+}
+
 const loadTree = async () => {
   const res = await GetDevPartitionApi()
-  if (res.status !== 200 || res.data.code !== 0) return
-  const list: TreeNode[] = []
-  const walk = (nodes: any[]) => {
-    nodes.forEach(p => {
-      if (p.children?.length) walk(p.children)
-      p.dev?.forEach((d: any) => list.push({
-        id: `dev_${d.devId}`, label: d.name, type: 'device', online: d.online, data: d,
-        children: [{ id: 'ph', label: '', type: 'device', data: null }],
-      }))
-      p.view?.forEach((v: any) => list.push({
-        id: `view_${v.viewId}`, label: v.viewName, type: 'view', data: v,
-      }))
-    })
-  }
-  walk(res.data.result ?? [])
-  const devs = list.filter(n => n.type === 'device' && n.data?.token)
+  if (res.status !== 200 || !res.data?.result?.length) return
+  const root = res.data.result[0]
+  const tree: TreeNode[] = []
+  if (root.children?.length) tree.push(...buildTree(root.children))
+  root.dev?.forEach((d: any) => tree.push({
+    id: `dev_${d.devId}`, label: d.name, type: 'device', online: d.online, data: d,
+    children: [], isLeaf: false,
+  }))
+
+  const devs = extractDevices(tree)
   for (let i = 0; i < devs.length; i += 3) {
     await Promise.allSettled(devs.slice(i, i + 3).map(async item => {
       if (deviceCache.has(item.data.token)) {
         const c = deviceCache.get(item.data.token)!
-        item.children = c.length ? c : undefined; return
+        item.children = c.length ? c : undefined
+        item.isLeaf = !c.length
+        return
       }
       const r = await GetDeviceChannels(item.data.token)
       if (r.status === 200 && r.data.code === 0 && r.data.result?.length) {
         const chs: TreeNode[] = r.data.result.map((ch: any, i: number) => ({
           id: `ch_${item.data.devId}_${i}`, label: ch.name || `ch${i+1}`,
-          type: 'device', data: ch, isDeviceChannel: true, online: ch.online,
+          type: 'device', data: ch, isDeviceChannel: true, isLeaf: true, online: ch.online,
         }))
         deviceCache.set(item.data.token, chs)
-        item.children = chs; item.totalCount = chs.length
+        item.children = chs; item.isLeaf = false; item.totalCount = chs.length
         item.onlineCount = chs.filter((c: any) => c.online).length
-      } else { deviceCache.set(item.data.token, []); item.children = undefined }
+      } else { deviceCache.set(item.data.token, []); item.children = undefined; item.isLeaf = true }
     }))
   }
-  expandedKeys.value = list.filter(n => n.type === 'device' && !n.isDeviceChannel).map(n => n.id)
-  treeData.value = list
+  expandedKeys.value = devs.map(n => n.id)
+  treeData.value = tree
 }
 const refreshTree = () => { deviceCache.clear(); loadTree() }
 const toggleFold = () => {
@@ -921,27 +947,35 @@ onBeforeUnmount(() => {
   .liveview_left {
     flex: 0 0 15%;
     height: 100%;
-    overflow: auto;
+    background: #252525;
+    overflow: hidden;
     transition: flex 0.2s;
-    &::-webkit-scrollbar { display: none; }
 
     .liveview_left_input {
-      background: #1B1B1B;
-      :deep(.el-input__inner) { color: #fff; }
-      :deep(.el-input__wrapper) { background: #232323; box-shadow: none; }
+      height: 50px; background: #1B1B1B; display: flex; align-items: center; padding: 0 8px; gap: 8px;
+      .tree-search { flex: 1; :deep(.el-input__wrapper) { background: #232323; box-shadow: none; .el-input__inner { color: #fff; } } }
+      .fold-btn { font-size: 18px; cursor: pointer; }
     }
 
-    .nowplay {
-      display: flex; align-items: center; font-size: 12px; color: #30d158;
+    .collapse-title { display: flex; justify-content: space-between; width: 90%; align-items: center; padding-left: 10px; }
+    .tree-node { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+    .node-playing-label { color: #30d158; }
+    .node-playing {
+      display: flex; align-items: center;
+      font-size: 12px; color: #30d158;
+      padding-left: 4px; padding-right: 8px; flex-shrink: 0;
       .dot { font-size: 12px; padding-right: 4px; }
     }
+    .device-offline { opacity: 0.6; }
 
     :deep(.el-collapse) {
       border: 0;
-      .el-collapse-item__header { background: #303030; border: 0; color: #fff; font-size: 14px; height: 36px; }
-      .el-collapse-item__wrap   { background: transparent; border: 0; }
+      .el-collapse-item__header { background: #303030; border: 0; color: #fff; font-size: 14px; height: 36px; line-height: 36px; }
+      .el-collapse-item__wrap   { background: transparent; border: 0;
+        .el-collapse-item__content { padding: 0 10px; }
+      }
       .el-tree { background: transparent; font-size: 13px;
-        .el-tree-node__content { min-height: 26px; &:hover { background: rgba(255,255,255,0.1); } }
+        .el-tree-node__content { min-height: 26px; height: auto; &:hover { background: rgba(255,255,255,0.1); } }
       }
     }
   }

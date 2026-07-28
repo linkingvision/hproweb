@@ -58,12 +58,14 @@ H5jsEvent.prototype.init = function (conf) {
 		}
 	}
 	switch (conf.apipath) {
+		case "/uapi/v1/ws/anaSearch":
 		case "/api/v1/ws/anaSearch":
 			this.h5spath = conf.rootpath + conf.apipath + "?token=" + conf.token +
 				'&profile=' + this.streamprofile + "&playback=true&hevc=" + this.strHevc + "&serverpb=" + this.serverpb +
 				"&begintime=" + encodeURIComponent(this._pbconf.begintime) + "&endtime=" + encodeURIComponent(this._pbconf.endtime) +
 				"&meta=true&session=" + conf.session;
 			break;
+		case "/uapi/v1/ws/anaEvent":
 		case "/api/v1/ws/anaEvent":
 			this.h5spath = conf.rootpath + conf.apipath + '?session=' + conf.session;
 			break;

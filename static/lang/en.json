@@ -415,6 +415,7 @@
     "live_column": "Column",
     "live_customization": "Customization",
     "live_restore_defaults": "Restore Defaults",
+    "live_select_layout_first": "Please select a layout first",
     "live_displaying": "Displaying",
     "live_playing": "Playing",
     "live_video": "Video",

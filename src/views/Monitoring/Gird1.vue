@@ -166,6 +166,7 @@ onMounted(generateGrid)
   height: 300px;
   display: grid;
   gap: 5px;
+  background-color: #1a1a1a;
 }
 .control-panel {
   display: flex;
@@ -179,11 +180,13 @@ onMounted(generateGrid)
 }
 .label {
   font-size: 12px;
+  color: #ccc;
   margin-right: 10px;
   white-space: nowrap;
 }
 .grid-cell {
   border: 1px solid #232323;
+  background-color: #676767;
   position: relative;
   display: flex;
   justify-content: center;
@@ -199,4 +202,16 @@ onMounted(generateGrid)
 .right-edge  { right: 0; top: 0; bottom: 0; width: 3px; }
 .bottom-edge { bottom: 0; left: 0; right: 0; height: 3px; }
 .left-edge   { left: 0; top: 0; bottom: 0; width: 3px; }
+
+/* el-input-number 深色样式（对照 uscweb Gird1.vue） */
+:deep(.el-input-number) {
+  .el-input__wrapper {
+    background-color: #000 !important;
+    box-shadow: none !important;
+    border-radius: 15px;
+  }
+  .el-input__inner { color: #fff !important; }
+  .el-input-number__increase,
+  .el-input-number__decrease { background: none !important; color: #ccc; }
+}
 </style>

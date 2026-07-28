@@ -359,7 +359,7 @@ const initResourceCharts = (data: any) => {
     cpuChart.setOption({ tooltip: { trigger: 'axis', backgroundColor: bgcol }, legend: { data: [t('CommDev.comm_dev_cpuusage')], icon: 'circle', itemWidth: 8, textStyle: { color: titlecol }, bottom: 37, left: 161 },
       grid: { left: 50, right: 20, top: 40, bottom: 73 }, xAxis: { type: 'category', boundaryGap: false, data: timeAxis, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { color: titlecol, interval: 58 } },
       yAxis: { type: 'value', min: 0, max: 100, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { color: titlecol, fontSize: 10 } },
-      series: [{ name: t('CommDev.comm_dev_cpuusage'), data: cpuUsageData.value, type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#55EEDA' }, areaStyle: { color: 'rgba(85,238,218,0.5)' } }] })
+      series: [{ name: t('CommDev.comm_dev_cpuusage'), data: cpuUsageData.value, type: 'line', smooth: true, symbol: 'none', lineStyle: { color: '#55EEDA' }, itemStyle: { color: '#55EEDA' }, areaStyle: { color: 'rgba(85,238,218,0.5)' } }] })
   }
   if (!memChart) {
     memChart = echarts.init(chartMemoryContainerRef.value!)

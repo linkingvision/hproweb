@@ -110,6 +110,11 @@
     "comm_table_token": "編號",
     "comm_table_type": "類型",
     "comm_modify_successfully": "修改成功！",
+    "comm_edit_successfully": "編輯成功！",
+    "comm_edit_failed": "編輯失敗！",
+    "comm_save_failed": "儲存失敗！",
+    "comm_save_successfully": "儲存成功！",
+    "comm_set_successfully": "設置成功！",
     "comm_detail_alarm": "查看報警"
   },
   "CommTime": {
@@ -127,8 +132,14 @@
     "comm_enable": "開啓",
     "comm_filtration": "輸入關鍵字進行過濾",
     "comm_logic_partition": "邏輯分區",
+    "comm_minutes": "分鐘",
     "comm_picture": "圖片",
     "comm_please_input": "請輸入",
+    "comm_please_select": "請選擇",
+    "comm_reset": "重置",
+    "comm_about": "關於",
+    "comm_delete_confirm": "確定刪除該選項？",
+    "comm_prompt": "提示",
     "comm_root": "根節點",
     "comm_time_current": "當前時間",
     "comm_time_end": "結束時間",
@@ -262,7 +273,9 @@
     "mon_stop_recording": "停止錄像",
     "mon_stop_recording_failed": "停止錄像失敗！",
     "mon_live": "實時",
-    "mon_playback": "回放"
+    "mon_playback": "回放",
+    "mon_monitoring": "監控",
+    "mon_cloud_view": "雲視圖"
   },
   "Partition": {
     "part_name": "分區名稱",
@@ -307,7 +320,11 @@
     "set_pw_uppercase": "密碼至少包含一個大寫字母。",
     "set_pw_user": "密碼中不能包含用戶名。",
     "set_two_passwords_error": "兩次密碼不一致，請重新輸入!",
-    "set_user": "用戶"
+    "set_user": "用戶",
+    "set_high": "高",
+    "set_middle": "中",
+    "set_low": "低",
+    "set_critical": "嚴重"
   },
   "System": {
     "svs_file_import_success": "文件導入成功，重啟後生",
@@ -381,7 +398,11 @@
     "system_endtime": "版權結束時間",
     "system_runtime": "運行時間",
     "system_hour": "時",
-    "system_minute": "分"
+    "system_minute": "分",
+    "system_network_in": "網路流入",
+    "system_network_out": "網路流出",
+    "system_memory": "記憶體",
+    "system_copysuccessful": "複製成功"
   },
   "Liveview": {
     "live_view": "視圖",
@@ -393,6 +414,7 @@
     "live_column": "列",
     "live_customization": "自定義",
     "live_restore_defaults": "恢復預設",
+    "live_select_layout_first": "請先選擇一個布局",
     "live_displaying": "正在顯示",
     "live_playing": "正在播放",
     "live_video": "視頻",
@@ -405,7 +427,8 @@
     "live_sampleBit": "採樣位",
     "live_channels": "聲道",
     "live_rec_start": "開始錄像",
-    "live_rec_stop": "停止錄像"
+    "live_rec_stop": "停止錄像",
+    "live_camera": "攝像頭"
   },
   "CommDev": {
     "comm_dev_audio": "音頻",
@@ -466,6 +489,9 @@
   },
   "Cascade": {
     "cascade_central_record": "中心存儲"
+  },
+  "Event": {
+    "event_count": "告警"
   },
   "Theme": {
     "theme": "主題",
