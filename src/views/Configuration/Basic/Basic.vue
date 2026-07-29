@@ -51,10 +51,13 @@ onMounted(() => {
             <i class="iconfont icon-cunchupeizhi"></i>
             <span>{{ t('Router.router_storage_setting') }}</span>
           </template>
+          <el-menu-item index="/Configuration/Basic/RecordingTemplate">{{ t('Router.router_recording_plan') }}</el-menu-item>
+          <el-menu-item index="/Configuration/Basic/SnapshotTemplate">{{ t('Router.router_snapshot_plan') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/StorageMode">{{ t('Router.router_storage_mode') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/RegularStorage">{{ t('Router.router_regular_storage') }}</el-menu-item>
-          <el-menu-item index="/Configuration/Basic/MetaStorage">{{ t('Router.router_meta_storage') }}</el-menu-item>
+          <el-menu-item index="/Configuration/Basic/ArchiveStorage">{{ t('Configuration.conf_archive_storage') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/LocalObjectStorage">{{ t('Router.router_local_obj_storage') }}</el-menu-item>
+          <el-menu-item index="/Configuration/Basic/MetaStorage">{{ t('Router.router_meta_storage') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/S3Storage">{{ t('Router.router_s3_storage') }}</el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="/Configuration/Basic/User/UserConfig">

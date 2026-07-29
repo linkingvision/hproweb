@@ -72,6 +72,11 @@
     "ana_version_number": "Número de versión",
     "ana_work_server": "servidor de trabajo"
   },
+  "Archive": {
+    "arch_storage_archivepartition": "Partición de archivo",
+    "arch_storage_retentionpercent": "Proporción de cobertura cíclica",
+    "arch_storage_videotime": "Duración del archivo de grabación"
+  },
   "Cluster": {
     "cluster_server_name": "Nombre del servidor"
   },
@@ -154,7 +159,18 @@
     "comm_last_time24": "Últimas 24 horas",
     "comm_last_time1524": "Últimos 15 días",
     "comm_last_time3024": "Últimos 30 días",
-    "comm_alarms_count": "number alarma(s)"
+    "comm_alarms_count": "number alarma(s)",
+    "comm_monday": "Lunes",
+    "comm_tuesday": "Martes",
+    "comm_wednesday": "Miércoles",
+    "comm_thursday": "Jueves",
+    "comm_friday": "Viernes",
+    "comm_saturday": "Sábado",
+    "comm_sunday": "Domingo",
+    "comm_public_holiday": "Día festivo",
+    "comm_check_all": "Seleccionar todo",
+    "comm_s": "s",
+    "comm_year": "Año"
   },
   "Configuration": {
     "conf_advanced_features": "Características avanzadas",
@@ -188,6 +204,7 @@
     "conf_total": "Total",
     "conf_disk_units": "disco(s)",
     "conf_regular_storage": "Almacenamiento convencional",
+    "conf_archive_storage": "Almacenamiento de archivo",
     "conf_cannot_be_modified": "Después de guardar, la capacidad máxima no se puede modificar",
     "conf_save_record_first": "Primero guarde la partición de grabación ya añadida"
   },
@@ -275,7 +292,7 @@
     "router_device_partition": "Partición de Dispositivo",
     "router_image_storage": "Almacenamiento de imágenes",
     "router_local_obj_storage": "Almacenamiento local de objetos",
-    "router_meta_storage": "Almacenamiento de metadatos",
+    "router_meta_storage": "S3 Almacenamiento de metadatos",
     "router_monitoring": "Escucha",
     "router_regular_storage": "Almacenamiento convencional",
     "router_s3_storage": "almacenamiento S3",
@@ -283,7 +300,8 @@
     "router_storage_setting": "Configuración de almacenamiento",
     "router_view": "Vista",
     "router_user": "Usuario",
-    "router_user_config": "Config. de usuario"
+    "router_user_config": "Config. de usuario",
+    "router_recording_plan": "Plan de Grabación"
   },
   "Setting": {
     "set_adding_views": "Agregar vista",
@@ -306,7 +324,43 @@
     "set_pw_uppercase": "La contraseña debe contener al menos una letra mayúscula.",
     "set_pw_user": "La contraseña no puede contener el nombre de usuario.",
     "set_two_passwords_error": "Dos contraseñas no coinciden, ¡vuelve a ingresar!",
-    "set_user": "Usuario"
+    "set_user": "Usuario",
+    "set_high": "Alto",
+    "set_middle": "Medio",
+    "set_low": "Bajo",
+    "set_critical": "Crítico",
+    "set_record_always": "Grabar siempre",
+    "set_do_not_record": "No grabar",
+    "set_motion": "Movimiento",
+    "set_object": "Objeto",
+    "set_motion_and_object": "Movimiento y Objeto",
+    "set_pre_record": "Tiempo pregrabado",
+    "set_post_record": "Publicar registro",
+    "set_anr_max_time": "tiempo máximo de ANR",
+    "set_record_expire_day": "Día de caducidad de la grabación",
+    "set_enable_anr": "Habilitar ANR",
+    "set_0_auto": "0 significa automático",
+    "set_copy_to": "Copiar a",
+    "set_public_holiday_configuration": "Configurar festivos",
+    "set_holiday": "Festivo",
+    "set_holiday_new_year":    "Año Nuevo",
+    "set_holiday_spring":      "Festival de Primavera",
+    "set_holiday_qingming":    "Festival Qingming",
+    "set_holiday_labor":       "Día del Trabajo",
+    "set_holiday_dragon_boat": "Festival del Bote del Dragón",
+    "set_holiday_mid_autumn":  "Festival de Medio Otoño",
+    "set_holiday_national":    "Día Nacional",
+    "set_today": "Hoy",
+    "set_planned_date": "Fecha planificada",
+    "set_recording_always": "Grabación continua",
+    "set_motion_recording": "Grabación por movimiento",
+    "set_object_recording": "Grabación por objeto",
+    "set_motion_object_recording": "Grabación por movimiento y objeto",
+    "set_not_recording": "Sin grabación",
+    "set_continue_30": "Grabación continua (30 días)",
+    "set_continue_60": "Grabación continua (60 días)",
+    "set_continue_90": "Grabación continua (90 días)",
+    "set_continue_365": "Grabación continua (365 días)"
   },
   "System": {
     "svs_file_import_success": "Archivo importado con éxito. ¡Se activará tras el reinicio!",

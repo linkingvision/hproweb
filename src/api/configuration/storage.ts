@@ -160,3 +160,133 @@ export const DelRecordPartitionApi = (data: DelRecordPartitionParam) => Axios({
   method: 'DELETE',
   data
 })
+
+// ──────────────── Recording Template ────────────────
+
+export const GetRecordingTemplateApi = () => Axios({
+  url: '/uapi/v1/RecordingTemplate',
+  method: 'GET'
+})
+
+export interface RecordingRange {
+  index: number
+  startTime: string
+  endTime: string
+  enable: string
+  type: string
+  stream: string
+}
+
+export interface TemplateDay {
+  dayIndex: number
+  recordingRange: RecordingRange[]
+}
+
+export interface RecordingTemplateParam {
+  uuid?: string
+  recordingTemplateName: string
+  preRecInSecond: number
+  postRecInSecond: number
+  RecordingExpireInDay: number
+  ANR: boolean
+  ANRTimeInHour: number
+  setting: { templateData: TemplateDay[] }
+}
+
+export const AddRecordingTemplateApi = (data: RecordingTemplateParam) => Axios({
+  url: '/uapi/v1/RecordingTemplate',
+  method: 'POST',
+  data
+})
+
+export const UpdateRecordingTemplateApi = (data: RecordingTemplateParam) => Axios({
+  url: '/uapi/v1/RecordingTemplate',
+  method: 'PUT',
+  data
+})
+
+export const DeleteRecordingTemplateApi = (data: { ids: number[] }) => Axios({
+  url: '/uapi/v1/RecordingTemplate',
+  method: 'DELETE',
+  data
+})
+
+// ──────────────── Public Holiday ────────────────
+
+export const GetPublicHolidayApi = () => Axios({
+  url: '/uapi/v1/PublicHoliday',
+  method: 'GET'
+})
+
+export interface PublicHolidayParam {
+  year: string
+  setting: { publicHoliday: { holiday: string }[] }
+}
+
+export const AddPublicHolidayApi = (data: PublicHolidayParam) => Axios({
+  url: '/uapi/v1/PublicHoliday',
+  method: 'POST',
+  data
+})
+
+export const DeletePublicHolidayApi = (data: { ids: number[] }) => Axios({
+  url: '/uapi/v1/PublicHoliday',
+  method: 'DELETE',
+  data
+})
+
+// ──────────────── Snapshot Template ────────────────
+
+export interface SnapshotTemplateParam {
+  uuid?: string
+  snapshotTemplateName: string
+  scheduleSnapshot: number
+  snapshotWidth: number
+  snapshotHeight: number
+  snapshotQuality: string
+  snapshotIntervalInSec: number
+  snapshotExpireInDay: number
+  setting: { templateData: TemplateDay[] }
+}
+
+export const GetSnapshotTemplateApi = () => Axios({
+  url: '/uapi/v1/SnapshotTemplate',
+  method: 'GET'
+})
+
+export const AddSnapshotTemplateApi = (data: SnapshotTemplateParam) => Axios({
+  url: '/uapi/v1/SnapshotTemplate',
+  method: 'POST',
+  data
+})
+
+export const UpdateSnapshotTemplateApi = (data: SnapshotTemplateParam) => Axios({
+  url: '/uapi/v1/SnapshotTemplate',
+  method: 'PUT',
+  data
+})
+
+export const DeleteSnapshotTemplateApi = (data: { ids: number[] }) => Axios({
+  url: '/uapi/v1/SnapshotTemplate',
+  method: 'DELETE',
+  data
+})
+
+// ──────────────── Archive Storage ────────────────
+
+export const GetArchiveVolumeConfApi = (nodeId: string) => Axios({
+  url: '/uapi/v1/GetArchiveVolumeConf?nodeId=' + nodeId,
+  method: 'GET'
+})
+
+interface SetArchiveVolumeConfParam {
+  nodeId: string
+  storpath: string
+  autodelpercent: number
+  maxFileLength: number
+}
+export const SetArchiveVolumeConfApi = (params: SetArchiveVolumeConfParam) => Axios({
+  url: '/uapi/v1/SetArchiveVolumeConf',
+  method: 'GET',
+  params
+})

@@ -19,6 +19,9 @@ const MetaStorage = () => import('@/views/Configuration/Basic/StorageSetting/Met
 const LocalObjectStorage = () => import('@/views/Configuration/Basic/StorageSetting/LocalObjectStorage.vue')
 const S3Storage = () => import('@/views/Configuration/Basic/StorageSetting/S3Storage.vue')
 const RegularStorage = () => import('@/views/Configuration/Basic/StorageSetting/RegularStorage.vue')
+const RecordingTemplate = () => import('@/views/Configuration/Basic/StorageSetting/RecordingTemplate.vue')
+const ArchiveStorage = () => import('@/views/Configuration/Basic/StorageSetting/ArchiveStorage.vue')
+const SnapshotTemplate = () => import('@/views/Configuration/Basic/StorageSetting/SnapshotTemplate.vue')
 const UserConfigPage = () => import('@/views/Configuration/Basic/User/UserConfig.vue')
 const DevicePartition = () => import('@/views/Configuration/Basic/DevicePartition/DevicePartition.vue')
 const Device = () => import('@/views/Configuration/Device/Device.vue')
@@ -116,7 +119,7 @@ const router = createRouter({
         meta: {
           title: '/Monitoring/GridView',
           name: 'Monitoring.mon_grid_view',
-          icon: 'iconfont icon-gongge',
+          icon: 'iconfont icon-wanggeshitu',
           type: 'Operator'
         }
       }, {
@@ -215,6 +218,36 @@ const router = createRouter({
             type: 'Operator'
           }
         }, {
+          path: 'RecordingTemplate',
+          name: 'RecordingTemplate',
+          component: RecordingTemplate,
+          meta: {
+            title: '/Configuration/Basic/RecordingTemplate',
+            name: 'RecordingTemplate',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'SnapshotTemplate',
+          name: 'SnapshotTemplate',
+          component: SnapshotTemplate,
+          meta: {
+            title: '/Configuration/Basic/SnapshotTemplate',
+            name: 'SnapshotTemplate',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'ArchiveStorage',
+          name: 'ArchiveStorage',
+          component: ArchiveStorage,
+          meta: {
+            title: '/Configuration/Basic/ArchiveStorage',
+            name: 'ArchiveStorage',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
           path: 'User/UserConfig',
           name: 'UserConfig',
           component: UserConfigPage,
@@ -243,7 +276,7 @@ const router = createRouter({
         meta: {
           title: '/Configuration/Device',
           name: 'Device.device_dev',
-          icon: 'iconfont icon-shebei',
+          icon: 'iconfont icon-shebei1',
           type: 'Operator'
         },
         children: [{
