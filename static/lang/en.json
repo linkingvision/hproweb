@@ -120,7 +120,8 @@
     "comm_table_token": "Token",
     "comm_table_type": "Type",
     "comm_modify_successfully": "Modify successfully!",
-    "comm_detail_alarm": "Detail Alarm"
+    "comm_detail_alarm": "Detail Alarm",
+    "comm_configuration_successfully": "Configuration successful"
   },
   "CommTime": {
     "comm_time_start": "Start Time",
@@ -183,7 +184,10 @@
     "comm_public_holiday": "Public Holiday",
     "comm_check_all": "Check All",
     "comm_s": "s",
-    "comm_year": "Year"
+    "comm_year": "Year",
+    "comm_bytes": "Byte(s)",
+    "comm_second": "Second(s)",
+    "comm_number_of_times": "Time(s)"
   },
   "Configuration": {
     "conf_advanced_features": "Advanced Features",
@@ -219,7 +223,13 @@
     "conf_regular_storage": "Regular Storage",
     "conf_archive_storage": "Archive Storage",
     "conf_cannot_be_modified": "After saving, the maximum capacity cannot be modified",
-    "conf_save_record_first": "Please save the already added recording partition first"
+    "conf_save_record_first": "Please save the already added recording partition first",
+    "conf_role": "Role",
+    "conf_group": "Group",
+    "conf_time_template": "Time Template",
+    "conf_obj_space": "Object Space",
+    "conf_index": "Index",
+    "conf_partition": "Partition"
   },
   "Device": {
     "device_audio": "Audio",
@@ -359,13 +369,13 @@
     "set_copy_to": "Copy To",
     "set_public_holiday_configuration": "Public Holiday Configuration",
     "set_holiday": "Holiday",
-    "set_holiday_new_year":    "New Year's Day",
-    "set_holiday_spring":      "Spring Festival",
-    "set_holiday_qingming":    "Tomb-Sweeping Day",
-    "set_holiday_labor":       "Labor Day",
+    "set_holiday_new_year": "New Year's Day",
+    "set_holiday_spring": "Spring Festival",
+    "set_holiday_qingming": "Tomb-Sweeping Day",
+    "set_holiday_labor": "Labor Day",
     "set_holiday_dragon_boat": "Dragon Boat Festival",
-    "set_holiday_mid_autumn":  "Mid-Autumn Festival",
-    "set_holiday_national":    "National Day",
+    "set_holiday_mid_autumn": "Mid-Autumn Festival",
+    "set_holiday_national": "National Day",
     "set_today": "Today",
     "set_planned_date": "Planned Date",
     "set_recording_always": "Recording Always",
@@ -396,7 +406,25 @@
     "set_donot_img": "Do Not Snapshot",
     "set_obj_snapshot": "Object Snapshot",
     "set_motion_and_obj_snapshot": "Motion & Object Snapshot",
-    "set_auto": "Auto"
+    "set_auto": "Auto",
+    "set_role_name": "Role Name",
+    "set_administrator": "Management Permissions",
+    "set_usage_permissions": "Usage Permissions",
+    "set_account_lockout_duration": "Account Lockout Duration",
+    "set_account_lock": "Account Lock Times",
+    "set_account_relock_duration": "Account Relock Duration",
+    "set_password_expiration_time": "Password Expiration Time",
+    "set_password_expiration_alert_time": "Password Expiration Alert Time",
+    "set_password_expiry_change": "Force Change Password on Expiry",
+    "set_password_rule": "Password Complexity Rule",
+    "set_password_first_change": "Force Change Password on First Login",
+    "set_group_name": "Group Name",
+    "set_parentGroup": "Parent Group",
+    "set_everyday_template": "Everyday Template",
+    "set_weekend_template": "Weekend Template",
+    "set_workday_template": "Workday Template",
+    "set_public_holiday_template": "Public Holiday Template",
+    "set_empty_template": "Empty Template"
   },
   "System": {
     "svs_file_import_success": "File imported successfully. It will take effect after restarting.",
@@ -607,5 +635,8 @@
     "set_reset_picture": "Reset Picture",
     "set_edit_avatarsuccessfully": "Avatar updated successfully!",
     "set_edit_avatar_failed": "Failed to update avatar!"
+  },
+  "ExternalIDP": {
+    "ext_idp_config": "External IDP Config"
   }
 }

@@ -269,8 +269,10 @@ onMounted(() => {
         background-color: #409EFF;
       }
       .el-slider__button {
+        width: 16px;
+        height: 16px;
         border-color: #409EFF;
-        background-color: #409EFF;
+        background-color: #fff;
       }
     }
   }

@@ -115,7 +115,8 @@
     "comm_table_token": "Símbolo",
     "comm_table_type": "Tipo",
     "comm_modify_successfully": "Modifique com sucesso!",
-    "comm_detail_alarm": "Detalhe Alarme"
+    "comm_detail_alarm": "Detalhe Alarme",
+    "comm_configuration_successfully": "Configuração bem-sucedida"
   },
   "CommTime": {
     "comm_time_start": "Hora de início",
@@ -170,7 +171,10 @@
     "comm_public_holiday": "Feriado",
     "comm_check_all": "Selecionar tudo",
     "comm_s": "s",
-    "comm_year": "Ano"
+    "comm_year": "Ano",
+    "comm_bytes": "Byte(s)",
+    "comm_second": "Segundo(s)",
+    "comm_number_of_times": "Vez(es)"
   },
   "Configuration": {
     "conf_advanced_features": "Recursos avançados",
@@ -206,7 +210,13 @@
     "conf_regular_storage": "Armazenamento convencional",
     "conf_archive_storage": "Armazenamento de arquivo",
     "conf_cannot_be_modified": "Depois de salvar, a capacidade máxima não pode ser modificada",
-    "conf_save_record_first": "Por favor, salve primeiro a partição de gravação já adicionada"
+    "conf_save_record_first": "Por favor, salve primeiro a partição de gravação já adicionada",
+    "conf_role": "Função",
+    "conf_group": "Grupo",
+    "conf_time_template": "Modelo de tempo",
+    "conf_obj_space": "Object Space",
+    "conf_index": "Index",
+    "conf_partition": "Partition"
   },
   "Device": {
     "device_audio": "Áudio",
@@ -343,13 +353,13 @@
     "set_copy_to": "Copiar para",
     "set_public_holiday_configuration": "Configurar feriados",
     "set_holiday": "Feriado",
-    "set_holiday_new_year":    "Ano Novo",
-    "set_holiday_spring":      "Festival da Primavera",
-    "set_holiday_qingming":    "Festival Qingming",
-    "set_holiday_labor":       "Dia do Trabalho",
+    "set_holiday_new_year": "Ano Novo",
+    "set_holiday_spring": "Festival da Primavera",
+    "set_holiday_qingming": "Festival Qingming",
+    "set_holiday_labor": "Dia do Trabalho",
     "set_holiday_dragon_boat": "Festival do Barco-Dragão",
-    "set_holiday_mid_autumn":  "Festival do Meio Outono",
-    "set_holiday_national":    "Dia Nacional",
+    "set_holiday_mid_autumn": "Festival do Meio Outono",
+    "set_holiday_national": "Dia Nacional",
     "set_today": "Hoje",
     "set_planned_date": "Data planejada",
     "set_recording_always": "Gravação contínua",
@@ -360,7 +370,25 @@
     "set_continue_30": "Gravação contínua (30 dias)",
     "set_continue_60": "Gravação contínua (60 dias)",
     "set_continue_90": "Gravação contínua (90 dias)",
-    "set_continue_365": "Gravação contínua (365 dias)"
+    "set_continue_365": "Gravação contínua (365 dias)",
+    "set_role_name": "Nome da função",
+    "set_administrator": "Permissões de administração",
+    "set_usage_permissions": "Permissões de uso",
+    "set_account_lockout_duration": "Duração do bloqueio de conta",
+    "set_account_lock": "Tentativas de bloqueio de conta",
+    "set_account_relock_duration": "Duração do rebloqueio de conta",
+    "set_password_expiration_time": "Tempo de expiração de senha",
+    "set_password_expiration_alert_time": "Tempo de alerta de expiração",
+    "set_password_expiry_change": "Forçar alteração ao expirar senha",
+    "set_password_rule": "Regra de complexidade de senha",
+    "set_password_first_change": "Forçar alteração no primeiro login",
+    "set_group_name": "Nome do grupo",
+    "set_parentGroup": "Grupo pai",
+    "set_everyday_template": "Modelo todos os dias",
+    "set_weekend_template": "Modelo fim de semana",
+    "set_workday_template": "Modelo dias úteis",
+    "set_public_holiday_template": "Modelo feriados",
+    "set_empty_template": "Modelo vazio"
   },
   "System": {
     "svs_file_import_success": "Arquivo importado com sucesso. Será efetivado após o reinício.",
@@ -563,5 +591,8 @@
     "set_reset_picture": "Redefinir imagem",
     "set_edit_avatarsuccessfully": "Avatar atualizado com sucesso!",
     "set_edit_avatar_failed": "Falha ao atualizar avatar!"
+  },
+  "ExternalIDP": {
+    "ext_idp_config": "Configuração de IDP externo"
   }
 }

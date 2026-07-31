@@ -59,7 +59,8 @@ interface ObjPartitionParam {
   nodeId: string,
   nIndex: number,
   strDevice: string,
-  strMountpoint: string
+  strMountpoint: string,
+  nAutoDelPercent?: number
 }
 export const AddObjPartitionApi = (data: ObjPartitionParam) => Axios({
   url: '/uapi/v1/Storage/Add/ObjPartition',

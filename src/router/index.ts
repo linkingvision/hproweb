@@ -23,6 +23,9 @@ const RecordingTemplate = () => import('@/views/Configuration/Basic/StorageSetti
 const ArchiveStorage = () => import('@/views/Configuration/Basic/StorageSetting/ArchiveStorage.vue')
 const SnapshotTemplate = () => import('@/views/Configuration/Basic/StorageSetting/SnapshotTemplate.vue')
 const UserConfigPage = () => import('@/views/Configuration/Basic/User/UserConfig.vue')
+const Role = () => import('@/views/Configuration/Basic/Role.vue')
+const Group = () => import('@/views/Configuration/Basic/Group.vue')
+const TimeTemplate = () => import('@/views/Configuration/Basic/TimeTemplate.vue')
 const DevicePartition = () => import('@/views/Configuration/Basic/DevicePartition/DevicePartition.vue')
 const Device = () => import('@/views/Configuration/Device/Device.vue')
 const DeviceSDK = () => import('@/views/Configuration/Device/DeviceSDK.vue')
@@ -168,6 +171,46 @@ const router = createRouter({
           type: 'Operator'
         },
         children: [{
+          path: 'DevicePartition',
+          name: 'DevicePartition',
+          component: DevicePartition,
+          meta: {
+            title: '/Configuration/Basic/DevicePartition',
+            name: 'Router.router_device_partition',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'Role',
+          name: 'Role',
+          component: Role,
+          meta: {
+            title: '/Configuration/Basic/Role',
+            name: 'Configuration.conf_role',
+            icon: 'iconfont icon-jiaose1',
+            type: 'Operator'
+          }
+        }, {
+          path: 'Group',
+          name: 'Group',
+          component: Group,
+          meta: {
+            title: '/Configuration/Basic/Group',
+            name: 'Configuration.conf_group',
+            icon: 'iconfont icon-zuzhi1',
+            type: 'Operator'
+          }
+        }, {
+          path: 'TimeTemplate',
+          name: 'TimeTemplate',
+          component: TimeTemplate,
+          meta: {
+            title: '/Configuration/Basic/TimeTemplate',
+            name: 'Configuration.conf_time_template',
+            icon: 'iconfont icon-jihuamoban',
+            type: 'Operator'
+          }
+        }, {
           path: 'StorageMode',
           name: 'StorageMode',
           component: StorageMode,
@@ -254,16 +297,6 @@ const router = createRouter({
           meta: {
             title: '/Configuration/Basic/User/UserConfig',
             name: 'Router.router_user_config',
-            icon: '',
-            type: 'Operator'
-          }
-        }, {
-          path: 'DevicePartition',
-          name: 'DevicePartition',
-          component: DevicePartition,
-          meta: {
-            title: '/Configuration/Basic/DevicePartition',
-            name: 'Router.router_device_partition',
             icon: '',
             type: 'Operator'
           }

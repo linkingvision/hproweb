@@ -17,6 +17,9 @@ const stateVisible = ref<boolean>(false)
 const nIndex = ref<number>(0)
 const indexDisabled = ref<boolean>(true)
 const addData = ref<any>({})
+const nAutoDelPercent = ref<number>(92)
+
+const formatPercent = (val: number) => val + '%'
 const nodeList = ref<any[]>([])
 const nodeId = ref<string>('')
 const nodeName = ref<string>('')
@@ -39,6 +42,7 @@ const GetObjPartitions = async () => {
   let objList: any[] = [];
   hasIndex.value = [];
   if (res.status == 200 && res.data.code == 0) {
+    console.log('[LocalObjStorage] partition data:', res.data.result.partition);
     diskData.value = res.data.result.partition;
     objList = res.data.result.partition.filter((item: any) => item.obj != null).map((item: any) => {
       return {
@@ -112,6 +116,7 @@ const delRow = (row: any) => {
 
 const add = () => {
   nIndex.value = findMissingNumber(hasIndex.value);
+  nAutoDelPercent.value = 92;
   addVisiable.value = true;
 }
 
@@ -129,7 +134,8 @@ const submit = async () => {
     nodeId: nodeId.value,
     nIndex: nIndex.value,
     strDevice: addData.value.strDevice,
-    strMountpoint: addData.value.strMountpoint
+    strMountpoint: addData.value.strMountpoint,
+    nAutoDelPercent: Math.min(nAutoDelPercent.value, 95)
   });
   if (res.status === 200 && res.data.code === 0) {
     ElMessage({
@@ -211,13 +217,13 @@ onMounted(() => {
       v-loading="loading"
       style="width: 100%;"
     >
-      <el-table-column :label="t('Cluster.cluster_server_name')" prop="nodeName" width="200" align="center"></el-table-column>
-      <el-table-column label="Index" width="120" align="center">
+      <el-table-column :label="t('Cluster.cluster_server_name')" prop="nodeName" align="center"></el-table-column>
+      <el-table-column :label="t('Configuration.conf_index')" align="center">
         <template #default="{ row }">
           <span>{{ row.obj[0].nIndex }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Partition" align="center">
+      <el-table-column :label="t('Configuration.conf_partition')" align="center">
         <template #default="{ row }">
           <div class="pregress-box">
             <span class="disk">{{ row.strDevice }}</span>
@@ -233,7 +239,12 @@ onMounted(() => {
           </div>
         </template>
       </el-table-column>
-      <el-table-column :label="t('Configuration.conf_mount')" align="center" width="120">
+      <el-table-column :label="t('Configuration.conf_obj_space')" align="center">
+        <template #default="{ row }">
+          <span>{{ row.obj[0].nAutoDelPercent }}%</span>
+        </template>
+      </el-table-column>
+      <el-table-column :label="t('Configuration.conf_mount')" align="center">
         <template #default="{ row }">
           <span v-if="row.obj[0].bMount" style="color: #06D20B;">{{ t('CommTableEdit.comm_online') }}</span>
           <span v-else style="color: #FE1100;">{{ t('CommTableEdit.comm_offline') }}</span>
@@ -265,6 +276,20 @@ onMounted(() => {
         </el-form-item>
         <el-form-item label="Index" style="width: 490px;">
           <el-input v-model="nIndex" :disabled="indexDisabled"></el-input>
+        </el-form-item>
+        <el-form-item :label="$t('Configuration.conf_obj_space')" style="width: 490px;">
+          <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+            <el-slider
+              v-model="nAutoDelPercent"
+              :min="1"
+              :max="95"
+              :step="1"
+              :show-tooltip="true"
+              :format-tooltip="formatPercent"
+              style="flex: 1;"
+            ></el-slider>
+            <span style="min-width: 45px; color: #409EFF;">{{ nAutoDelPercent }}%</span>
+          </div>
         </el-form-item>
       </el-form>
       <div class="disk-list">
@@ -348,6 +373,21 @@ onMounted(() => {
     :deep(.is-disabled) {
       .el-input__inner {
         opacity: 0.5;
+      }
+    }
+
+    :deep(.el-slider) {
+      .el-slider__runway {
+        background-color: #404040;
+      }
+      .el-slider__bar {
+        background-color: #409EFF;
+      }
+      .el-slider__button {
+        width: 16px;
+        height: 16px;
+        border-color: #409EFF;
+        background-color: #fff;
       }
     }
 

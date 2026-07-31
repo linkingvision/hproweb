@@ -127,7 +127,7 @@ onMounted(() => {
           <el-switch v-model="row.bEnableMetaStorage" disabled></el-switch>
         </template>
       </el-table-column>
-      <el-table-column prop="nMetaRetentionInDay" :label="$t('Configuration.conf_meta_days')" align="center"></el-table-column>
+      <!-- <el-table-column prop="nMetaRetentionInDay" :label="$t('Configuration.conf_meta_days')" align="center"></el-table-column> -->
       <el-table-column label="MetaPartition" align="center" width="300">
         <template #default="{ row }">
           <div class="pregress-box" v-if="row.checkedDisk">
@@ -167,9 +167,9 @@ onMounted(() => {
         <el-form-item :label="$t('Configuration.conf_enable_meta')">
           <el-switch v-model="editData.bEnableMetaStorage"></el-switch>
         </el-form-item>
-        <el-form-item :label="$t('Configuration.conf_meta_days')" style="width: 600px;">
+        <!-- <el-form-item :label="$t('Configuration.conf_meta_days')" style="width: 600px;">
           <el-input v-model="editData.nMetaRetentionInDay" type="number"></el-input>
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
       <div class="disk-list">
         <div

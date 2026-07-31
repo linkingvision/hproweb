@@ -46,6 +46,18 @@ onMounted(() => {
           <i class="iconfont icon-shebeifenqu"></i>
           <span>{{ t('Router.router_device_partition') }}</span>
         </el-menu-item>
+        <el-menu-item index="/Configuration/Basic/Role">
+          <i class="iconfont icon-jiaose1"></i>
+          <span>{{ t('Configuration.conf_role') }}</span>
+        </el-menu-item>
+        <el-menu-item index="/Configuration/Basic/Group">
+          <i class="iconfont icon-zuzhi1"></i>
+          <span>{{ t('Configuration.conf_group') }}</span>
+        </el-menu-item>
+        <el-menu-item index="/Configuration/Basic/TimeTemplate">
+          <i class="iconfont icon-jihuamoban"></i>
+          <span>{{ t('Configuration.conf_time_template') }}</span>
+        </el-menu-item>
         <el-sub-menu index="/Configuration/Basic/StorageMode">
           <template #title>
             <i class="iconfont icon-cunchupeizhi"></i>

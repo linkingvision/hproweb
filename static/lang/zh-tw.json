@@ -120,7 +120,8 @@
     "comm_save_failed": "儲存失敗！",
     "comm_save_successfully": "儲存成功！",
     "comm_set_successfully": "設置成功！",
-    "comm_detail_alarm": "查看報警"
+    "comm_detail_alarm": "查看報警",
+    "comm_configuration_successfully": "配置成功"
   },
   "CommTime": {
     "comm_time_start": "開始時間",
@@ -182,7 +183,10 @@
     "comm_public_holiday": "公休日",
     "comm_check_all": "全選",
     "comm_s": "秒",
-    "comm_year": "年"
+    "comm_year": "年",
+    "comm_bytes": "位元組",
+    "comm_second": "秒",
+    "comm_number_of_times": "次"
   },
   "Configuration": {
     "conf_advanced_features": "高級功能",
@@ -218,7 +222,13 @@
     "conf_regular_storage": "常規存儲",
     "conf_archive_storage": "歸檔存儲",
     "conf_cannot_be_modified": "保存之後，最大容量將不能進行修改",
-    "conf_save_record_first": "請先保存已添加的錄像分區"
+    "conf_save_record_first": "請先保存已添加的錄像分區",
+    "conf_role": "角色",
+    "conf_group": "組織",
+    "conf_time_template": "時間模板",
+    "conf_obj_space": "對象空間",
+    "conf_index": "索引",
+    "conf_partition": "分區"
   },
   "Device": {
     "device_audio": "音頻",
@@ -358,13 +368,13 @@
     "set_copy_to": "複製到",
     "set_public_holiday_configuration": "公休日配置",
     "set_holiday": "節假日",
-    "set_holiday_new_year":    "元旦",
-    "set_holiday_spring":      "春節",
-    "set_holiday_qingming":    "清明節",
-    "set_holiday_labor":       "勞動節",
+    "set_holiday_new_year": "元旦",
+    "set_holiday_spring": "春節",
+    "set_holiday_qingming": "清明節",
+    "set_holiday_labor": "勞動節",
     "set_holiday_dragon_boat": "端午節",
-    "set_holiday_mid_autumn":  "中秋節",
-    "set_holiday_national":    "國慶節",
+    "set_holiday_mid_autumn": "中秋節",
+    "set_holiday_national": "國慶節",
     "set_today": "今天",
     "set_planned_date": "計劃日期",
     "set_recording_always": "持續錄像",
@@ -395,7 +405,25 @@
     "set_donot_img": "不抓圖",
     "set_obj_snapshot": "目標檢測抓圖",
     "set_motion_and_obj_snapshot": "移動+目標抓圖",
-    "set_auto": "自動"
+    "set_auto": "自動",
+    "set_role_name": "角色名稱",
+    "set_administrator": "管理權限",
+    "set_usage_permissions": "使用權限",
+    "set_account_lockout_duration": "賬號鎖定時長",
+    "set_account_lock": "賬號鎖定次數",
+    "set_account_relock_duration": "賬號再次鎖定時長",
+    "set_password_expiration_time": "密碼過期時間",
+    "set_password_expiration_alert_time": "密碼過期提醒時間",
+    "set_password_expiry_change": "密碼到期強制修改",
+    "set_password_rule": "密碼複雜度規則",
+    "set_password_first_change": "首次登錄強制修改密碼",
+    "set_group_name": "組織名稱",
+    "set_parentGroup": "上級組織",
+    "set_everyday_template": "全天模板",
+    "set_weekend_template": "週末模板",
+    "set_workday_template": "工作日模板",
+    "set_public_holiday_template": "公休日模板",
+    "set_empty_template": "空模板"
   },
   "System": {
     "svs_file_import_success": "文件導入成功，重啟後生",
@@ -606,5 +634,8 @@
     "set_reset_picture": "重置圖片",
     "set_edit_avatarsuccessfully": "頭像修改成功！",
     "set_edit_avatar_failed": "頭像修改失敗！"
+  },
+  "ExternalIDP": {
+    "ext_idp_config": "外部IDP配置"
   }
 }

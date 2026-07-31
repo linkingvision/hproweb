@@ -115,7 +115,8 @@
     "comm_table_token": "Simbólico",
     "comm_table_type": "Tipo",
     "comm_modify_successfully": "¡Modifique con éxito!",
-    "comm_detail_alarm": "Detalle Alarma"
+    "comm_detail_alarm": "Detalle Alarma",
+    "comm_configuration_successfully": "Configuración exitosa"
   },
   "CommTime": {
     "comm_time_start": "Hora de inicio",
@@ -170,7 +171,10 @@
     "comm_public_holiday": "Día festivo",
     "comm_check_all": "Seleccionar todo",
     "comm_s": "s",
-    "comm_year": "Año"
+    "comm_year": "Año",
+    "comm_bytes": "Byte(s)",
+    "comm_second": "Segundo(s)",
+    "comm_number_of_times": "Vez(ces)"
   },
   "Configuration": {
     "conf_advanced_features": "Características avanzadas",
@@ -206,7 +210,13 @@
     "conf_regular_storage": "Almacenamiento convencional",
     "conf_archive_storage": "Almacenamiento de archivo",
     "conf_cannot_be_modified": "Después de guardar, la capacidad máxima no se puede modificar",
-    "conf_save_record_first": "Primero guarde la partición de grabación ya añadida"
+    "conf_save_record_first": "Primero guarde la partición de grabación ya añadida",
+    "conf_role": "Rol",
+    "conf_group": "Grupo",
+    "conf_time_template": "Plantilla de tiempo",
+    "conf_obj_space": "Object Space",
+    "conf_index": "Index",
+    "conf_partition": "Partition"
   },
   "Device": {
     "device_audio": "Audio",
@@ -343,13 +353,13 @@
     "set_copy_to": "Copiar a",
     "set_public_holiday_configuration": "Configurar festivos",
     "set_holiday": "Festivo",
-    "set_holiday_new_year":    "Año Nuevo",
-    "set_holiday_spring":      "Festival de Primavera",
-    "set_holiday_qingming":    "Festival Qingming",
-    "set_holiday_labor":       "Día del Trabajo",
+    "set_holiday_new_year": "Año Nuevo",
+    "set_holiday_spring": "Festival de Primavera",
+    "set_holiday_qingming": "Festival Qingming",
+    "set_holiday_labor": "Día del Trabajo",
     "set_holiday_dragon_boat": "Festival del Bote del Dragón",
-    "set_holiday_mid_autumn":  "Festival de Medio Otoño",
-    "set_holiday_national":    "Día Nacional",
+    "set_holiday_mid_autumn": "Festival de Medio Otoño",
+    "set_holiday_national": "Día Nacional",
     "set_today": "Hoy",
     "set_planned_date": "Fecha planificada",
     "set_recording_always": "Grabación continua",
@@ -360,7 +370,25 @@
     "set_continue_30": "Grabación continua (30 días)",
     "set_continue_60": "Grabación continua (60 días)",
     "set_continue_90": "Grabación continua (90 días)",
-    "set_continue_365": "Grabación continua (365 días)"
+    "set_continue_365": "Grabación continua (365 días)",
+    "set_role_name": "Nombre de rol",
+    "set_administrator": "Permisos de administración",
+    "set_usage_permissions": "Permisos de uso",
+    "set_account_lockout_duration": "Duración del bloqueo de cuenta",
+    "set_account_lock": "Intentos de bloqueo de cuenta",
+    "set_account_relock_duration": "Duración del rebloqueo de cuenta",
+    "set_password_expiration_time": "Tiempo de caducidad de contraseña",
+    "set_password_expiration_alert_time": "Tiempo de alerta de caducidad",
+    "set_password_expiry_change": "Forzar cambio al vencer contraseña",
+    "set_password_rule": "Regla de complejidad de contraseña",
+    "set_password_first_change": "Forzar cambio en primer inicio de sesión",
+    "set_group_name": "Nombre de grupo",
+    "set_parentGroup": "Grupo padre",
+    "set_everyday_template": "Plantilla todos los días",
+    "set_weekend_template": "Plantilla fin de semana",
+    "set_workday_template": "Plantilla días laborables",
+    "set_public_holiday_template": "Plantilla días festivos",
+    "set_empty_template": "Plantilla vacía"
   },
   "System": {
     "svs_file_import_success": "Archivo importado con éxito. ¡Se activará tras el reinicio!",
@@ -563,5 +591,8 @@
     "set_reset_picture": "Restablecer imagen",
     "set_edit_avatarsuccessfully": "¡Avatar actualizado con éxito!",
     "set_edit_avatar_failed": "¡Error al actualizar el avatar!"
+  },
+  "ExternalIDP": {
+    "ext_idp_config": "Configuración IDP externo"
   }
 }
