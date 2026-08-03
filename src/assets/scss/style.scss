@@ -37,3 +37,53 @@ html, body, #app {
   width: 100%;
   height: 100%;
 }
+
+// ── Button styles (mirroring uscweb) ────────────────────────────────────────
+
+// 蓝底白字：主操作按钮（Add、Save、OK 等）
+.form_butt {
+  width: unset;
+  min-width: 78px;
+  height: 29px;
+  background: #0399FE !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 0 12px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #FFFFFF !important;
+  cursor: pointer;
+  span { color: #FFFFFF !important; }
+}
+
+// 暗底白字：次操作按钮（Delete、Cancel、Edit 等）
+.form_butt1 {
+  width: unset;
+  min-width: 78px;
+  height: 29px;
+  background: #252525 !important;
+  border: 1px solid #0399FE !important;
+  border-radius: 4px !important;
+  padding: 0 12px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #FFFFFF !important;
+  cursor: pointer;
+  span { color: #FFFFFF !important; }
+}
+
+// 蓝底白字：单独按钮（View Layout 等）
+.single_button {
+  width: unset;
+  min-width: 78px;
+  height: 29px;
+  background: #0399FE !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 0 12px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #FFFFFF !important;
+  cursor: pointer;
+  span { color: #FFFFFF !important; }
+}

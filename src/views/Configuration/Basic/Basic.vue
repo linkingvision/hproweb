@@ -54,6 +54,14 @@ onMounted(() => {
           <i class="iconfont icon-zuzhi1"></i>
           <span>{{ t('Configuration.conf_group') }}</span>
         </el-menu-item>
+        <el-menu-item index="/Configuration/Basic/View">
+          <i class="iconfont icon-shitu2"></i>
+          <span>{{ t('Configuration.conf_view') }}</span>
+        </el-menu-item>
+        <el-menu-item index="/Configuration/Basic/Map">
+          <i class="iconfont icon-ditu"></i>
+          <span>{{ t('Configuration.conf_map') }}</span>
+        </el-menu-item>
         <el-menu-item index="/Configuration/Basic/TimeTemplate">
           <i class="iconfont icon-jihuamoban"></i>
           <span>{{ t('Configuration.conf_time_template') }}</span>

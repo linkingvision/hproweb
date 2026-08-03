@@ -23,6 +23,8 @@ const RecordingTemplate = () => import('@/views/Configuration/Basic/StorageSetti
 const ArchiveStorage = () => import('@/views/Configuration/Basic/StorageSetting/ArchiveStorage.vue')
 const SnapshotTemplate = () => import('@/views/Configuration/Basic/StorageSetting/SnapshotTemplate.vue')
 const UserConfigPage = () => import('@/views/Configuration/Basic/User/UserConfig.vue')
+const ViewConfig = () => import('@/views/Configuration/Basic/View.vue')
+const MapConfig  = () => import('@/views/Configuration/Basic/Map.vue')
 const Role = () => import('@/views/Configuration/Basic/Role.vue')
 const Group = () => import('@/views/Configuration/Basic/Group.vue')
 const TimeTemplate = () => import('@/views/Configuration/Basic/TimeTemplate.vue')
@@ -198,6 +200,26 @@ const router = createRouter({
             title: '/Configuration/Basic/Group',
             name: 'Configuration.conf_group',
             icon: 'iconfont icon-zuzhi1',
+            type: 'Operator'
+          }
+        }, {
+          path: 'View',
+          name: 'ViewConfig',
+          component: ViewConfig,
+          meta: {
+            title: '/Configuration/Basic/View',
+            name: 'Configuration.conf_view',
+            icon: 'iconfont icon-shitu2',
+            type: 'Operator'
+          }
+        }, {
+          path: 'Map',
+          name: 'MapConfig',
+          component: MapConfig,
+          meta: {
+            title: '/Configuration/Basic/Map',
+            name: 'Configuration.conf_map',
+            icon: 'iconfont icon-ditu',
             type: 'Operator'
           }
         }, {
