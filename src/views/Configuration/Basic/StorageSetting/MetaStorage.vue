@@ -128,7 +128,7 @@ onMounted(() => {
         </template>
       </el-table-column>
       <!-- <el-table-column prop="nMetaRetentionInDay" :label="$t('Configuration.conf_meta_days')" align="center"></el-table-column> -->
-      <el-table-column label="MetaPartition" align="center" width="300">
+      <el-table-column :label="$t('Configuration.conf_meta_partition')" align="center" width="300">
         <template #default="{ row }">
           <div class="pregress-box" v-if="row.checkedDisk">
             <span class="disk">{{ row.strMetaPartitionDevice }}</span>

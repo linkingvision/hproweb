@@ -218,7 +218,10 @@
     "conf_obj_space": "Object Space",
     "conf_index": "Index",
     "conf_partition": "Partition",
-    "conf_map": "Mapa"
+    "conf_map": "Mapa",
+    "conf_meta_partition": "Partición de Metadatos",
+    "conf_user": "Usuario",
+    "conf_playcode": "Código de Reproducción"
   },
   "Device": {
     "device_audio": "Audio",
@@ -620,7 +623,9 @@
     "set_support_images": "Compatible con PNG, JPG, JPEG",
     "set_reset_picture": "Restablecer imagen",
     "set_edit_avatarsuccessfully": "¡Avatar actualizado con éxito!",
-    "set_edit_avatar_failed": "¡Error al actualizar el avatar!"
+    "set_edit_avatar_failed": "¡Error al actualizar el avatar!",
+    "set_add_user": "Agregar Usuario",
+    "set_del_user": "Eliminar Usuario"
   },
   "ExternalIDP": {
     "ext_idp_config": "Configuración IDP externo"

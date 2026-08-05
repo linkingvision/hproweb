@@ -22,7 +22,10 @@ const RegularStorage = () => import('@/views/Configuration/Basic/StorageSetting/
 const RecordingTemplate = () => import('@/views/Configuration/Basic/StorageSetting/RecordingTemplate.vue')
 const ArchiveStorage = () => import('@/views/Configuration/Basic/StorageSetting/ArchiveStorage.vue')
 const SnapshotTemplate = () => import('@/views/Configuration/Basic/StorageSetting/SnapshotTemplate.vue')
-const UserConfigPage = () => import('@/views/Configuration/Basic/User/UserConfig.vue')
+const UserConfigPage  = () => import('@/views/Configuration/Basic/User/UserConfig.vue')
+const UserPage        = () => import('@/views/Configuration/Basic/User/User.vue')
+const UserSettingPage = () => import('@/views/Configuration/Basic/User/UserSetting.vue')
+const PlayCodePage    = () => import('@/views/Configuration/Basic/User/PlayCode.vue')
 const ViewConfig = () => import('@/views/Configuration/Basic/View.vue')
 const MapConfig  = () => import('@/views/Configuration/Basic/Map.vue')
 const Role = () => import('@/views/Configuration/Basic/Role.vue')
@@ -319,6 +322,36 @@ const router = createRouter({
           meta: {
             title: '/Configuration/Basic/User/UserConfig',
             name: 'Router.router_user_config',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'User',
+          name: 'User',
+          component: UserPage,
+          meta: {
+            title: '/Configuration/Basic/User',
+            name: 'Configuration.conf_user',
+            icon: 'iconfont icon-yonghu',
+            type: 'Operator'
+          }
+        }, {
+          path: 'UserSetting',
+          name: 'UserSetting',
+          component: UserSettingPage,
+          meta: {
+            title: '/Configuration/Basic/UserSetting',
+            name: 'SetUser.set_basic_information',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'PlayCode',
+          name: 'PlayCode',
+          component: PlayCodePage,
+          meta: {
+            title: '/Configuration/Basic/PlayCode',
+            name: 'Configuration.conf_playcode',
             icon: '',
             type: 'Operator'
           }

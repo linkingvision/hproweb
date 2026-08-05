@@ -230,7 +230,10 @@
     "conf_obj_space": "對象空間",
     "conf_index": "索引",
     "conf_partition": "分區",
-    "conf_map": "地圖"
+    "conf_map": "地圖",
+    "conf_meta_partition": "元數據分區",
+    "conf_user": "用戶",
+    "conf_playcode": "播放碼"
   },
   "Device": {
     "device_audio": "音頻",
@@ -663,7 +666,9 @@
     "set_support_images": "支持PNG、JPG、JPEG格式",
     "set_reset_picture": "重置圖片",
     "set_edit_avatarsuccessfully": "頭像修改成功！",
-    "set_edit_avatar_failed": "頭像修改失敗！"
+    "set_edit_avatar_failed": "頭像修改失敗！",
+    "set_add_user": "添加用戶",
+    "set_del_user": "刪除用戶"
   },
   "ExternalIDP": {
     "ext_idp_config": "外部IDP配置"

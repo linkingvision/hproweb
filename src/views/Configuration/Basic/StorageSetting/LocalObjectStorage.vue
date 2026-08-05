@@ -223,7 +223,7 @@ onMounted(() => {
           <span>{{ row.obj[0].nIndex }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="t('Configuration.conf_partition')" align="center">
+      <el-table-column :label="t('Configuration.conf_partition')" align="center" min-width="280">
         <template #default="{ row }">
           <div class="pregress-box">
             <span class="disk">{{ row.strDevice }}</span>
@@ -239,9 +239,13 @@ onMounted(() => {
           </div>
         </template>
       </el-table-column>
-      <el-table-column :label="t('Configuration.conf_obj_space')" align="center">
+      <el-table-column :label="t('Configuration.conf_obj_space')" align="center" min-width="140">
         <template #default="{ row }">
-          <span>{{ row.obj[0].nAutoDelPercent }}%</span>
+          <template v-if="row.obj && row.obj[0]">
+            <span class="used">{{ CalculateCapacity(Math.round(row.nTotalInM * row.obj[0].nAutoDelPercent / 100)) }}</span>
+            <span> {{ row.obj[0].nAutoDelPercent }}%</span>
+          </template>
+          <span v-else>-</span>
         </template>
       </el-table-column>
       <el-table-column :label="t('Configuration.conf_mount')" align="center">
@@ -312,6 +316,11 @@ onMounted(() => {
             {{ $t('Configuration.conf_used') }}/{{ $t('Configuration.conf_all') }}：
             <span style="color: #409EFF;">{{ CalculateCapacity(item.nTotalInM - item.nFreeInM) }}</span>
             /{{ CalculateCapacity(item.nTotalInM) }}
+          </div>
+          <div class="obj-space">
+            {{ $t('Configuration.conf_obj_space') }}：
+            <span style="color: #67C23A;">{{ CalculateCapacity(Math.round(item.nTotalInM * nAutoDelPercent / 100)) }}</span>
+            <span style="color: #909399;">（{{ nAutoDelPercent }}%）</span>
           </div>
         </div>
       </div>
@@ -400,7 +409,7 @@ onMounted(() => {
         width: 32%;
         margin-right: 20px;
         margin-bottom: 20px;
-        height: 120px;
+        height: 150px;
         border-radius: 4px;
         padding: 16px;
         cursor: pointer;
@@ -412,6 +421,12 @@ onMounted(() => {
 
         .el-progress {
           margin: 10px 0;
+        }
+
+        .obj-space {
+          font-size: 12px;
+          color: #909399;
+          margin-top: 6px;
         }
 
         :deep(.el-progress-bar__outer) {
@@ -435,23 +450,33 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-wrap: nowrap;
 
     .disk {
       margin-right: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     :deep(.el-progress) {
       width: 160px;
       margin-right: 10px;
+      flex-shrink: 0;
 
       .el-progress-bar__outer {
         height: 8px !important;
       }
     }
 
+    .count {
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     .used {
       color: #409EFF;
     }
   }
+
 }
 </style>

@@ -232,6 +232,7 @@ import Polygon from 'ol/geom/Polygon'
 import service from '@/api/http'
 import { GetDevPartitionApi } from '@/api/configuration/device'
 import { GetDeviceChannels } from '@/api/channel'
+import { GetViewListApi } from '@/api/view'
 import { useUserStore } from '@/store/user'
 // @ts-ignore
 import H5smap from '@/assets/js/h5mapjs.js'
@@ -262,8 +263,8 @@ class CustomScaleLine extends ScaleLine {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface TreeNode {
-  id: string; label: string; type: 'partition'|'device'|'channel'|'map'
-  data?: any; children?: TreeNode[]; isLeaf?: boolean; isDeviceChannel?: boolean
+  id: string; label: string; type: 'partition'|'device'|'channel'|'map'|'view'
+  data?: any; children?: TreeNode[]; isLeaf?: boolean; isDeviceChannel?: boolean; isView?: boolean
 }
 interface PartitionNode {
   devPartitionId: number; devPartitionName: string; children?: PartitionNode[]
@@ -289,27 +290,23 @@ function filterNode(v: string, d: TreeNode) {
 
 function getNodeIcon(d: TreeNode) {
   if (d.type === 'map')            return 'iconfont icon-ditu'
+  if (d.type === 'view')           return 'iconfont icon-shitu2'
   if (d.isDeviceChannel)           return 'iconfont icon-shexiangjizaixian'
   if (d.type === 'device')         return 'iconfont icon-Device'
   return 'iconfont icon-gen'
 }
 
-function buildTree(parts: any[], mapsByPartition: Record<number, any[]>): TreeNode[] {
+function buildTree(parts: any[], mapsByPartition: Record<number, any[]>, viewsByPartition: Record<number, any[]> = {}): TreeNode[] {
   return parts.map(p => {
     const children: TreeNode[] = []
-    if (p.children?.length) children.push(...buildTree(p.children, mapsByPartition))
-    // 普通设备（摄像机等）
+    if (p.children?.length) children.push(...buildTree(p.children, mapsByPartition, viewsByPartition))
     p.dev?.forEach((d: any) => children.push({
       id: `dev_${d.devId}`, label: d.name, type: 'device', data: d, children: [], isLeaf: false,
     }))
-    // 门禁/消防等接入设备（Gate/Fire）— 对照 uscweb p.accessDev
     p.accessDev?.forEach((d: any) => children.push({
       id: `acc_${d.accessDevId ?? d.uuid}`,
-      label: d.name,
-      type: 'device',
-      data: { ...d, isAccessDev: true },
-      children: [],
-      isLeaf: false,
+      label: d.name, type: 'device',
+      data: { ...d, isAccessDev: true }, children: [], isLeaf: false,
     }))
     // 地图节点
     p.map?.forEach((m: any) => children.push({
@@ -318,6 +315,16 @@ function buildTree(parts: any[], mapsByPartition: Record<number, any[]>): TreeNo
     mapsByPartition[p.devPartitionId]?.forEach((m: any) => {
       if (!children.some(c => c.id === `map_${m.mapId}`))
         children.push({ id: `map_${m.mapId}`, label: m.mapName, type: 'map', data: m, isLeaf: true })
+    })
+    // 视图节点（对照 View.vue，同一棵树显示 View 和 Map）
+    const seenViewIds = new Set<number>()
+    p.view?.forEach((v: any) => {
+      seenViewIds.add(v.viewId)
+      children.push({ id: `view_${v.viewId}`, label: v.viewName, type: 'view', data: v, isLeaf: true, isView: true })
+    })
+    viewsByPartition[p.devPartitionId]?.forEach((v: any) => {
+      if (!seenViewIds.has(v.viewId))
+        children.push({ id: `view_${v.viewId}`, label: v.viewName, type: 'view', data: v, isLeaf: true, isView: true })
     })
     return { id: `part_${p.devPartitionId}`, label: p.devPartitionName, type: 'partition', data: p, isLeaf: false, children } as TreeNode
   })
@@ -334,10 +341,11 @@ function extractDevices(nodes: TreeNode[]): TreeNode[] {
 
 async function loadTree() {
   try {
-    // 两路并发：一路取设备/分区，一路取地图节点（type=USC_MAP 让服务端嵌入地图数据）
-    const [devRes, mapRes] = await Promise.allSettled([
+    // 三路并发：设备分区、地图分区、视图列表
+    const [devRes, mapRes, viewRes] = await Promise.allSettled([
       GetDevPartitionApi(),
       service.get('/uapi/v1/DevPartition/List?pageSize=100000&type=USC_MAP'),
+      GetViewListApi(),
     ])
 
     if (devRes.status !== 'fulfilled') return
@@ -364,16 +372,37 @@ async function loadTree() {
       collectMaps(mapTreeResult)
     }
 
+    // 从视图列表构建 viewsByPartition
+    const viewsByPartition: Record<number, any[]> = {}
+    if (viewRes.status === 'fulfilled') {
+      const views: any[] = (viewRes.value as any)?.data?.result ?? []
+      views.forEach((v: any) => {
+        const pid = v.devPartitionId ?? 10000
+        if (!viewsByPartition[pid]) viewsByPartition[pid] = []
+        viewsByPartition[pid].push(v)
+      })
+    }
+
     const tree: TreeNode[] = []
-    // 构建 Root 子节点（对照 uscweb：分区子节点 + 设备 + 地图）
+    // 构建 Root 子节点（分区子节点 + 设备 + 地图 + 视图）
     const rootChildren: TreeNode[] = []
-    if (root.children?.length) rootChildren.push(...buildTree(root.children, mapsByPartition))
+    if (root.children?.length) rootChildren.push(...buildTree(root.children, mapsByPartition, viewsByPartition))
     root.dev?.forEach((d: any) => rootChildren.push({ id: `dev_${d.devId}`, label: d.name, type: 'device', data: d, children: [], isLeaf: false }))
     root.accessDev?.forEach((d: any) => rootChildren.push({ id: `acc_${d.accessDevId ?? d.uuid}`, label: d.name, type: 'device', data: { ...d, isAccessDev: true }, children: [], isLeaf: false }))
     root.map?.forEach((m: any) => rootChildren.push({ id: `map_${m.mapId}`, label: m.mapName, type: 'map', data: m, isLeaf: true }))
     mapsByPartition[root.devPartitionId]?.forEach((m: any) => {
       if (!rootChildren.some(n => n.id === `map_${m.mapId}`))
         rootChildren.push({ id: `map_${m.mapId}`, label: m.mapName, type: 'map', data: m, isLeaf: true })
+    })
+    // 视图节点（根分区）
+    const seenRootViews = new Set<number>()
+    root.view?.forEach((v: any) => {
+      seenRootViews.add(v.viewId)
+      rootChildren.push({ id: `view_${v.viewId}`, label: v.viewName, type: 'view', data: v, isLeaf: true, isView: true })
+    })
+    viewsByPartition[root.devPartitionId]?.forEach((v: any) => {
+      if (!seenRootViews.has(v.viewId))
+        rootChildren.push({ id: `view_${v.viewId}`, label: v.viewName, type: 'view', data: v, isLeaf: true, isView: true })
     })
     // Root 节点本身（对照 uscweb comm_dev_root）
     tree.push({
@@ -496,7 +525,7 @@ function gisMap(data: any, map: any) {
 function staticMap(data: any, map: any) {
   map.setView(new View({ center: fromLonLat([0,0]), zoom: data.zoom||7, minZoom: data.minZoom, maxZoom: data.maxZoom||8 }))
   const img = new Image()
-  img.src = IPPORT() + '/' + data.mapUrl
+  img.src = IPPORT() + '/' + data.mapUrl + '?session=' + userStore.session;
   img.onload = () => {
     const w = img.width, h = img.height
     const ext = [-w*1000,-h*1000,w*1000,h*1000]

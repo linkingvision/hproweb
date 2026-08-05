@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import $ from 'jquery';
-import { ref, onMounted, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
@@ -23,9 +23,9 @@ watch(activeIndex, (newVal) => {
   $router.push(newVal)
 })
 
-onMounted(() => {
-  activeIndex.value = $route.path;
-})
+watch(() => $route.path, (newPath) => {
+  activeIndex.value = newPath
+}, { immediate: true })
 </script>
 <template>
   <div class="basic-all">
@@ -85,7 +85,9 @@ onMounted(() => {
             <i class="iconfont icon-yonghu"></i>
             <span>{{ t('Router.router_user') }}</span>
           </template>
+          <el-menu-item index="/Configuration/Basic/User">{{ t('Configuration.conf_user') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/User/UserConfig">{{ t('Router.router_user_config') }}</el-menu-item>
+          <el-menu-item index="/Configuration/Basic/PlayCode">{{ t('Configuration.conf_playcode') }}</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </div>

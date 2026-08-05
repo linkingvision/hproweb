@@ -231,7 +231,10 @@
     "conf_obj_space": "Object Space",
     "conf_index": "Index",
     "conf_partition": "Partition",
-    "conf_map": "Map"
+    "conf_map": "Map",
+    "conf_meta_partition": "Meta Partition",
+    "conf_user": "User",
+    "conf_playcode": "Play Code"
   },
   "Device": {
     "device_audio": "Audio",
@@ -347,7 +350,7 @@
     "set_pw_new_cannot_old": "The new password cannot be the same as the old password",
     "set_pw_number": "The password must contain at least one number.",
     "set_pw_security_low": "The password security index is too low. please reset the password",
-    "set_pw_special_character": "The%20password%20must%20contain%20at%20least%20one%20special%20character.%20for%20example%2C%20%40%20%23%20%26%2C%20etc.",
+    "set_pw_special_character": "The password must contain at least one special character. For example, @ # &, etc.",
     "set_pw_title": "To improve your password security, it is recommended to use the following:",
     "set_pw_uppercase": "The password must contain at least one uppercase letter.",
     "set_pw_user": "The password cannot contain the username.",
@@ -664,7 +667,9 @@
     "set_support_images": "Supports PNG, JPG, JPEG",
     "set_reset_picture": "Reset Picture",
     "set_edit_avatarsuccessfully": "Avatar updated successfully!",
-    "set_edit_avatar_failed": "Failed to update avatar!"
+    "set_edit_avatar_failed": "Failed to update avatar!",
+    "set_add_user": "Add User",
+    "set_del_user": "Delete User"
   },
   "ExternalIDP": {
     "ext_idp_config": "External IDP Config"

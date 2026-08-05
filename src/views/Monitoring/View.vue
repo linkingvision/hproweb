@@ -245,9 +245,14 @@
               </el-form-item>
             </el-form>
           </div>
-          <div style="padding:0 0 10px 45%;display:flex;gap:8px;">
-            <button type="button" style="padding:6px 12px;cursor:pointer;" @click="croppingEnabled = false">{{ t('CommTableEdit.comm_cancel') }}</button>
-            <button type="button" style="padding:6px 12px;background:#0399FE;color:#fff;border:none;cursor:pointer;position:relative;z-index:9999;" @click="() => { console.log('btn clicked'); doExport(); }">{{ t('Playback.pb_export') }}</button>
+          <!-- 对照 uscweb button_table：form_butt1=取消，form_butt=导出 -->
+          <div class="cropping-footer">
+            <el-button class="cropping-btn-cancel" @click="croppingEnabled = false">
+              {{ t('CommTableEdit.comm_cancel') }}
+            </el-button>
+            <el-button class="cropping-btn-ok" type="primary" @click="doExport">
+              {{ t('Playback.pb_export') }}
+            </el-button>
           </div>
         </div>
         <div class="timeline-box" style="width:100%;height:80px;padding:0;box-sizing:border-box;border:none;">
@@ -410,7 +415,8 @@
             </div>
             <div style="display:flex;">
               <div class="liveview_group blocks" style="width:40%">
-                <div v-for="group in layoutGroups" :key="group.label" style="margin-bottom:10px">
+                <div v-for="(group, gi) in layoutGroups" :key="group.label"
+                :style="{ marginBottom: gi === layoutGroups.length - 1 ? '7px' : '10px' }">
                   <p>{{ group.label }}</p>
                   <div class="PanelBtns">
                     <el-button v-for="k in group.keys" :key="k"
@@ -436,7 +442,7 @@
               </div>
             </div>
             <template #reference>
-              <el-button class="iconfont icon-wanggeshitu" @click="loadCustomLayouts"></el-button>
+              <el-button class="iconfont icon-gongge" @click="loadCustomLayouts"></el-button>
             </template>
           </el-popover>
           <el-button class="iconfont icon-quanping1" @click="toggleFullscreen"></el-button>
@@ -678,10 +684,10 @@ const customLayoutForm = reactive({ layoutName:'' })
 
 // ─── Layout groups (for popover, mirroring uscweb grouping) ────────────────
 const layoutGroups = [
-  { label: '13 · 16 · 25', keys: ['13','16','25'] },
-  { label: '6 · 7 · 9',    keys: ['6','7','9']    },
-  { label: '4 · 4Alt',     keys: ['4','4Alt']      },
-  { label: '1 · 3',        keys: ['1','3']         },
+  { label: '13-16-25', keys: ['13','16','25'] },
+  { label: '6-7-9',    keys: ['6','7','9']    },
+  { label: '4-4',      keys: ['4','4Alt']     },
+  { label: '1-3',      keys: ['1','3']        },
 ]
 
 // Icon class mapping for layout picker (matches uscweb's icon names)
@@ -2035,19 +2041,23 @@ const clickEventImg = async (row: any) => {
 }
 
 const toggleCropping = () => {
-  const cellId = selectedCellId.value || [...cameraMap.value.keys()][0]
-  if (!cellId) return
-  const cam = cameraMap.value.get(cellId)
-  if (!cam) return
-  croppingEnabled.value = !croppingEnabled.value
+  // 对照 uscweb cropping()：面板始终可以展开，不因无摄像头而拦截
   if (croppingEnabled.value) {
+    croppingEnabled.value = false
+    return
+  }
+  croppingEnabled.value = true
+  // 有摄像头时填充表单（对照 uscweb croppingCB 回调）
+  const cellId = selectedCellId.value || [...cameraMap.value.keys()][0]
+  const cam = cellId ? cameraMap.value.get(cellId) : undefined
+  if (cam) {
     croppingForm.label = cam.name
     croppingForm.token = cam.token
-    // 默认截取当前时间前后30分钟
-    const base = xzvalue.value ? new Date(xzvalue.value) : new Date()
-    croppingForm.startTime = new Date(base.getTime() - 30 * 60 * 1000)
-    croppingForm.endTime = new Date(base.getTime())
   }
+  // 默认截取当前时间前后30分钟
+  const base = xzvalue.value ? new Date(xzvalue.value) : new Date()
+  croppingForm.startTime = new Date(base.getTime() - 30 * 60 * 1000)
+  croppingForm.endTime = new Date(base.getTime())
 }
 
 const formatTime = (d: Date) => {
@@ -2478,16 +2488,52 @@ onBeforeUnmount(() => {
 // 时间轴控制区 — 完全对照 GridCloudView.vue
 .control_area {
   width: 100%; display: flex; flex-direction: column; flex-shrink: 0;
+  // 对照 uscweb Advancepb .Cropping：绝对浮层，定位在视频区底部中央偏左
   .Cropping {
-    background: #282828; padding: 12px 16px; border-bottom: 1px solid #3a3a3a;
+    position: absolute;
+    width: 390px;
+    bottom: 13%;
+    left: 38%;
+    z-index: 20;
+    padding: 15px;
+    background: #282828;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    color: #ccc;
     .Cropping_title {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 10px; font-size: 14px; color: #fff;
-      i { cursor: pointer; font-size: 18px; &:hover { color: #0399FE; } }
+      i { cursor: pointer; font-size: 20px; &:hover { color: #0399FE; } }
     }
-    .Cropping_content { :deep(.el-form-item) { margin-bottom: 8px; } }
-    :deep(.el-input__wrapper), :deep(.el-input__inner) { background: #1e1e1e; color: #fff; }
-    :deep(.fixed_input .el-input__wrapper) { background: #1e1e1e; border: 0; box-shadow: none; }
+    .Cropping_content {
+      width: 100%;
+      :deep(.el-form-item) { margin-bottom: 8px; }
+      :deep(.el-form-item__label) { color: #ccc; }
+      // 对照 uscweb .el-date-editor.el-input { width:250px }
+      :deep(.el-date-editor.el-input),
+      :deep(.el-date-editor.el-input__inner) { width: 220px !important; }
+    }
+    :deep(.el-input__wrapper) { background: #1e1e1e !important; box-shadow: none !important; }
+    :deep(.el-input__inner) { color: #fff; }
+    :deep(.el-date-editor .el-input__wrapper) { background: #1e1e1e !important; box-shadow: none !important; }
+    .cropping-footer {
+      padding: 0 0 0 45%;
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .cropping-btn-cancel {
+      min-width: 78px; height: 29px; padding: 0 12px;
+      background: transparent !important; border: 1px solid #0399FE !important;
+      border-radius: 4px; font-size: 14px; color: #ccc !important; box-shadow: none !important;
+      &:hover { color: #0399FE !important; }
+    }
+    .cropping-btn-ok {
+      min-width: 78px; height: 29px; padding: 0 12px;
+      background: #0399FE !important; border: none !important;
+      border-radius: 4px; font-size: 14px; color: #fff !important; box-shadow: none !important;
+      &:hover { opacity: 0.85; }
+    }
   }
   .control_btns {
     flex: 1; width: 100%; background-color: #282828;
@@ -2884,6 +2930,7 @@ onBeforeUnmount(() => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
+    width: 100%;
 
     .SearchIcon {
       width: 32px;
