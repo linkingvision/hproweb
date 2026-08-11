@@ -17,6 +17,7 @@
             ref="treeRef"
             :data="treeData"
             node-key="id"
+            highlight-current
             :props="treeProps"
             :filter-node-method="filterNode"
             :default-expanded-keys="defaultExpandIds"
@@ -26,8 +27,14 @@
             <template #default="{ data }">
               <span draggable="true" @dragstart="dragStart($event, data)" @dragend="dragEnd"
                 style="display:flex;align-items:center;width:100%;">
-                <i :class="getNodeIcon(data)" style="font-size:16px;margin-right:4px;" />
-                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ data.label }}</span>
+                <i
+                  :class="[getNodeIcon(data), data.type === 'map' && mapID === data.data?.mapId ? 'el-tree-camera-play' : '']"
+                  style="font-size:16px;margin-right:4px;"
+                />
+                <span
+                  :class="data.type === 'map' && mapID === data.data?.mapId ? 'el-tree-camera-play' : ''"
+                  style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                >{{ data.label }}</span>
               </span>
             </template>
           </el-tree>
@@ -215,7 +222,7 @@
 
 <script lang="ts" setup>
 import 'ol/ol.css'
-import { ref, reactive, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Map as OLMap, View } from 'ol'
@@ -459,6 +466,8 @@ const urlTest = {
 // ─── Tree node click ──────────────────────────────────────────────────────────
 function handleNodeClick(data: TreeNode) {
   if (data.type !== 'map') return
+  // 先同步设置高亮，防止 async 等待期间状态丢失（对照 View.vue）
+  nextTick(() => treeRef.value?.setCurrentKey(data.id))
   DeivesExist.value = []
   mapID.value = data.data?.mapId ?? null
   const url = IPPORT() + '/uapi/v1/Map/' + mapID.value
@@ -481,6 +490,8 @@ function handleNodeClick(data: TreeNode) {
       if (mapdata.mapView?.length)           renderViews(mapdata.mapView)
       if (mapdata.mapElementLink?.length)    renderLinks(mapdata.mapElementLink)
     }, 500)
+    // 加载完毕后再次确保高亮
+    nextTick(() => treeRef.value?.setCurrentKey(data.id))
   }).catch(() => {})
 }
 
@@ -848,7 +859,7 @@ onBeforeUnmount(() => {
     :deep(.el-tree) {
       background: transparent; color: #fff;
       .el-tree-node__content:hover { background-color: rgba(3,153,254,0.08); }
-      .el-tree-node.is-current > .el-tree-node__content { color: #0399FE; background-color: rgba(3,153,254,0.2); border-right: 2px solid #0399FE; }
+      .el-tree-node.is-current > .el-tree-node__content { background-color: transparent; }
     }
   }
 

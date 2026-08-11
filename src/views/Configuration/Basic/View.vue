@@ -31,8 +31,18 @@
                   style="display:flex;align-items:center;"
                   :style="data.isDeviceChannel ? 'cursor:grab;' : ''"
                 >
-                  <i :class="getNodeIcon(data)" style="font-size:14px;margin-right:4px;"></i>
-                  <span>{{ data.label }}</span>
+                  <i
+                    :class="[getNodeIcon(data),
+                      (data.isView && currentView?.viewId === data.viewData?.viewId) ||
+                      (data.isMap  && Object.values(cellAssignments).some(a => a.entityType === 'USC_VIEW_MAP' && a.uuid === String(data.data?.mapId)))
+                        ? 'el-tree-camera-play' : '']"
+                    style="font-size:14px;margin-right:4px;"
+                  ></i>
+                  <span
+                    :class="(data.isView && currentView?.viewId === data.viewData?.viewId) ||
+                      (data.isMap  && Object.values(cellAssignments).some(a => a.entityType === 'USC_VIEW_MAP' && a.uuid === String(data.data?.mapId)))
+                        ? 'el-tree-camera-play' : ''"
+                  >{{ data.label }}</span>
                 </span>
                 <!-- 视图正在显示指示器（对照 uscweb view_iconclass3） -->
                 <span v-if="data.isView && currentView?.viewId === data.viewData?.viewId" class="nowplay">
@@ -467,15 +477,28 @@ import { useUserStore } from '@/store/user'
 import { useStore } from '@/store'
 import uuid from '@/assets/js/uuid.js'
 import http from '@/api/http'
+import 'ol/ol.css'
+import { Map as OLMap, View as OLView } from 'ol'
+import ImageLayer from 'ol/layer/Image'
+import ImageStatic from 'ol/source/ImageStatic'
+import TileLayer from 'ol/layer/Tile'
+import { WMTS, XYZ } from 'ol/source'
+import WMTSTileGrid from 'ol/tilegrid/WMTS'
+import { fromLonLat, get } from 'ol/proj'
+import { getWidth, getTopLeft } from 'ol/extent'
+// @ts-ignore
+import H5smap from '@/assets/js/h5mapjs.js'
 
 const { t } = useI18n()
 const userStore = useUserStore()
 const store     = useStore()
 
-// cellId → UPlayerSDKClass 实例（对照 Monitoring/View.vue playerMap）
+// cellId → UPlayerSDKClass 实例
 const playerMap = new Map<string, any>()
+// cellId → OL Map 实例（地图格子）
+const cellMapInstances = new Map<string, any>()
 
-// ─── Float-layer state（直接对照 Monitoring/View.vue）────────────────────────
+// ─── Float-layer state ────────────────────
 const audioingCellId   = ref('')
 let   audioback: any   = null
 const infoShow         = ref(false)
@@ -835,8 +858,11 @@ function clearCell(cellId: string) {
   stopCellExtra(cellId)
   const player = playerMap.get(cellId)
   if (player) { try { player.destroy?.() } catch (e) {} ; playerMap.delete(cellId) }
+  // 销毁该格子的 OL 地图实例
+  const olMap = cellMapInstances.get(cellId)
+  if (olMap) { try { olMap.setTarget(undefined) } catch {} ; cellMapInstances.delete(cellId) }
   const container = document.getElementById('h' + cellId)
-  if (container) container.querySelectorAll('video, canvas').forEach(el => el.remove())
+  if (container) container.querySelectorAll('video, canvas, .ol-viewport').forEach(el => el.remove())
   cameraMap.value.delete(cellId)
   const next = { ...cellAssignments.value }
   delete next[cellId]
@@ -849,6 +875,9 @@ function clearAllPlayers() {
   playerMap.forEach(p => { try { p?.destroy?.() } catch (e) {} })
   playerMap.clear()
   cameraMap.value.clear()
+  // 销毁所有 OL 地图实例
+  cellMapInstances.forEach(m => { try { m.setTarget(undefined) } catch {} })
+  cellMapInstances.clear()
 }
 
 // ─── Float-layer handlers（直接对照 Monitoring/View.vue）─────────────────────
@@ -1112,12 +1141,131 @@ async function handleNodeClick(data: TreeNode) {
     return
   }
 
+  // 点击地图节点 → 放入当前选中格子并渲染 OL 地图
+  if (data.isMap && LiveplayShow.value && previewGrid.value.length) {
+    if (!selectedCellId.value) selectedCellId.value = previewGrid.value[0].id
+    const cellId = selectedCellId.value
+    const mapData = data.data
+    // 先销毁旧内容（可能是视频或另一张地图）
+    clearCell(cellId)
+    // 更新 cellAssignments
+    cellAssignments.value = {
+      ...cellAssignments.value,
+      [cellId]: {
+        name:       mapData.mapName ?? data.label,
+        uuid:       String(mapData.mapId ?? ''),
+        profile:    '',
+        entityType: 'USC_VIEW_MAP',
+      },
+    }
+    // 从服务端获取完整地图数据，然后渲染
+    try {
+      const res: any = await http.get(userStore.IPPORT + '/uapi/v1/Map/' + mapData.mapId)
+      if (res?.data?.msg === 'Success' && res?.data?.result) {
+        await nextTick()
+        placeCellMap(cellId, res.data.result)
+      }
+    } catch (e) {
+      console.warn('[handleNodeClick] Map API error', e)
+    }
+    // 自动跳到下一格
+    const idx  = previewGrid.value.findIndex(c => c.id === cellId)
+    const next = previewGrid.value[idx + 1] ?? previewGrid.value[0]
+    if (next) selectedCellId.value = next.id
+    return
+  }
+
   // 点击摄像头通道 → 放入当前选中格子并起播（仅在已选中视图后生效）
   if (data.isDeviceChannel && LiveplayShow.value && previewGrid.value.length) {
     if (!selectedCellId.value) selectedCellId.value = previewGrid.value[0].id
     const cellId = selectedCellId.value
     placeCamera(cellId, data.data)
   }
+}
+
+// ─── 格子内渲染 OL 地图（对照 uscweb Liveplay.ViewPlayMap）─────────────────────
+
+function placeCellMap(cellId: string, mapdata: any) {
+  const container = document.getElementById('h' + cellId)
+  if (!container) return
+  // 清理旧的 OL 实例
+  const old = cellMapInstances.get(cellId)
+  if (old) { try { old.setTarget(undefined) } catch {} ; cellMapInstances.delete(cellId) }
+  container.querySelectorAll('.ol-viewport').forEach(el => el.remove())
+
+  const allowed = ['USC_MAP_STATIC','USC_MAP_CAD','USC_MAP_GOOGLE','USC_MAP_GAO_DE','USC_MAP_TIAN','USC_MAP_TILE']
+  if (!allowed.includes(mapdata.type)) return
+
+  const olMap = new OLMap({ target: container })
+  cellMapInstances.set(cellId, olMap)
+
+  if (mapdata.type === 'USC_MAP_STATIC') {
+    _cellStaticMap(olMap, mapdata)
+  } else {
+    _cellGisMap(olMap, mapdata)
+  }
+  setTimeout(() => {
+    if (mapdata.mapElementChannel?.length) _cellRenderChannels(olMap, mapdata.mapElementChannel)
+    if (mapdata.mapView?.length)           _cellRenderViews(olMap, mapdata.mapView)
+    if (mapdata.mapElementLink?.length)    _cellRenderLinks(olMap, mapdata.mapElementLink)
+  }, 500)
+}
+
+function _cellGisMap(olMap: any, data: any) {
+  const proj = data.projection || 'EPSG:4326'
+  if (data.type === 'USC_MAP_TIAN') {
+    const p = get('EPSG:4326')!
+    const ext = p.getExtent()
+    const size = getWidth(ext) / 256
+    const res: number[] = Array.from({length:18}, (_,z) => size / Math.pow(2, z))
+    const ids: string[] = Array.from({length:18}, (_,z) => String(z))
+    olMap.setView(new OLView({ projection: proj, center: data.center, zoom: data.zoom||7, minZoom: data.minZoom, maxZoom: data.maxZoom||8 }))
+    olMap.addLayer(new TileLayer({ source: new WMTS({ url: data.mapUrl, layer:'vec', matrixSet:'c', format:'tiles', style:'default', crossOrigin:'anonymous', tileGrid: new WMTSTileGrid({ origin: getTopLeft(ext), resolutions: res, matrixIds: ids }) }) }))
+    if (data.mapUrl2) olMap.addLayer(new TileLayer({ source: new WMTS({ url: data.mapUrl2, layer:'cva', matrixSet:'c', format:'tiles', style:'default', crossOrigin:'anonymous', tileGrid: new WMTSTileGrid({ origin: getTopLeft(ext), resolutions: res, matrixIds: ids }) }) }))
+  } else {
+    const center = proj === 'EPSG:3857' ? fromLonLat(data.center) : (data.center || fromLonLat([0, 0]))
+    olMap.setView(new OLView({ center, zoom: data.zoom||7, minZoom: data.minZoom, maxZoom: data.maxZoom||8, projection: proj }))
+    olMap.addLayer(new TileLayer({ source: new XYZ({ url: data.mapUrl, projection: proj }) }))
+  }
+}
+
+function _cellStaticMap(olMap: any, data: any) {
+  olMap.setView(new OLView({ center: fromLonLat([0,0]), zoom: data.zoom||7, minZoom: data.minZoom, maxZoom: data.maxZoom||8 }))
+  const img = new Image()
+  img.src = userStore.IPPORT + '/' + data.mapUrl + '?session=' + userStore.session
+  img.onload = () => {
+    const ext = [-img.width*1000, -img.height*1000, img.width*1000, img.height*1000]
+    olMap.addLayer(new ImageLayer({ source: new ImageStatic({ url: img.src, imageExtent: ext }) }))
+  }
+}
+
+function _cellCoordFix(olMap: any, item: any) {
+  const proj = olMap.getView().getProjection()
+  if (proj?.getCode() === 'EPSG:3857') {
+    const c = fromLonLat([item.longitude, item.latitude])
+    item.longitude = c[0]; item.latitude = c[1]
+  }
+}
+function _cellRenderChannels(olMap: any, data: any[]) {
+  const dm = new H5smap(olMap)
+  data.forEach(item => {
+    _cellCoordFix(olMap, item)
+    dm.addLayer({ map: olMap, cameraName: item.channelName, cameraToken: item.channelUUID, radius: item.Radius, angle: item.angle, rotationAngle: item.rotationAngle, cameraType: item.fillColor, coordinate: [item.longitude, item.latitude], id: item.id, type: 'camera', callback: () => {} })
+  })
+}
+function _cellRenderViews(olMap: any, data: any[]) {
+  const dm = new H5smap(olMap)
+  data.forEach(item => {
+    _cellCoordFix(olMap, item)
+    dm.addLayer({ map: olMap, cameraName: item.viewName, cameraToken: item.viewUUID, cameraType: item.fillColor, coordinate: [item.longitude, item.latitude], drawIcon: true, id: item.id, type: 'view', callback: () => {} })
+  })
+}
+function _cellRenderLinks(olMap: any, data: any[]) {
+  const dm = new H5smap(olMap)
+  data.forEach(item => {
+    _cellCoordFix(olMap, item)
+    dm.addLayer({ map: olMap, cameraName: item.resName, cameraToken: item.id, cameraType: item.fillColor, coordinate: [item.longitude, item.latitude], drawIcon: true, id: item.mapLinkId, type: 'link', callback: () => {} })
+  })
 }
 
 function loadViewPreview(view: ViewRow) {

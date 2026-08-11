@@ -165,8 +165,8 @@
             <span v-if="changePwStatus === 'fail'">{{ t('Setting.set_pw_security_low') }}</span>
           </span>
         </div>
-        <span class="updateHelp" style="margin-left:90px;">{{ t('Setting.set_pw_title') }}</span>
-        <ul class="rule" style="padding-left:40px;">
+        <span class="updateHelp">{{ t('Setting.set_pw_title') }}</span>
+        <ul class="rule">
           <li v-for="rule in changePwRuleList" :key="rule.key">
             <span class="rulechildren" :style="{ background: ruleColor(rule.state) }"></span>
             <span :style="{ color: ruleColor(rule.state) }">{{ rule.text }}</span>

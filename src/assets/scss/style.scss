@@ -87,3 +87,8 @@ html, body, #app {
   cursor: pointer;
   span { color: #FFFFFF !important; }
 }
+
+/* 视图节点正在播放时的图标/文字颜色（对照 uscweb .el-tree-camera-play） */
+.el-tree-camera-play {
+  color: #30d158 !important;
+}
