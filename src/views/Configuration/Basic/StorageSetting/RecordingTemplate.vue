@@ -521,7 +521,6 @@ function toggleDate(day: string) {
   else date.value.push(day)
 }
 
-// 对照 uscweb PublicHoliday(Delete)
 async function PublicHoliday(_Delete?: boolean) {
   const res = await GetPublicHolidayApi()
   if (res.data.msg !== 'Success') return
@@ -534,7 +533,6 @@ async function PublicHoliday(_Delete?: boolean) {
   }
 }
 
-// 对照 uscweb Add()
 function Add() {
   dialogFormVisible.value = true
   OptionYear.value = []; OptionMonth.value = []
@@ -546,7 +544,6 @@ function Add() {
   Month.value = new Date().getMonth() + 1
 }
 
-// 对照 uscweb platformyes()
 async function platformyes() {
   dialogFormVisible.value = false
   const publicHoliday: { holiday: string }[] = []
@@ -636,7 +633,6 @@ function ChangeMonth(direction: 'prev' | 'next', step: number) {
   Month.value = m; Year.value = y
 }
 
-// 对照 uscweb clickToday()
 function clickToday() {
   Year.value = new Date().getFullYear(); Month.value = new Date().getMonth() + 1
 }

@@ -33,18 +33,22 @@
                 >
                   <i
                     :class="[getNodeIcon(data),
-                      (data.isView && currentView?.viewId === data.viewData?.viewId) ||
-                      (data.isMap  && Object.values(cellAssignments).some(a => a.entityType === 'USC_VIEW_MAP' && a.uuid === String(data.data?.mapId)))
-                        ? 'el-tree-camera-play' : '']"
+                      data.isView && currentView?.viewId === data.viewData?.viewId
+                        ? 'el-tree-view-play'
+                        : data.isMap && isMapAssigned(data)
+                          ? 'el-tree-map-play'
+                          : '']"
                     style="font-size:14px;margin-right:4px;"
                   ></i>
                   <span
-                    :class="(data.isView && currentView?.viewId === data.viewData?.viewId) ||
-                      (data.isMap  && Object.values(cellAssignments).some(a => a.entityType === 'USC_VIEW_MAP' && a.uuid === String(data.data?.mapId)))
-                        ? 'el-tree-camera-play' : ''"
+                    :class="data.isView && currentView?.viewId === data.viewData?.viewId
+                      ? 'el-tree-view-play'
+                      : data.isMap && isMapAssigned(data)
+                        ? 'el-tree-map-play'
+                        : ''"
                   >{{ data.label }}</span>
                 </span>
-                <!-- 视图正在显示指示器（对照 uscweb view_iconclass3） -->
+                <!-- 视图正在显示指示器 -->
                 <span v-if="data.isView && currentView?.viewId === data.viewData?.viewId" class="nowplay">
                   <span class="dot">●</span>
                   <span class="nowplayText">{{ t('Liveview.live_displaying') }}</span>
@@ -103,14 +107,14 @@
                   <p>4-4</p>
                   <div class="PanelBtns">
                     <el-button class="iconfont icon-a-4gongge" @click="applyPresetLayout(4)" />
-                    <!-- 4Alt：1大+3小竖排，对照 uscweb icon-sigongge -->
+                    <!-- 4Alt：1大+3小竖排 -->
                     <el-button class="iconfont icon-sigongge" @click="applyPresetLayout('4Alt')" />
                   </div>
                 </div>
                 <div>
                   <p>1-1-3</p>
                   <div class="PanelBtns">
-                    <!-- 全屏按钮，对照 uscweb panelFullScreen -->
+                    <!-- 全屏按钮 -->
                     <el-button class="iconfont icon-quanping1" @click="panelFullScreen" />
                     <el-button class="iconfont icon-a-1gongge" @click="applyPresetLayout(1)" />
                     <el-button class="iconfont icon-a-3gongge" @click="applyPresetLayout(3)" />
@@ -161,7 +165,7 @@
         </div>
       </div>
 
-      <!-- 布局预览区：对照uscweb，点击视图节点后才显示（LiveplayShow 控制） -->
+      <!-- 布局预览区 -->
       <div v-if="LiveplayShow" class="layout-preview-area" id="layoutPreviewPanel">
         <div
           v-for="cell in previewGrid"
@@ -194,7 +198,7 @@
             </div>
           </div>
 
-          <!-- 悬浮按钮层 -->
+          <!-- 视频悬浮按钮层 -->
           <div v-if="getCellCamera(cell.id)" class="float-layer" @click.stop>
             <!-- 1. 音量 -->
             <i class="iconfont"
@@ -239,6 +243,21 @@
                @click.stop="toggleCellFullscreen(cell.id)"></i>
             <!-- 10. 关闭 -->
             <i class="iconfont icon-guanbi" title="Close"
+               @click.stop="clearCell(cell.id)"></i>
+          </div>
+
+          <!-- 地图悬浮按钮层 -->
+          <div v-if="cellAssignments[cell.id]?.entityType === 'USC_VIEW_MAP'" class="float-layer map-float-layer" @click.stop>
+            <i class="iconfont icon-fangda6"
+               :class="{ 'expend-active': mapAreaZoomCellId === cell.id }"
+               :title="t('Liveview.live_expendarea')"
+               @click.stop="toggleMapAreaZoomTip(cell.id)"></i>
+            <i class="iconfont"
+               :class="cellFullscreenId === cell.id ? 'icon-suoxiao' : 'icon-fangda'"
+               :title="t('Liveview.live_full_screen')"
+               @click.stop="toggleCellFullscreen(cell.id)"></i>
+            <i class="iconfont icon-guanbi"
+               :title="t('Liveview.live_close')"
                @click.stop="clearCell(cell.id)"></i>
           </div>
 
@@ -292,13 +311,13 @@
             </div>
           </div>
 
-          <!-- 摄像头名称标签（左上角） -->
-          <div v-if="cellAssignments[cell.id]" class="cell-label-overlay">
+          <!-- 摄像头名称标签 -->
+          <div v-if="cellAssignments[cell.id] && cellAssignments[cell.id].entityType !== 'USC_VIEW_MAP'" class="cell-label-overlay">
             {{ cellAssignments[cell.id].name }}
           </div>
         </div>
       </div>
-      <!-- 未选中视图时显示提示（对照 uscweb 初始黑屏区域） -->
+      <!-- 未选中视图时显示提示 -->
       <div v-else class="layout-empty">
         {{ t('Liveview.live_view') }}
       </div>
@@ -484,6 +503,7 @@ import ImageStatic from 'ol/source/ImageStatic'
 import TileLayer from 'ol/layer/Tile'
 import { WMTS, XYZ } from 'ol/source'
 import WMTSTileGrid from 'ol/tilegrid/WMTS'
+import { ScaleLine } from 'ol/control'
 import { fromLonLat, get } from 'ol/proj'
 import { getWidth, getTopLeft } from 'ol/extent'
 // @ts-ignore
@@ -492,6 +512,41 @@ import H5smap from '@/assets/js/h5mapjs.js'
 const { t } = useI18n()
 const userStore = useUserStore()
 const store     = useStore()
+
+// ─── Map controls────────────────────
+class CustomScaleLine extends ScaleLine {
+  scaleBar: HTMLElement
+  zoomHtml: HTMLElement
+
+  constructor(opts?: any) {
+    super(opts || {})
+    this.element = document.createElement('div')
+    this.element.className = opts?.className || 'custom-scale-line-container'
+
+    this.scaleBar = document.createElement('div')
+    this.scaleBar.className = 'custom-scale-line'
+    this.scaleBar.innerHTML = '<div class="scale-value">0</div><div class="h-letter"><div class="vertical vertical-left"></div><div class="horizontal"></div><div class="vertical vertical-right"></div></div>'
+
+    this.zoomHtml = document.createElement('div')
+    this.zoomHtml.className = 'custom-zoom'
+    this.zoomHtml.innerHTML = `<span class="zoom-label">${t('Setting.set_level')}:</span><span class="zoom-value">0</span>`
+
+    this.element.appendChild(this.scaleBar)
+    this.element.appendChild(this.zoomHtml)
+    this.on('change', () => this.updateHTML())
+  }
+
+  updateHTML(view?: any) {
+    const map = this.getMap()
+    const mapView = view || map?.getView()
+    const scaleValue = this.scaleBar.querySelector('.scale-value')
+    if (scaleValue) scaleValue.textContent = (this as any).renderedHTML_ || '0'
+
+    const zoomValue = this.zoomHtml.querySelector('.zoom-value')
+    const zoom = mapView?.getZoom?.()
+    if (zoomValue) zoomValue.textContent = Number.isFinite(zoom) ? String(Math.trunc(zoom)) : '0'
+  }
+}
 
 // cellId → UPlayerSDKClass 实例
 const playerMap = new Map<string, any>()
@@ -513,6 +568,7 @@ const presetList       = ref<any[]>([])
 const cellAudioSliders = reactive<Record<string, number>>({})
 const cellAudioVisible = ref('')
 const cell3DZoomId     = ref('')
+const mapAreaZoomCellId = ref('')
 interface ZoomRect { drawing: boolean; x0: number; y0: number; x1: number; y1: number }
 const cell3DZoomState  = reactive<Record<string, ZoomRect>>({})
 const cellEZoomId      = ref('')
@@ -689,7 +745,7 @@ async function loadAll() {
         rootChildren.push({ id: `map_${m.mapId}`, label: m.mapName, type: 'map', isLeaf: true, isMap: true, data: m })
     })
 
-    // Root 节点本身，与 uscweb comm_dev_root 对应
+    // Root
     const tree: TreeNode[] = [{
       id: `part_${root.devPartitionId}`,
       label: root.devPartitionName || t('CommDev.comm_dev_root'),
@@ -699,7 +755,7 @@ async function loadAll() {
       children: rootChildren,
     }]
 
-    // 批量加载设备通道（每批3个并发）
+    // 批量加载设备通道
     const deviceNodes = extractDevices(tree)
     for (let i = 0; i < deviceNodes.length; i += 3) {
       await Promise.allSettled(deviceNodes.slice(i, i + 3).map(async item => {
@@ -755,7 +811,12 @@ function getNodeIcon(data: TreeNode): string {
   return 'iconfont icon-gen'
 }
 
-// 对照 uscweb srcview：服务端用 1-10 存预设布局，映射到 PRESET_LAYOUTS key
+function isMapAssigned(data: TreeNode): boolean {
+  return data.isMap && Object.values(cellAssignments.value).some(a =>
+    a.entityType === 'USC_VIEW_MAP' && a.uuid === String(data.data?.mapId),
+  )
+}
+
 const LAYOUT_ID_MAP: Record<number, number | string> = {
   1: 1, 2: 3, 3: 13, 4: 16, 5: 25,
   6: 7, 7: 4, 8: '4Alt', 9: 6, 10: 9,
@@ -775,7 +836,6 @@ const cellAssignments = ref<Record<string, { name: string; token?: string; uuid?
 
 function handleDragStart(ev: DragEvent, data: TreeNode) {
   if (!data.isDeviceChannel) return
-  // 与 Monitoring/View.vue 保持一致，用 window._viewDrag 传递拖拽对象
   ;(window as any)._viewDrag = { channel: data.data, nodeId: data.id }
   if (ev.dataTransfer) {
     ev.dataTransfer.effectAllowed = 'move'
@@ -884,6 +944,7 @@ function clearAllPlayers() {
 
 function stopCellExtra(cellId: string) {
   if (cell3DZoomId.value === cellId) { cell3DZoomId.value = ''; _clear3DCanvas(cellId) }
+  if (mapAreaZoomCellId.value === cellId) mapAreaZoomCellId.value = ''
   if (cellEZoomId.value === cellId) _stopEZoom(cellId)
   if (cellAudioVisible.value === cellId) cellAudioVisible.value = ''
 }
@@ -995,6 +1056,15 @@ const showPtz = async (cellId: string) => {
 }
 const closePtz = () => { ptzShow.value = false; ptzToken.value = '' }
 const ptzAction = (action: string) => { if (ptzToken.value) PtzApi(ptzToken.value, action, ptzSpeed.value) }
+const toggleMapAreaZoomTip = (cellId: string) => {
+  if (mapAreaZoomCellId.value === cellId) {
+    mapAreaZoomCellId.value = ''
+    ElMessage({ message: t('Liveview.live_expendarea_exit'), type: 'info', duration: 2000 })
+  } else {
+    mapAreaZoomCellId.value = cellId
+    ElMessage({ message: t('Liveview.live_expendarea_enter'), type: 'info', duration: 3000 })
+  }
+}
 
 // 3D 框选放大
 const _clear3DCanvas = (cellId: string) => {
@@ -1204,11 +1274,19 @@ function placeCellMap(cellId: string, mapdata: any) {
   } else {
     _cellGisMap(olMap, mapdata)
   }
+  addCellScaleLine(olMap)
   setTimeout(() => {
     if (mapdata.mapElementChannel?.length) _cellRenderChannels(olMap, mapdata.mapElementChannel)
     if (mapdata.mapView?.length)           _cellRenderViews(olMap, mapdata.mapView)
     if (mapdata.mapElementLink?.length)    _cellRenderLinks(olMap, mapdata.mapElementLink)
   }, 500)
+}
+
+function addCellScaleLine(olMap: any) {
+  const ctrl = new CustomScaleLine({ className: 'custom-scale-line-container', units: 'metric' })
+  if (!olMap.getControls().getArray().find((c: any) => c instanceof CustomScaleLine)) olMap.addControl(ctrl)
+  olMap.on('postrender', () => ctrl.updateHTML())
+  olMap.getView()?.on('change:resolution', () => ctrl.updateHTML())
 }
 
 function _cellGisMap(olMap: any, data: any) {
@@ -1456,7 +1534,7 @@ function applyPresetLayout(n: number | string) {
   }
 }
 
-// ─── 全屏：将布局预览区切换为全屏（对照 uscweb panelFullScreen）──────────────
+// ─── 全屏：将布局预览区切换为全屏──────────────
 
 function panelFullScreen() {
   const elem = document.getElementById('layoutPreviewPanel')
@@ -1493,7 +1571,7 @@ async function deleteCurrentView() {
       ElMessage({ type: 'success', message: t('CommTableEdit.comm_delete_successfully') })
       clearAllPlayers()
       currentView.value = null; previewGrid.value = []; cellAssignments.value = {}
-      LiveplayShow.value = false   // 对照 uscweb：删除后回到黑屏状态
+      LiveplayShow.value = false  
       await loadAll()
     } else {
       ElMessage({ type: 'error', message: t('CommTableEdit.comm_delete_failed') })
@@ -1506,10 +1584,10 @@ async function deleteCurrentView() {
 async function saveCurrentView() {
   if (!currentView.value) return
   try {
-    // 从 cellAssignments 构建 viewEntity（对照 uscweb viewadd）
+    // 从 cellAssignments 构建 viewEntity
     const viewEntity = Object.entries(cellAssignments.value).map(([cellId, assign]) => ({
       entityType:     assign.entityType,
-      layoutPosition: 'h' + cellId,    // 对照 uscweb：存 "h1-1" 格式
+      layoutPosition: 'h' + cellId,    
       resourceUUID:   assign.uuid ?? assign.token ?? '',
       profile:        assign.profile,
     }))
@@ -1775,17 +1853,13 @@ onBeforeUnmount(() => {
       background: transparent;
       color: #fff;
 
-      .el-tree-node__content:hover {
-        background-color: rgba(3, 153, 254, 0.08);
-      }
-
+      .el-tree-node__content:hover,
       .el-tree-node.is-current > .el-tree-node__content {
-        color: #0399FE;
-        background-color: rgba(3, 153, 254, 0.2);
-        border-right: 2px solid #0399FE;
-
-        i, span { color: #0399FE; }
+        background-color: transparent;
       }
+
+      .el-tree-view-play { color: #30D158 !important; }
+      .el-tree-map-play  { color: #3ABBFE !important; }
     }
   }
 
@@ -1835,12 +1909,61 @@ onBeforeUnmount(() => {
 
   video { display: block; width: 100%; height: 100%; object-fit: fill; }
 
+  :deep(.ol-zoom) {
+    bottom: 10px !important;
+    right: 10px !important;
+    top: auto !important;
+    left: auto !important;
+  }
+
+  :deep(.custom-scale-line-container) {
+    .custom-scale-line {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      width: 88px;
+      height: 23px;
+      padding: 2px;
+      border-radius: 2px;
+      background: #DCE3E9;
+      opacity: 0.7;
+
+      .scale-value {
+        color: #000;
+        font-size: 10px;
+        text-align: center;
+      }
+
+      .h-letter { position: relative; height: 6px; }
+      .vertical { position: absolute; width: 1px; height: 6px; background: #000; }
+      .vertical-left { left: 0; }
+      .vertical-right { right: 0; }
+      .horizontal { position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: #000; }
+    }
+
+    .custom-zoom {
+      position: absolute;
+      bottom: 35px;
+      left: 8px;
+      display: flex;
+      align-items: center;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 2px;
+      background: rgba(220, 227, 233, 0.7);
+      color: #000;
+      font-size: 10px;
+
+      .zoom-value { margin-left: 2px; }
+    }
+  }
+
   // 悬浮按钮层：默认藏在顶部上方，hover 时滑入（对照 Monitoring/View）
   &:hover .float-layer { top: 0; }
   .float-layer {
     position: absolute; right: 0; top: -30px; z-index: 10;
     width: 290px; height: 30px; line-height: 30px;
-    background: url('@/views/Monitoring/liveview/imgs/liveview_buttback.png') no-repeat;
+    background: url('@/assets/imgs/liveview_buttback.png') no-repeat;
     background-size: 290px 30px; text-align: right; padding: 0 10px; transition: 0.2s;
     display: flex; align-items: center; justify-content: flex-end;
     i, span { margin-left: 8px; cursor: pointer; color: #fff; font-size: 16px;
@@ -1849,6 +1972,11 @@ onBeforeUnmount(() => {
     .audio-active  { color: #0399FE !important; }
     .rec-active    { color: #f44336 !important; }
     .expend-active { color: #0399FE !important; }
+
+    &.map-float-layer {
+      width: 100px;
+      background-size: 100px 30px;
+    }
   }
 
   // 音量滑块面板

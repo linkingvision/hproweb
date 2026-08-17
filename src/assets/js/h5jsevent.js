@@ -145,6 +145,16 @@ H5jsEvent.prototype.colors = function (data) {
 		if (this._debug === true) console.log(e);
 	}
 }
+H5jsEvent.prototype.userName = function (data) {
+	try {
+		var j = {};
+		j.type = "user";
+		j.data = data;
+		this.wsSocket.send(JSON.stringify(j));
+	} catch (e) {
+		if (this._debug === true) console.log(e);
+	}
+}
 H5jsEvent.prototype.send = function (data) {
 	console.log("send",data);
 	try {
@@ -186,8 +196,17 @@ H5jsEvent.prototype.setupWebSocket = function (token) {
 			this.h5.colors(this.h5._pbconf.colors)
 		}
 		console.log(this.h5._pbconf.parameters);
+		if (this.h5._pbconf.userName) {
+			this.h5.userName(this.h5._pbconf.userName)
+		}
 		if (this.h5._pbconf.parameters) {
-			this.h5.send(this.h5._pbconf.parameters)
+			if (Array.isArray(this.h5._pbconf.parameters)) {
+				this.h5._pbconf.parameters.forEach(element => {
+					this.h5.send(element)
+				});
+			} else {
+				this.h5.send(this.h5._pbconf.parameters)
+			}
 		}
 	}
 

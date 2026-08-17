@@ -685,7 +685,7 @@ onMounted(() => { initGrid(); loadTemplates(); PublicHoliday() })
   }
 }
 
-/* 右侧按钮样式，对照uscweb .form_butt */
+/* 右侧按钮样式 */
 .btn-holiday {
   border: none !important;
   background: #177DDC !important;

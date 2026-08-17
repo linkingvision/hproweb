@@ -80,6 +80,17 @@ watch(() => $route.path, (newPath) => {
           <el-menu-item index="/Configuration/Basic/MetaStorage">{{ t('Router.router_meta_storage') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/S3Storage">{{ t('Router.router_s3_storage') }}</el-menu-item>
         </el-sub-menu>
+        <el-sub-menu index="/Configuration/Basic/Iscsi/IscsiConfig">
+          <template #title>
+            <i class="iconfont icon-iSCSImenhu"></i>
+            <span>{{ t('Configuration.conf_iscsi_portal') }}</span>
+          </template>
+          <el-menu-item index="/Configuration/Basic/Iscsi/IscsiConfig">{{ t('Configuration.conf_iscsi_portal_config') }}</el-menu-item>
+        </el-sub-menu>
+        <el-menu-item index="/Configuration/Basic/Patrol">
+          <i class="iconfont icon-xungengpeizhi"></i>
+          <span>{{ t('Configuration.conf_patrol_config') }}</span>
+        </el-menu-item>
         <el-sub-menu index="/Configuration/Basic/User/UserConfig">
           <template #title>
             <i class="iconfont icon-yonghu"></i>
@@ -88,6 +99,28 @@ watch(() => $route.path, (newPath) => {
           <el-menu-item index="/Configuration/Basic/User">{{ t('Configuration.conf_user') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/User/UserConfig">{{ t('Router.router_user_config') }}</el-menu-item>
           <el-menu-item index="/Configuration/Basic/PlayCode">{{ t('Configuration.conf_playcode') }}</el-menu-item>
+        </el-sub-menu>
+        <el-menu-item index="/Configuration/Basic/Joystick">
+          <i class="iconfont icon-caozonggan"></i>
+          <span>{{ t('Joystick.joystick_joy') }}</span>
+        </el-menu-item>
+        <el-menu-item index="/Configuration/Basic/AlarmConfig">
+          <i class="iconfont icon-baojingpeizhi"></i>
+          <span>{{ t('AlarmConfig.ala_config') }}</span>
+        </el-menu-item>
+        <el-sub-menu index="/Configuration/Basic/RulesConfig">
+          <template #title>
+            <i class="iconfont icon-guizeheshijian"></i>
+            <span>{{ t('RulesAndEvent.rule_and_event') }}</span>
+          </template>
+          <el-menu-item index="/Configuration/Basic/RulesConfig">{{ t('RulesAndEvent.rule_config') }}</el-menu-item>
+          <el-sub-menu index="/Configuration/Basic/SendNotice">
+            <template #title>{{ t('RulesAndEvent.rule_send_notice_config') }}</template>
+            <el-menu-item index="/Configuration/Basic/HTTPNotice">{{ t('RulesAndEvent.rule_http_conf') }}</el-menu-item>
+            <el-menu-item index="/Configuration/Basic/MQTTNotice">{{ t('RulesAndEvent.rule_mqtt_conf') }}</el-menu-item>
+            <el-menu-item index="/Configuration/Basic/SendNotice">{{ t('RulesAndEvent.rule_email_notice_config') }}</el-menu-item>
+          </el-sub-menu>
+          <el-menu-item index="/Configuration/Basic/EmailService">{{ t('RulesAndEvent.rule_email_service_config') }}</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </div>
@@ -108,6 +141,24 @@ watch(() => $route.path, (newPath) => {
     height: calc(100vh - 30px);
     background-color: #181818;
     transition: 0.4s;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(218, 218, 218, 0.25) transparent;
+    &::-webkit-scrollbar {
+      width: 6px;
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 4px;
+      background: rgba(218, 218, 218, 0.25);
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
     .collapse-box {
       width: 100%;
       height: 48px;

@@ -22,6 +22,8 @@ const RegularStorage = () => import('@/views/Configuration/Basic/StorageSetting/
 const RecordingTemplate = () => import('@/views/Configuration/Basic/StorageSetting/RecordingTemplate.vue')
 const ArchiveStorage = () => import('@/views/Configuration/Basic/StorageSetting/ArchiveStorage.vue')
 const SnapshotTemplate = () => import('@/views/Configuration/Basic/StorageSetting/SnapshotTemplate.vue')
+const IscsiConfig = () => import('@/views/Configuration/Basic/IscsiConfig.vue')
+const Joystick = () => import('@/views/Configuration/Basic/Joystick.vue')
 const UserConfigPage  = () => import('@/views/Configuration/Basic/User/UserConfig.vue')
 const UserPage        = () => import('@/views/Configuration/Basic/User/User.vue')
 const UserSettingPage = () => import('@/views/Configuration/Basic/User/UserSetting.vue')
@@ -31,6 +33,13 @@ const MapConfig  = () => import('@/views/Configuration/Basic/Map.vue')
 const Role = () => import('@/views/Configuration/Basic/Role.vue')
 const Group = () => import('@/views/Configuration/Basic/Group.vue')
 const TimeTemplate = () => import('@/views/Configuration/Basic/TimeTemplate.vue')
+const Patrol = () => import('@/views/Configuration/Basic/Patrol.vue')
+const AlarmConfig = () => import('@/views/Configuration/Basic/AlarmConfig.vue')
+const RulesConfig = () => import('@/views/Configuration/Basic/RulesAndEvent/RulesConfig.vue')
+const SendNotice = () => import('@/views/Configuration/Basic/RulesAndEvent/SendNotice.vue')
+const HTTPNotice = () => import('@/views/Configuration/Basic/RulesAndEvent/HTTPNotice.vue')
+const MQTTNotice = () => import('@/views/Configuration/Basic/RulesAndEvent/MQTTNotice.vue')
+const EmailService = () => import('@/views/Configuration/Basic/RulesAndEvent/EmailService.vue')
 const DevicePartition = () => import('@/views/Configuration/Basic/DevicePartition/DevicePartition.vue')
 const Device = () => import('@/views/Configuration/Device/Device.vue')
 const DeviceSDK = () => import('@/views/Configuration/Device/DeviceSDK.vue')
@@ -38,9 +47,12 @@ const System = () => import('@/views/System/System.vue')
 const Setting = () => import('@/views/System/Setting/Setting.vue')
 const License = () => import('@/views/System/Setting/License.vue')
 const SystemConfig = () => import('@/views/System/Setting/SystemConfig.vue')
+const AlarmSearch = () => import('@/views/System/Setting/AlarmSearch.vue')
+const SystemEventSearch = () => import('@/views/System/Setting/EventSearch.vue')
 const OperationLog = () => import('@/views/System/Setting/Maintain/OperationLog.vue')
 const SystemMaintenance = () => import('@/views/System/Setting/Maintain/SystemMaintenance.vue')
 const SystemUpgrade = () => import('@/views/System/Setting/Maintain/SystemUpgrade.vue')
+const AutoBackup = () => import('@/views/System/Setting/Maintain/AutoBackup.vue')
 const Analytics = () => import('@/views/Analytics/Analytics.vue')
 const AnaSetting = () => import('@/views/Analytics/Setting/Settings.vue')
 const Rules = () => import('@/views/Analytics/Setting/Rules.vue')
@@ -236,6 +248,86 @@ const router = createRouter({
             type: 'Operator'
           }
         }, {
+          path: 'Patrol',
+          name: 'Patrol',
+          component: Patrol,
+          meta: {
+            title: '/Configuration/Basic/Patrol',
+            name: 'Configuration.conf_patrol_config',
+            icon: 'iconfont icon-xungengpeizhi',
+            type: 'Operator'
+          }
+        }, {
+          path: 'AlarmConfig',
+          name: 'AlarmConfig',
+          component: AlarmConfig,
+          meta: {
+            title: '/Configuration/Basic/AlarmConfig',
+            name: 'AlarmConfig.ala_config',
+            icon: 'iconfont icon-baojingpeizhi',
+            type: 'Operator'
+          }
+        }, {
+          path: 'RulesConfig',
+          name: 'RulesConfig',
+          component: RulesConfig,
+          meta: {
+            title: '/Configuration/Basic/RulesConfig',
+            name: 'RulesAndEvent.rule_config',
+            icon: 'iconfont icon-guizeheshijian',
+            type: 'Operator'
+          }
+        }, {
+          path: 'SendNotice',
+          name: 'SendNotice',
+          component: SendNotice,
+          meta: {
+            title: '/Configuration/Basic/SendNotice',
+            name: 'RulesAndEvent.rule_email_notice_config',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'HTTPNotice',
+          name: 'HTTPNotice',
+          component: HTTPNotice,
+          meta: {
+            title: '/Configuration/Basic/HTTPNotice',
+            name: 'RulesAndEvent.rule_http_conf',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'MQTTNotice',
+          name: 'MQTTNotice',
+          component: MQTTNotice,
+          meta: {
+            title: '/Configuration/Basic/MQTTNotice',
+            name: 'RulesAndEvent.rule_mqtt_conf',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'EmailService',
+          name: 'EmailService',
+          component: EmailService,
+          meta: {
+            title: '/Configuration/Basic/EmailService',
+            name: 'RulesAndEvent.rule_email_service_config',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'Joystick',
+          name: 'Joystick',
+          component: Joystick,
+          meta: {
+            title: '/Configuration/Basic/Joystick',
+            name: 'Joystick.joystick_joy',
+            icon: 'iconfont icon-caozonggan',
+            type: 'Operator'
+          }
+        }, {
           path: 'StorageMode',
           name: 'StorageMode',
           component: StorageMode,
@@ -312,6 +404,16 @@ const router = createRouter({
           meta: {
             title: '/Configuration/Basic/ArchiveStorage',
             name: 'ArchiveStorage',
+            icon: '',
+            type: 'Operator'
+          }
+        }, {
+          path: 'Iscsi/IscsiConfig',
+          name: 'IscsiConfig',
+          component: IscsiConfig,
+          meta: {
+            title: '/Configuration/Basic/Iscsi/IscsiConfig',
+            name: 'Configuration.conf_iscsi_portal_config',
             icon: '',
             type: 'Operator'
           }
@@ -476,6 +578,26 @@ const router = createRouter({
           type: 'Operator'
         },
         children: [{
+          path: 'AlarmSearch',
+          name: 'AlarmSearch',
+          component: AlarmSearch,
+          meta: {
+            title: '/System/Setting/AlarmSearch',
+            name: 'AlarmConfig.ala_search',
+            icon: '',
+            type: 'Operator'
+          }
+        },{
+          path: 'EventSearch',
+          name: 'SystemEventSearch',
+          component: SystemEventSearch,
+          meta: {
+            title: '/System/Setting/EventSearch',
+            name: 'System.sys_event_search',
+            icon: '',
+            type: 'Operator'
+          }
+        },{
           path: 'OperationLog',
           name: 'OperationLog',
           component: OperationLog,
@@ -502,6 +624,16 @@ const router = createRouter({
           meta: {
             title:'/System/Setting/SystemUpgrade',
             name: 'SystemUpgrade',
+            icon: '',
+            type: 'Operator'
+          }
+        },{
+          path: 'AutoBackup',
+          name: 'AutoBackup',
+          component: AutoBackup,
+          meta: {
+            title:'/System/Setting/AutoBackup',
+            name: 'AutoBackup',
             icon: '',
             type: 'Operator'
           }

@@ -411,7 +411,7 @@ async function loadTree() {
       if (!seenRootViews.has(v.viewId))
         rootChildren.push({ id: `view_${v.viewId}`, label: v.viewName, type: 'view', data: v, isLeaf: true, isView: true })
     })
-    // Root 节点本身（对照 uscweb comm_dev_root）
+    // Root 节点本身
     tree.push({
       id: `part_${root.devPartitionId}`,
       label: root.devPartitionName || t('CommDev.comm_dev_root'),
@@ -448,6 +448,7 @@ const mapID        = ref<number | null>(null)
 const OperateData  = ref<any>({})
 const currentZoom  = ref(0)
 const callbackData = ref<any>({})
+const activeMapElementData = ref<any>({})
 const drags        = ref(true)
 const dragtype     = ref<any>(null)
 const DeivesExist  = ref<any[]>([])
@@ -455,7 +456,7 @@ const putChannelId = ref<{key:string;value:any}[]>([])
 const putViewId    = ref<{key:string;value:any}[]>([])
 const putLinkId    = ref<{key:string;value:any}[]>([])
 
-// URL presets (same as uscweb)
+// URL presets
 const urlTest = {
   GaoDe: 'http://wprd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&style=7&x={x}&y={y}&z={z}',
   Google: 'https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}',
@@ -550,7 +551,27 @@ function clearMap() {
   else mapInstance.value = new OLMap({ target: 'map' })
 }
 
-function updateCamera(color: string) { DrawMap.value?.updateCamera(color, []) }
+function updateCamera(color: string) {
+  if (!DrawMap.value) return
+  const data = activeMapElementData.value?.cameraToken ? activeMapElementData.value : callbackData.value
+  if (!data?.cameraToken) return
+  const layer = DrawMap.value.layers?.[data.cameraToken]
+  if (!layer) return
+  DrawMap.value.this_ = layer
+  const center = layer.center ?? data.center
+  const updateData = {
+    ...data,
+    cameraType: color,
+    radius: layer.radius ?? data.radius,
+    angle: data.angle,
+    rotationAngle: layer.rotationAngle ?? data.rotationAngle,
+    longitude: center?.[0],
+    latitude:  center?.[1],
+  }
+  callbackData.value = { ...callbackData.value, cameraType: color }
+  activeMapElementData.value = { ...activeMapElementData.value, cameraType: color }
+  DrawMap.value.updateCamera(color, updateData)
+}
 
 // ─── Render existing map elements ─────────────────────────────────────────────
 function ensureDrawMap() {
@@ -626,6 +647,7 @@ function EventCB(data: any) {
   const proj = mapInstance.value?.getView().getProjection()
   if (proj?.getCode() === 'EPSG:3857') data.center = toLonLat(data.center)
   if (data.type === 'camera' && data.callbackType === 'Add') {
+    activeMapElementData.value = { ...data }
     service.post(IPPORT()+'/uapi/v1/Map/Cam/Channel', { mapId: mapID.value, channelUUID: dragtype.value?.data?.uuid, longitude: data.center[0], latitude: data.center[1], radius: data.radius, angle: data.angle, rotationAngle: data.rotationAngle, fillColor: data.cameraType }).then(() => loadMapChannel('camera', dragtype.value?.data?.uuid))
   } else if (data.type === 'link' && data.callbackType === 'Add') {
     service.post(IPPORT()+'/uapi/v1/Map/ElementLink', { mapId: mapID.value, resName: dragtype.value?.label, mapLinkId: dragtype.value?.data?.mapId, longitude: data.center[0], latitude: data.center[1], fillColor: 'USC_MAP_CAM_COLOR_BLUE' }).then(() => loadMapChannel('link', String(dragtype.value?.data?.mapId)))
@@ -634,9 +656,10 @@ function EventCB(data: any) {
 
 // ─── EventCB1: update/delete existing element ────────────────────────────────
 function EventCB1(data: any) {
-  callbackData.value = data
   const proj = mapInstance.value?.getView().getProjection()
   if (proj?.getCode() === 'EPSG:3857') data.center = toLonLat(data.center)
+  callbackData.value = data
+  activeMapElementData.value = { ...data }
   if (data.type === 'camera') {
     const url = IPPORT()+'/uapi/v1/Map/Cam/Channel'
     if (data.callbackType === 'Update') {
@@ -990,7 +1013,7 @@ onBeforeUnmount(() => {
 </style>
 
 <style lang="scss">
-/* 把放大缩小按钮移到右下角（对照uscweb） */
+/* 把放大缩小按钮移到右下角 */
 .ol-zoom {
   bottom: 10px !important;
   right: 10px !important;
@@ -998,7 +1021,7 @@ onBeforeUnmount(() => {
   left: auto !important;
 }
 
-/* 刻度尺样式（对照uscweb style.scss） */
+/* 刻度尺样式 */
 .custom-scale-line-container {
   .custom-scale-line {
     background: #DCE3E9;

@@ -3,6 +3,7 @@
     "ana_Infer_server_status": "Inferir el estado del servidor",
     "ana_alarm_class_index": "Índice de clase de alarma",
     "ana_check_type": "Tipo de regla",
+    "ana_channel_name": "Nombre del canal",
     "ana_classifier": "Clasificador",
     "ana_copy_to": "Copiar a",
     "ana_detail": "Detalles",
@@ -70,7 +71,12 @@
     "ana_text_search": "Búsqueda por texto",
     "ana_txt_list": "Lista de texto",
     "ana_version_number": "Número de versión",
-    "ana_work_server": "servidor de trabajo"
+    "ana_work_server": "servidor de trabajo",
+    "ana_rule_fism": "Fuego y humo",
+    "ana_rule_fblk": "Carril de bomberos bloqueado",
+    "ana_rule_figt": "Detección de pelea",
+    "ana_every_day": "Cada día",
+    "ana_weekly": "Cada semana"
   },
   "Archive": {
     "arch_storage_archivepartition": "Partición de archivo",
@@ -100,7 +106,7 @@
     "comm_offline": "Desconectado",
     "comm_ok": "DE ACUERDO",
     "comm_online": "En línea",
-    "comm_operational": "Operacion",
+    "comm_operational": "Operacional",
     "comm_prompt": "Inmediato",
     "comm_refresh": "Refrescar",
     "comm_reset": "Reiniciar",
@@ -116,7 +122,17 @@
     "comm_table_type": "Tipo",
     "comm_modify_successfully": "¡Modifique con éxito!",
     "comm_detail_alarm": "Detalle Alarma",
-    "comm_configuration_successfully": "Configuración exitosa"
+    "comm_particulars": "Detalles",
+    "comm_configuration_successfully": "Configuración exitosa",
+    "comm_edit_successfully": "¡Editado con éxito!",
+    "comm_edit_failed": "¡Error al editar!",
+    "comm_get_failed": "¡Error al obtener!",
+    "comm_save_failed": "¡Error al guardar!",
+    "comm_save_successfully": "¡Guardado con éxito!"
+  },
+  "CommLogin": {
+    "comm_login_username": "Nombre de usuario",
+    "comm_login_password": "Contraseña"
   },
   "CommTime": {
     "comm_time_start": "Hora de inicio",
@@ -174,7 +190,9 @@
     "comm_year": "Año",
     "comm_bytes": "Byte(s)",
     "comm_second": "Segundo(s)",
-    "comm_number_of_times": "Vez(ces)"
+    "comm_number_of_times": "Vez(ces)",
+    "comm_please_input": "Introduzca",
+    "comm_please_select": "Seleccione"
   },
   "Configuration": {
     "conf_advanced_features": "Características avanzadas",
@@ -188,6 +206,12 @@
     "conf_enter_index_del": "Por favor, introduce el Index para eliminar.",
     "conf_file_list": "Lista de archivos",
     "conf_iscsi_status": "Estado",
+    "conf_iscsi_portal": "portal iSCSI",
+    "conf_iscsi_portal_config": "Configuración del portal iSCSI",
+    "conf_iscsi_mount": "Montar",
+    "conf_iscsi_usage": "Uso",
+    "conf_iscsi_start_time": "Hora de inicio",
+    "conf_iscsi_end_time": "Hora de finalización",
     "conf_meta_days": "Período de retención de metadatos",
     "conf_mount": "Montar",
     "conf_mount_point": "Punto de montaje",
@@ -221,7 +245,8 @@
     "conf_map": "Mapa",
     "conf_meta_partition": "Partición de Metadatos",
     "conf_user": "Usuario",
-    "conf_playcode": "Código de Reproducción"
+    "conf_playcode": "Código de Reproducción",
+    "conf_patrol_config": "Configuración de patrulla"
   },
   "Device": {
     "device_audio": "Audio",
@@ -244,6 +269,22 @@
     "header_dark_blue": "Azul oscuro",
     "header_theme": "Tema",
     "header_white": "Blanco"
+  },
+  "Joystick": {
+    "joystick_basic": "Acciones básicas",
+    "joystick_fullscreen": "Pantalla completa/Salir de pantalla completa",
+    "joystick_hotkey1": "Tecla de acceso rápido 1",
+    "joystick_hotkey2": "Tecla de acceso rápido 2",
+    "joystick_hotkey3": "Tecla de acceso rápido 3",
+    "joystick_joy": "Palanca de mando",
+    "joystick_moving": "Moverse",
+    "joystick_next_layout": "Siguiente cuadrícula del palacio",
+    "joystick_previous_layout": "Cuadrícula anterior",
+    "joystick_pt": "Panorámica e inclinación",
+    "joystick_sensitivity": "Sensibilidad",
+    "joystick_z": "Acercar/Alejar",
+    "joystick_zoom_in": "Acercar",
+    "joystick_zoom_out": "Alejar"
   },
   "License": {
     "lic_ai_advance": "Canal de análisis de vídeo",
@@ -323,6 +364,8 @@
     "set_deleting_views": "Eliminar vista",
     "set_view_id": "ID de vista",
     "set_view_type": "Tipo de vista",
+    "set_patrol_name": "Nombre de patrulla",
+    "set_patrol_id": "ID de patrulla",
     "set_characters": "Personajes",
     "set_confirm_password": "Confirmar Contraseña",
     "set_minimum_password_length": "Longitud mínima de la contraseña",
@@ -421,16 +464,33 @@
     "set_upload_base_map": "Subir mapa base",
     "set_only_jpg_png": "Sólo se pueden cargar imágenes JPG y PNG",
     "set_maximum_image_size": "El tamaño máximo de imagen permitido es 10 MB",
-    "set_minimum_pixels": "La resolución mínima permitida es de 500x500 píxeles"
+    "set_minimum_pixels": "La resolución mínima permitida es de 500x500 píxeles",
+    "set_work_server": "Servidor de trabajo",
+    "set_lun_config": "Config. de LUN",
+    "set_lun_number": "Número de LUN",
+    "set_size": "Tamaño",
+    "set_formatting": "Formatear"
+  },
+  "Message": {
+    "msg_going_format": "El formateo borrará los datos. ¿Continuar?",
+    "msg_format_success": "¡Formateado con éxito!",
+    "msg_format_failed": "¡Error al formatear!",
+    "get_provision_success": "Licencia obtenida correctamente",
+    "get_provision_failed": "No se pudo obtener la licencia",
+    "fresh_success": "Actualización correcta",
+    "fresh_failed": "Error al actualizar"
   },
   "System": {
     "svs_file_import_success": "Archivo importado con éxito. ¡Se activará tras el reinicio!",
+    "get_free_license": "Activar licencia personal gratuita",
+    "active_new_provision": "Reinicie el sistema para activar la nueva licencia",
     "sys_all": "Todo",
     "sys_authorized_item": "Artículo autorizado",
     "sys_authorized_value": "Valor autorizado",
     "sys_client_ip": "IP del cliente",
     "sys_conf_export": "Configurar la exportación",
     "sys_configuration": "Configuración del sistema",
+    "sys_event_search": "Búsqueda de eventos",
     "sys_confirm_remove": "Confirme que desea eliminar",
     "sys_confirm_restart": "¿Confirmar el reinicio? No se puede interrumpir después de un reinicio.",
     "sys_copysuccessful": "Copia exitosa",
@@ -482,7 +542,14 @@
     "sys_v_import_success": "¡Importación de versión exitosa!",
     "sys_version_import_failed": "¡Error al importar la versión!",
     "sys_version_import_success": "¡Importación de versión exitosa!",
-    "sys_yes": "Sí"
+    "sys_yes": "Sí",
+    "sys_autobackup": "Copia de seguridad automática"
+  },
+  "Backup": {
+    "backup_enable": "Iniciar Copia de Seguridad",
+    "backup_event": "Copiar Eventos",
+    "backup_frenquency_time": "Frecuencia y Hora de la Copia de Seguridad",
+    "backup_path": "Ruta de la Copia de Seguridad"
   },
   "SystemInfo": {
     "system_server": "Servidor",
@@ -629,5 +696,66 @@
   },
   "ExternalIDP": {
     "ext_idp_config": "Configuración IDP externo"
+  },
+  "AlarmConfig": {
+    "ala_config": "Configuración de alarma",
+    "ala_belong": "Propietario de alarma",
+    "ala_level": "Nivel de alarma",
+    "ala_coercive_popup": "Ventana emergente obligatoria",
+    "ala_search": "Búsqueda de alarma",
+    "ala_time": "Hora de alarma",
+    "ala_event_id": "Número de evento",
+    "ala_channel_id": "Número de canal",
+    "ala_assign_to": "Asignar a",
+    "ala_reason": "Motivo",
+    "ala_select_reason": "Seleccionar motivo",
+    "ala_new": "Nuevo",
+    "ala_in_progress": "En progreso",
+    "ala_on_hold": "En espera",
+    "ala_closed": "Cerrado"
+  },
+  "RulesAndEvent": {
+    "rule_time_template": "Plantilla de tiempo",
+    "rule_system_event_type": "Tipo de evento del sistema",
+    "rule_ana_event_type": "Tipo de evento analítico",
+    "rule_description": "Descripción",
+    "rule_event_type": "El tipo de evento",
+    "rule_no_channel": "Seleccione un canal",
+    "rule_no_event_type": "Seleccione un tipo de evento",
+    "rule_no_name": "Introduzca un nombre",
+    "rule_and_event": "Reglas y eventos",
+    "rule_config": "Configuración de reglas",
+    "rule_send_notice_config": "Configuración de envío de notificación",
+    "rule_email_notice_config": "Configuración de notificación por correo",
+    "rule_http_conf": "Configuración HTTP",
+    "rule_mqtt_conf": "Configuración MQTT",
+    "rule_email_service_config": "Configuración del servicio de correo",
+    "rule_operation_type": "Tipo de operación",
+    "rule_config_list": "Lista de configuraciones",
+    "rule_no_config_list": "Seleccione una configuración",
+    "rule_recipient_email_address": "Dirección de correo del destinatario",
+    "rule_message": "Mensaje",
+    "rule_message_text": "Texto del mensaje",
+    "rule_add_system_information": "Agregar información del sistema",
+    "rule_click_link_to_text": "Haga clic en el enlace para agregar al texto",
+    "rule_sender_email_address": "Dirección de correo del remitente",
+    "rule_smtp_address": "Dirección SMTP",
+    "rule_smtp_port": "Puerto SMTP",
+    "rule_auth_code": "Código de autorización",
+    "rule_method": "Método",
+    "rule_header": "Encabezado",
+    "rule_value": "Valor"
+  },
+  "Event": {
+    "event_count": "Alarmas",
+    "event_search_quantity": "Cantidad de búsqueda",
+    "event_online_status": "Estado en línea",
+    "event_offline_status": "Estado sin conexión",
+    "event_motion_detection": "Detección de movimiento",
+    "event_cross_line": "Cruce de línea",
+    "event_field_detection": "Detección de área",
+    "event_smoke_detection": "Detección de humo",
+    "event_cons_vehi_detection": "Detección de vehículos consecutivos",
+    "event_picture": "Imagen"
   }
 }

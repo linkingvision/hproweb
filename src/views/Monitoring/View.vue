@@ -2596,7 +2596,7 @@ onBeforeUnmount(() => {
   .float-layer {
     position: absolute; right: 0; top: -30px; z-index: 10;
     width: 290px; height: 30px; line-height: 30px;
-    background: url('@/views/Monitoring/liveview/imgs/liveview_buttback.png') no-repeat;
+    background: url('@/assets/imgs/liveview_buttback.png') no-repeat;
     background-size: 290px 30px; text-align: right; padding: 0 10px; transition: 0.2s;
     display: flex; align-items: center; justify-content: flex-end;
     i, span { margin-left: 8px; cursor: pointer; color: #fff; font-size: 16px;

@@ -135,7 +135,7 @@ body.c-dark-theme {
 
 
   span, div, i, p, ul, li, h1, h2, h3, h4, h5, h6, input, button, label, li {
-    font-size: 14px;
+    font-size: 12px;
   }
   .Pagination {
     width: 100%;
@@ -202,13 +202,18 @@ body.c-dark-theme {
   }
   .el-table {
     --el-table-bg-color: transparent;
+    font-size: 12px;
     .el-table__inner-wrapper:before {
       background-color: transparent;
+    }
+    .el-table__cell {
+      font-size: 12px;
     }
   }
   .el-table__header th,
   .el-table__header tr {
     height: 60px;
+    font-size: 12px;
     background-color: #2A2A2A !important;
   }
   .el-table__body-wrapper {
@@ -491,6 +496,13 @@ body.c-dark-theme {
   .el-pagination {
     --el-text-color-regular: #ccc;
     --el-pagination-button-color: #fff;
+    font-size: 12px;
+    .el-pagination__total,
+    .el-pagination__jump,
+    .el-pager li,
+    button {
+      font-size: 12px;
+    }
   }
   .el-popper {
     --el-bg-color-overlay: #212121;

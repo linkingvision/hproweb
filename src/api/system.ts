@@ -10,6 +10,16 @@ export const GetLicenseInfoApi = () => axios({
   method: 'GET'
 })
 
+export const ReqFreePersonalProvisionApi = () => axios({
+  url: '/uapi/v1/System/ReqFreePersonalProvision',
+  method: 'GET'
+})
+
+export const GetReqProvisionStatusApi = () => axios({
+  url: '/uapi/v1/System/GetReqProvisionStatus',
+  method: 'GET'
+})
+
 export const UpLoadLicUrl = '/uapi/v1/Cluster/License/Upload?session=';
 
 interface GetLogParamType {
@@ -20,8 +30,32 @@ interface GetLogParamType {
   pageSize: number,
   pageIndex: number
 }
+export interface SystemEventListParams {
+  beginTime: string
+  endTime: string
+  pageSize: number
+  name?: string
+  moduleType?: string[]
+}
+
+export interface SystemEventItem {
+  id?: string | number
+  name?: string
+  uuid?: string
+  moduleType?: string
+  strTime?: string
+  strImg?: string
+  token?: string
+}
+
 export const GetLogApi = (data: GetLogParamType) => axios({
   url: '/uapi/v1/UscLog/List',
+  method: 'POST',
+  data
+})
+
+export const GetSystemEventListApi = (data: SystemEventListParams) => axios({
+  url: '/uapi/v1/Event/List',
   method: 'POST',
   data
 })
@@ -81,6 +115,45 @@ export const GetUserConfigApi = () => axios({
 
 export const UpdateUserConfigApi = (data: { key: string; value: string }) => axios({
   url: '/uapi/v1/UserConfig/Item',
+  method: 'PUT',
+  data
+})
+
+// ─── Auto Backup ──────────────────────────────────────────────────────────────
+export const GetNodeListApi = () => axios({
+  url: '/uapi/v1/WorkServer/List',
+  method: 'GET'
+})
+
+export const GetAutoBackupConfigApi = () => axios({
+  url: '/uapi/v1/Auto/Backup',
+  method: 'GET'
+})
+
+interface SaveAutoBackupConfigParams {
+  uuid: string
+  startTime: string
+  backupType: string
+  isEvent: boolean
+  enabled: boolean
+}
+export const SaveAutoBackupConfigApi = (data: SaveAutoBackupConfigParams) => axios({
+  url: '/uapi/v1/Auto/Backup',
+  method: 'PUT',
+  data
+})
+
+export const GetBackupPathsApi = (nodeId: string) => axios({
+  url: `/uapi/v1/Auto/BackupPath?nodeId=${nodeId}`,
+  method: 'GET'
+})
+
+interface SaveBackupPathParams {
+  nodeId: string
+  backupPath: string
+}
+export const SaveBackupPathApi = (data: SaveBackupPathParams) => axios({
+  url: '/uapi/v1/Auto/BackupPath',
   method: 'PUT',
   data
 })

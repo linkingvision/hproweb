@@ -3,6 +3,7 @@
     "ana_Infer_server_status": "Infer Server Status",
     "ana_alarm_class_index": "Alarm Class Index",
     "ana_check_type": "Rule type",
+    "ana_channel_name": "Channel Name",
     "ana_classifier": "Classifier",
     "ana_copy_to": "Copy To",
     "ana_detail": "Details",
@@ -51,13 +52,13 @@
     "ana_recording_always": "Recording Always",
     "ana_rule_config": "Rule Configuration",
     "ana_rule_cooldown": "Cooldown",
-    "ana_rule_cral": "Crossing A Line",
+    "ana_rule_cral": "Crossing a Line",
     "ana_rule_crod": "Crowd",
     "ana_rule_crpe": "Critical Number Of People",
     "ana_rule_detType": "Detection Type",
     "ana_rule_loit": "Loitering",
     "ana_rule_mesg": "Metadata Analytics",
-    "ana_rule_miaa": "Moving in an area",
+    "ana_rule_miaa": "Moving in an Area",
     "ana_rule_pect": "Person Counting",
     "ana_rule_pefa": "Fall Detection",
     "ana_rule_ppe": "Helmet Detection",
@@ -70,7 +71,12 @@
     "ana_text_search": "Text search",
     "ana_txt_list": "Text List",
     "ana_version_number": "Version Number",
-    "ana_work_server": "Work Server"
+    "ana_work_server": "Work Server",
+    "ana_rule_fism": "Fire Smoke Detection",
+    "ana_rule_fblk": "Fire Lane",
+    "ana_rule_figt": "Fight Detection",
+    "ana_every_day": "Every Day",
+    "ana_weekly": "Weekly"
   },
   "Archive": {
     "arch_storage_archivepartition": "Archive Partition",
@@ -95,6 +101,7 @@
     "comm_edit": "Edit",
     "comm_edit_successfully": "Edit Successfully!",
     "comm_edit_failed": "Edit Failed!",
+    "comm_get_failed": "Get Failed!",
     "comm_empty": "Empty",
     "comm_manual": "Manual",
     "comm_modify_failed": "Modify Failed!",
@@ -102,7 +109,7 @@
     "comm_offline": "Offline",
     "comm_ok": "OK",
     "comm_online": "Online",
-    "comm_operational": "Operation",
+    "comm_operational": "Operational",
     "comm_prompt": "Prompt",
     "comm_refresh": "Refresh",
     "comm_reset": "Reset",
@@ -121,7 +128,12 @@
     "comm_table_type": "Type",
     "comm_modify_successfully": "Modify successfully!",
     "comm_detail_alarm": "Detail Alarm",
+    "comm_particulars": "Details",
     "comm_configuration_successfully": "Configuration successful"
+  },
+  "CommLogin": {
+    "comm_login_username": "User Name",
+    "comm_login_password": "Password"
   },
   "CommTime": {
     "comm_time_start": "Start Time",
@@ -201,6 +213,12 @@
     "conf_enter_index_del": "Please enter the index to delete.",
     "conf_file_list": "File list",
     "conf_iscsi_status": "Status",
+    "conf_iscsi_portal": "iSCSI portal",
+    "conf_iscsi_portal_config": "iSCSI portal config",
+    "conf_iscsi_mount": "Mount",
+    "conf_iscsi_usage": "Usage",
+    "conf_iscsi_start_time": "Start time",
+    "conf_iscsi_end_time": "End time",
     "conf_meta_days": "Metadata Retention Period",
     "conf_mount": "Mount",
     "conf_mount_point": "Mount Point",
@@ -234,7 +252,8 @@
     "conf_map": "Map",
     "conf_meta_partition": "Meta Partition",
     "conf_user": "User",
-    "conf_playcode": "Play Code"
+    "conf_playcode": "Play Code",
+    "conf_patrol_config": "Patrol Config"
   },
   "Device": {
     "device_audio": "Audio",
@@ -257,6 +276,22 @@
     "header_dark_blue": "Dark Blue",
     "header_theme": "Theme",
     "header_white": "White"
+  },
+  "Joystick": {
+    "joystick_basic": "Basic actions",
+    "joystick_fullscreen": "Full Screen/Exit Full Screen",
+    "joystick_hotkey1": "Hotkey 1",
+    "joystick_hotkey2": "Hotkey 2",
+    "joystick_hotkey3": "Hotkey 3",
+    "joystick_joy": "Joystick",
+    "joystick_moving": "Moving",
+    "joystick_next_layout": "Next grid",
+    "joystick_previous_layout": "Previous grid",
+    "joystick_pt": "Pan and tilt",
+    "joystick_sensitivity": "Sensitivity",
+    "joystick_z": "Zoom in/Zoom out",
+    "joystick_zoom_in": "Zoom in",
+    "joystick_zoom_out": "Zoom out"
   },
   "License": {
     "lic_ai_advance": "Video Analysis Channel",
@@ -339,6 +374,8 @@
     "set_deleting_views": "Deleting Views",
     "set_view_id": "View ID",
     "set_view_type": "View Type",
+    "set_patrol_name": "Patrol Name",
+    "set_patrol_id": "Patrol ID",
     "set_characters": "Characters",
     "set_confirm_password": "Confirm Password",
     "set_minimum_password_length": "Minimum password length",
@@ -457,16 +494,33 @@
     "set_upload_base_map": "Upload base map",
     "set_only_jpg_png": "Only JPG and PNG images can be uploaded",
     "set_maximum_image_size": "The maximum allowed image size is 10MB",
-    "set_minimum_pixels": "The minimum resolution allowed is 500x500 pixels"
+    "set_minimum_pixels": "The minimum resolution allowed is 500x500 pixels",
+    "set_work_server": "Work Server",
+    "set_lun_config": "LUN config",
+    "set_lun_number": "LUN number",
+    "set_size": "Size",
+    "set_formatting": "Formatting"
+  },
+  "Message": {
+    "msg_going_format": "Formatting will erase data. Continue?",
+    "msg_format_success": "Format Successfully!",
+    "msg_format_failed": "Format Failed!",
+    "get_provision_success": "License obtained successfully",
+    "get_provision_failed": "Failed to obtain license",
+    "fresh_success": "Refresh succeeded",
+    "fresh_failed": "Refresh failed"
   },
   "System": {
     "svs_file_import_success": "File imported successfully. It will take effect after restarting.",
+    "get_free_license": "Activate Free Personal License",
+    "active_new_provision": "Please restart the system to activate the new license",
     "sys_all": "All",
     "sys_authorized_item": "Authorized Item",
     "sys_authorized_value": "Authorized Value",
     "sys_client_ip": "Client IP",
     "sys_conf_export": "Configure Export",
     "sys_configuration": "System Configuration",
+    "sys_event_search": "Event Search",
     "sys_confirm_remove": "Confirm that you want to remove",
     "sys_confirm_restart": "Confirm the restart? It cannot be interrupted after a restart.",
     "sys_copysuccessful": "Copy successful",
@@ -513,12 +567,19 @@
     "sys_upgrade_over": "The system upgrade is complete",
     "sys_upgrade_time": "The upgrade process will take about 2-10 minutes, please do not power off, it will restart automatically when the upgrade is completed",
     "sys_upgrading": "The system is being upgraded",
-    "sys_upload_license": "Import License",
+    "sys_upload_license": "Upload License",
     "sys_used": "Used",
     "sys_v_import_success": "Version Import Successful!",
     "sys_version_import_failed": "Version Import Failed!",
     "sys_version_import_success": "Version Import Successful!",
-    "sys_yes": "Yes"
+    "sys_yes": "Yes",
+    "sys_autobackup": "Auto Backup"
+  },
+  "Backup": {
+    "backup_enable": "Start Backup",
+    "backup_event": "Backup Events",
+    "backup_frenquency_time": "Backup Frequency And Time",
+    "backup_path": "Backup Path"
   },
   "SystemInfo": {
     "system_server": "Server",
@@ -601,7 +662,7 @@
     "comm_table_name": "Name",
     "comm_table_online": "Online",
     "comm_table_port": "Port",
-    "comm_table_serial_number": "Serial number",
+    "comm_table_serial_number": "Serial Number",
     "comm_table_tcp": "TCP",
     "comm_table_time": "Time",
     "comm_table_token": "Token",
@@ -624,7 +685,16 @@
     "cascade_central_record": "Central Record"
   },
   "Event": {
-    "event_count": "Alarms"
+    "event_count": "Alarms",
+    "event_search_quantity": "Search Quantity",
+    "event_online_status": "Online Status",
+    "event_offline_status": "Offline Status",
+    "event_motion_detection": "Motion Detection",
+    "event_cross_line": "Cross Line",
+    "event_field_detection": "Field Detection",
+    "event_smoke_detection": "Smoke Detection",
+    "event_cons_vehi_detection": "Cons Vehi Detection",
+    "event_picture": "Picture"
   },
   "Theme": {
     "theme": "Theme",
@@ -673,5 +743,54 @@
   },
   "ExternalIDP": {
     "ext_idp_config": "External IDP Config"
+  },
+  "AlarmConfig": {
+    "ala_config": "Alarm Configuration",
+    "ala_belong": "Alarm Ownership",
+    "ala_level": "Alarm Level",
+    "ala_coercive_popup": "Force Eject",
+    "ala_search": "Alarm Search",
+    "ala_time": "Alarm Time",
+    "ala_event_id": "Event Number",
+    "ala_channel_id": "Channel Number",
+    "ala_assign_to": "Assign To",
+    "ala_reason": "Reason",
+    "ala_select_reason": "Select Reason",
+    "ala_new": "New",
+    "ala_in_progress": "In Progress",
+    "ala_on_hold": "On Hold",
+    "ala_closed": "Closed"
+  },
+  "RulesAndEvent": {
+    "rule_time_template": "Time Template",
+    "rule_system_event_type": "The Type of System Event",
+    "rule_ana_event_type": "Analyze the Type of Event",
+    "rule_description": "Description",
+    "rule_event_type": "The Type of Event",
+    "rule_no_channel": "Please select a channel",
+    "rule_no_event_type": "Please select an event type",
+    "rule_no_name": "Please input a name",
+    "rule_and_event": "Rules and Events",
+    "rule_config": "Rules Config",
+    "rule_send_notice_config": "Send Notice Config",
+    "rule_email_notice_config": "Email Notice Config",
+    "rule_http_conf": "HTTP Configuration",
+    "rule_mqtt_conf": "MQTT Configuration",
+    "rule_email_service_config": "Email Service Config",
+    "rule_operation_type": "Operation Type",
+    "rule_config_list": "Config List",
+    "rule_no_config_list": "Please select a config",
+    "rule_recipient_email_address": "Recipient Email Address",
+    "rule_message": "Message",
+    "rule_message_text": "Message Text",
+    "rule_add_system_information": "Add System Information",
+    "rule_click_link_to_text": "Click the link to add to text",
+    "rule_sender_email_address": "Sender Email Address",
+    "rule_smtp_address": "SMTP Address",
+    "rule_smtp_port": "SMTP Port",
+    "rule_auth_code": "Authorization Code",
+    "rule_method": "Method",
+    "rule_header": "Header",
+    "rule_value": "Value"
   }
 }

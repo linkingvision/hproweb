@@ -2,9 +2,14 @@
 import { useStore } from '../store';
 import TheSidebar from './TheSidebar.vue';
 import TheHeader from './TheHeader.vue';
-import { onMounted, watch } from 'vue';
+import AlarmPopup from './AlarmPopup.vue';
+import { onBeforeUnmount, onMounted, watch } from 'vue';
+import { useAlarmEventWs } from '@/composables/useAlarmEventWs';
+import { useAlarmStore } from '@/store/alarm';
 
 const store = useStore();
+const alarmStore = useAlarmStore();
+const alarmEventWs = useAlarmEventWs();
 
 let prevClass: string | null = null;
 const updateBodyTheme = (theme: string) => {
@@ -26,6 +31,14 @@ const updateBodyTheme = (theme: string) => {
 watch(() => store.darkMode, (newVal: any) => {
   updateBodyTheme(newVal)
 }, { immediate: true })
+
+onMounted(() => {
+  alarmEventWs.connect()
+})
+
+onBeforeUnmount(() => {
+  alarmEventWs.disconnect()
+})
 </script>
 
 <template>
@@ -35,6 +48,7 @@ watch(() => store.darkMode, (newVal: any) => {
       <TheHeader></TheHeader>
       <router-view></router-view>
     </div>
+    <AlarmPopup v-if="alarmStore.popupVisible" />
   </div>
 </template>
 

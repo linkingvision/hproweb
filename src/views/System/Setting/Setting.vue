@@ -52,7 +52,16 @@ onMounted(() => {
           <el-menu-item index="/System/Setting/OperationLog">{{ t('System.sys_operation_log') }}</el-menu-item>
           <el-menu-item index="/System/Setting/SystemMaintenance">{{ t('System.sys_maintenance') }}</el-menu-item>
           <el-menu-item index="/System/Setting/SystemUpgrade">{{ t('System.sys_upgrade') }}</el-menu-item>
+          <el-menu-item index="/System/Setting/AutoBackup">{{ t('System.sys_autobackup') }}</el-menu-item>
         </el-sub-menu>
+        <el-menu-item index="/System/Setting/EventSearch">
+          <i class="iconfont icon-shijiansousuo"></i>
+          <span>{{ t('System.sys_event_search') }}</span>
+        </el-menu-item>
+        <el-menu-item index="/System/Setting/AlarmSearch">
+          <i class="iconfont icon-baojingsousuo"></i>
+          <span>{{ t('AlarmConfig.ala_search') }}</span>
+        </el-menu-item>
         <el-menu-item index="/System/Setting/License">
           <i class="iconfont icon-shouquanguanli"></i>
           <span>{{ t('System.sys_license') }}</span>

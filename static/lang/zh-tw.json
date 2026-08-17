@@ -3,6 +3,7 @@
     "ana_Infer_server_status": "推理服務狀態",
     "ana_alarm_class_index": "報警類別索引",
     "ana_check_type": "檢查類型",
+    "ana_channel_name": "通道名稱",
     "ana_classifier": "分類器",
     "ana_copy_to": "複製到",
     "ana_detail": "詳情",
@@ -70,7 +71,12 @@
     "ana_text_search": "文本搜尋",
     "ana_txt_list": "文字清單",
     "ana_version_number": "版本號",
-    "ana_work_server": "歸屬服務器"
+    "ana_work_server": "歸屬服務器",
+    "ana_rule_fism": "火焰煙霧",
+    "ana_rule_fblk": "消防通道佔用",
+    "ana_rule_figt": "打架檢測",
+    "ana_every_day": "每天",
+    "ana_weekly": "每週"
   },
   "Archive": {
     "arch_storage_archivepartition": "歸檔分區",
@@ -100,7 +106,7 @@
     "comm_offline": "離線",
     "comm_ok": "確定",
     "comm_online": "在線",
-    "comm_operational": "操作",
+    "comm_operational": "操作員",
     "comm_prompt": "提示",
     "comm_refresh": "刷新",
     "comm_reset": "重置",
@@ -117,11 +123,17 @@
     "comm_modify_successfully": "修改成功！",
     "comm_edit_successfully": "編輯成功！",
     "comm_edit_failed": "編輯失敗！",
+    "comm_get_failed": "獲取失敗！",
     "comm_save_failed": "儲存失敗！",
     "comm_save_successfully": "儲存成功！",
     "comm_set_successfully": "設置成功！",
     "comm_detail_alarm": "查看報警",
+    "comm_particulars": "詳情",
     "comm_configuration_successfully": "配置成功"
+  },
+  "CommLogin": {
+    "comm_login_username": "用戶名",
+    "comm_login_password": "密碼"
   },
   "CommTime": {
     "comm_time_start": "開始時間",
@@ -200,6 +212,12 @@
     "conf_enter_index_del": "請輸入要刪除的Index",
     "conf_file_list": "文件列表",
     "conf_iscsi_status": "狀態",
+    "conf_iscsi_portal": "iSCSI門戶",
+    "conf_iscsi_portal_config": "iSCSI門戶配置",
+    "conf_iscsi_mount": "Mount",
+    "conf_iscsi_usage": "使用率",
+    "conf_iscsi_start_time": "開始時間",
+    "conf_iscsi_end_time": "結束時間",
     "conf_meta_days": "元資料保留天數",
     "conf_mount": "掛載",
     "conf_mount_point": "掛載點",
@@ -226,14 +244,15 @@
     "conf_role": "角色",
     "conf_group": "組織",
     "conf_view": "視圖",
-    "conf_time_template": "時間模板",
+    "conf_time_template": "計劃模板",
     "conf_obj_space": "對象空間",
     "conf_index": "索引",
     "conf_partition": "分區",
     "conf_map": "地圖",
     "conf_meta_partition": "元數據分區",
     "conf_user": "用戶",
-    "conf_playcode": "播放碼"
+    "conf_playcode": "播放碼",
+    "conf_patrol_config": "巡更配置"
   },
   "Device": {
     "device_audio": "音頻",
@@ -256,6 +275,22 @@
     "header_dark_blue": "深藍色",
     "header_theme": "主題",
     "header_white": "預設白"
+  },
+  "Joystick": {
+    "joystick_basic": "基本配置",
+    "joystick_fullscreen": "全屏/退出全屏",
+    "joystick_hotkey1": "預置位1",
+    "joystick_hotkey2": "預置位2",
+    "joystick_hotkey3": "預置位3",
+    "joystick_joy": "操縱杆",
+    "joystick_moving": "區域",
+    "joystick_next_layout": "下一個宮格",
+    "joystick_previous_layout": "上一個宮格",
+    "joystick_pt": "平弧移和傾斜",
+    "joystick_sensitivity": "靈敏度",
+    "joystick_z": "放大/縮小",
+    "joystick_zoom_in": "放大",
+    "joystick_zoom_out": "縮小"
   },
   "License": {
     "lic_ai_advance": "視頻分析通道",
@@ -338,6 +373,8 @@
     "set_deleting_views": "刪除視圖",
     "set_view_id": "視圖ID",
     "set_view_type": "視圖類型",
+    "set_patrol_name": "巡更名稱",
+    "set_patrol_id": "巡更ID",
     "set_characters": "個字符。",
     "set_confirm_password": "確認密碼",
     "set_minimum_password_length": "密碼長度最少",
@@ -456,16 +493,33 @@
     "set_upload_base_map": "上傳底圖",
     "set_only_jpg_png": "只允許上傳JPG、PNG格式的圖片",
     "set_maximum_image_size": "允許的最大圖片大小爲10MB",
-    "set_minimum_pixels": "允許的最小的分辨率爲500x500像素"
+    "set_minimum_pixels": "允許的最小的分辨率爲500x500像素",
+    "set_work_server": "歸屬服務器",
+    "set_lun_config": "LUN配置",
+    "set_lun_number": "LUN編號",
+    "set_size": "大小",
+    "set_formatting": "格式化"
+  },
+  "Message": {
+    "msg_going_format": "即將格式化，是否繼續？",
+    "msg_format_success": "格式化成功！",
+    "msg_format_failed": "格式化失敗！",
+    "get_provision_success": "授權獲取成功",
+    "get_provision_failed": "授權獲取失敗",
+    "fresh_success": "刷新成功",
+    "fresh_failed": "刷新失敗"
   },
   "System": {
     "svs_file_import_success": "文件導入成功，重啟後生",
+    "get_free_license": "啟用免費個人授權",
+    "active_new_provision": "請重啟系統以啟用新的授權",
     "sys_all": "全部",
     "sys_authorized_item": "授權項",
     "sys_authorized_value": "授權值",
     "sys_client_ip": "客戶端IP",
     "sys_conf_export": "配置匯出",
     "sys_configuration": "系統配置",
+    "sys_event_search": "事件搜尋",
     "sys_confirm_remove": "確認要移除",
     "sys_confirm_restart": "確認重啟嗎？ 重啟之後無法中斷。",
     "sys_copysuccessful": "複製成功",
@@ -480,7 +534,7 @@
     "sys_file_after_restart": "文件導入成功，重啟後生",
     "sys_file_bin": "只能上傳bin格式的檔！",
     "sys_file_import_success": "文件導入成功，重啟後生",
-    "sys_file_lic": "只能上傳bin格式的檔！",
+    "sys_file_lic": "只能上傳lic格式的檔！",
     "sys_import": "導入",
     "sys_import_v": "導入版本",
     "sys_license": "授權管理",
@@ -508,7 +562,7 @@
     "sys_time": "時間",
     "sys_upgrade": "系統升級",
     "sys_upgrade_failed": "系統升級失敗",
-    "sys_upgrade_lic": "只能上傳bin格式的檔！",
+    "sys_upgrade_lic": "只能上傳lic格式的檔！",
     "sys_upgrade_over": "系統升級完畢",
     "sys_upgrade_time": "升級過程大約需要2-10分鐘，請勿斷電，完成升級後將自動重新啟動",
     "sys_upgrading": "系統正在升級",
@@ -517,7 +571,14 @@
     "sys_v_import_success": "版本導入成功！",
     "sys_version_import_failed": "版本導入失敗",
     "sys_version_import_success": "版本導入成功！",
-    "sys_yes": "是"
+    "sys_yes": "是",
+    "sys_autobackup": "自動備份"
+  },
+  "Backup": {
+    "backup_enable": "啟動備份",
+    "backup_event": "是否備份事件",
+    "backup_frenquency_time": "備份頻率及時間",
+    "backup_path": "備份路徑"
   },
   "SystemInfo": {
     "system_server": "服務器",
@@ -623,7 +684,16 @@
     "cascade_central_record": "中心存儲"
   },
   "Event": {
-    "event_count": "告警"
+    "event_count": "告警",
+    "event_search_quantity": "搜尋數量",
+    "event_online_status": "在線狀態",
+    "event_offline_status": "離線狀態",
+    "event_motion_detection": "移動偵測",
+    "event_cross_line": "越線檢測",
+    "event_field_detection": "區域檢測",
+    "event_smoke_detection": "煙霧檢測",
+    "event_cons_vehi_detection": "連續車輛檢測",
+    "event_picture": "圖片"
   },
   "Theme": {
     "theme": "主題",
@@ -672,5 +742,54 @@
   },
   "ExternalIDP": {
     "ext_idp_config": "外部IDP配置"
+  },
+  "AlarmConfig": {
+    "ala_config": "報警配置",
+    "ala_belong": "報警歸屬",
+    "ala_level": "報警級別",
+    "ala_coercive_popup": "強制彈窗",
+    "ala_search": "報警搜尋",
+    "ala_time": "報警時間",
+    "ala_event_id": "事件編號",
+    "ala_channel_id": "通道編號",
+    "ala_assign_to": "分配給",
+    "ala_reason": "原因",
+    "ala_select_reason": "選擇原因",
+    "ala_new": "新建",
+    "ala_in_progress": "處理中",
+    "ala_on_hold": "擱置",
+    "ala_closed": "已關閉"
+  },
+  "RulesAndEvent": {
+    "rule_time_template": "時間模板",
+    "rule_system_event_type": "系統事件類型",
+    "rule_ana_event_type": "分析事件類型",
+    "rule_description": "描述",
+    "rule_event_type": "事件類型",
+    "rule_no_channel": "請選擇通道",
+    "rule_no_event_type": "請選擇事件類型",
+    "rule_no_name": "請輸入名稱",
+    "rule_and_event": "規則與事件",
+    "rule_config": "規則配置",
+    "rule_send_notice_config": "發送通知配置",
+    "rule_email_notice_config": "郵件通知配置",
+    "rule_http_conf": "HTTP配置",
+    "rule_mqtt_conf": "MQTT配置",
+    "rule_email_service_config": "郵件服務配置",
+    "rule_operation_type": "操作類型",
+    "rule_config_list": "配置列表",
+    "rule_no_config_list": "請選擇配置",
+    "rule_recipient_email_address": "收件人郵箱地址",
+    "rule_message": "消息",
+    "rule_message_text": "消息文本",
+    "rule_add_system_information": "添加系統信息",
+    "rule_click_link_to_text": "點擊鏈接添加到文本",
+    "rule_sender_email_address": "發件人郵箱地址",
+    "rule_smtp_address": "SMTP地址",
+    "rule_smtp_port": "SMTP端口",
+    "rule_auth_code": "授權碼",
+    "rule_method": "方法",
+    "rule_header": "請求頭",
+    "rule_value": "值"
   }
 }

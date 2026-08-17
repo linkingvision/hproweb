@@ -34,6 +34,11 @@
       </div>
     </div>
     <div class="header-right">
+      <div class="alarm-entry" @click="openAlarmPopup">
+        <el-badge :value="alarmStore.newCount" :hidden="alarmStore.newCount === 0" :max="99">
+          <i class="iconfont icon-baojingsousuo"></i>
+        </el-badge>
+      </div>
       <div class="avatar"
         :style="{ background: '#222', width: '24px', height: '24px', borderRadius: '50%', fontSize: '14px', textAlign: 'center', lineHeight: '24px', position: 'relative', }">
         {{ acronym }}
@@ -64,10 +69,13 @@ import { onMounted, ref, nextTick, onBeforeMount, watch, computed } from 'vue';
 import { KeepAlive } from '@/api/userApi';
 import { GetSystemInfo, GetSysConfigApi, GetUserConfigApi } from '@/api/system';
 import { useUserStore } from '@/store/user';
+import { useAlarmStore } from '@/store/alarm';
+import { GetAlarmEventStateCountApi } from '@/api/alarmEvent';
 import { useI18n } from 'vue-i18n';
 
 const store = useStore()
 const userStore = useUserStore()
+const alarmStore = useAlarmStore()
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n();
@@ -94,6 +102,22 @@ const openSidebar = () => {
 
 const logout = () => {
   router.push('/Logout');
+}
+
+const openAlarmPopup = () => {
+  alarmStore.openPopup(1)
+}
+
+const loadAlarmCount = async () => {
+  if (!userStore.username) return
+  try {
+    const res = await GetAlarmEventStateCountApi(userStore.username)
+    if (res.status === 200 && res.data.code === 0) {
+      alarmStore.setStateCounts(res.data.result || {})
+    }
+  } catch (error) {
+    console.warn('[TheHeader] load alarm count failed', error)
+  }
 }
 
 const routes = () => {
@@ -184,6 +208,7 @@ onMounted(() => {
   getAtciveRouter(route.fullPath);
   SystemInfo()
   initStorageConfig()
+  loadAlarmCount()
 })
 onBeforeMount(() => {
   userStore.setSetIntervalKeepAlive(null);
@@ -276,6 +301,18 @@ onBeforeMount(() => {
       margin-right: 10px;
       width: 30px;
       cursor: pointer;
+    }
+    .alarm-entry {
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      text-align: center;
+      i {
+        font-size: 18px;
+      }
+      :deep(.el-badge__content) {
+        top: 5px;
+      }
     }
     .more {
       .example-showcase .el-dropdown-link {
