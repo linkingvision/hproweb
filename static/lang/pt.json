@@ -29,6 +29,7 @@
     "ana_license_plate_max_size": "Tamanho máximo da placa",
     "ana_license_plate_min_size": "Tamanho mínimo da placa",
     "ana_load_model": "Carregar Modelo",
+    "ana_language": "Idioma",
     "ana_lpre": "Reconhecimento da placa",
     "ana_model_accuracy": "Precisão do modelo",
     "ana_more_settings": "Mais configurações",

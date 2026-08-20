@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import $ from 'jquery'
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { GetNodeApi, GetEngineStatusApi } from '@/api/Analytics/setting';
 import { useI18n } from 'vue-i18n';
 
@@ -16,6 +16,7 @@ const firstNodeId = ref<string>('')
 
 const tableData1 = ref<any[]>([])
 const total1 = ref<number>(0)
+const totalFps = computed(() => tableData1.value.reduce((sum, item) => sum + (item.nFps || 0), 0))
 
 const GetNode = async () => {
   const res = await GetNodeApi();
@@ -61,6 +62,7 @@ const handleClick = (index: number, row: any) => {
     var TableRow = {
       nDevice: row.status[i].nDevice,
       strName: row.status[i].strName,
+      strModelName: row.status[i].strModelName,
       nInferTimeInMs: row.status[i].nInferTimeInMs + '    ms',
       nQueueSize: row.status[i].nQueueSize,
       nFps: row.status[i].nFps,
@@ -91,7 +93,7 @@ onMounted(() => {
     <div class="InferServerStatus_Left">
       <el-table :data="tableData" height="100%" width="100%">
         <el-table-column prop="nodeName" :label="t('Analytics.ana_work_server')"></el-table-column>
-        <el-table-column prop="Device" label="Device"></el-table-column>
+        <el-table-column prop="Device" label="Device ID"></el-table-column>
         <el-table-column>
           <template #header>
             <span>{{ t('Analytics.ana_detail') }} <i class="iconfont icon-xiangqing"></i></span>
@@ -117,10 +119,15 @@ onMounted(() => {
       </div>
       <el-table :data="tableData1" width="100%">
         <el-table-column prop="nDevice" label="Token"></el-table-column>
-        <el-table-column prop="strName" label="Name"></el-table-column>
+        <el-table-column prop="strName" label="Device Name"></el-table-column>
+        <el-table-column prop="strModelName" label="Model"></el-table-column>
         <el-table-column prop="nInferTimeInMs" label="Infer Time"></el-table-column>
         <el-table-column prop="nQueueSize" label="Queue Size"></el-table-column>
-        <el-table-column prop="nFps" label="FPS"></el-table-column>
+        <el-table-column prop="nFps">
+          <template #header>
+            <span>FPS ({{ totalFps }})</span>
+          </template>
+        </el-table-column>
       </el-table>
     </div>
   </div>

@@ -170,7 +170,7 @@ const systemEventOptions = computed(() => getSystemEventOptions(t))
 const analyticsEventOptions = computed(() => getAnalyticsEventOptions(t))
 
 function responseResult(res: any) {
-  const result = res?.data?.result ?? []
+  const result = res?.data?.result ?? res?.result ?? []
   return Array.isArray(result?.list) ? result.list : result
 }
 
@@ -209,9 +209,20 @@ async function buildDetail(row: RuleEventRow): Promise<RuleEventDetail> {
   const uuids = Array.isArray(row.setting?.channelUUID) ? row.setting.channelUUID : []
   let channels: RuleEventDetail['channels'] = []
   if (uuids.length) {
-    const res: any = await GetChannelsByUuidApi({ uuids, all: true })
-    const result = responseResult(res)
-    channels = Array.isArray(result) ? result.map((item: any) => ({ name: item.name, label: item.name, uuid: item.uuid, token: item.token })) : []
+    channels = uuids.map(uuid => ({ name: uuid, label: uuid, uuid }))
+    try {
+      const res: any = await GetChannelsByUuidApi({ uuids, all: true })
+      const result = responseResult(res)
+      if (Array.isArray(result)) {
+        const channelMap = new Map(result.map((item: any) => [item.uuid, {
+          name: item.name || item.label || item.uuid,
+          label: item.label || item.name || item.uuid,
+          uuid: item.uuid,
+          token: item.token
+        }]))
+        channels = uuids.map(uuid => channelMap.get(uuid) ?? { name: uuid, label: uuid, uuid })
+      }
+    } catch { }
   }
   const notificationUuid = row.setting?.Action?.Notification
   return {
@@ -227,7 +238,19 @@ async function buildDetail(row: RuleEventRow): Promise<RuleEventDetail> {
 
 async function selectDetail(row: RuleEventRow) {
   activeRuleUuid.value = rowKey(row)
-  detail.value = await buildDetail(row)
+  try {
+    detail.value = await buildDetail(row)
+  } catch {
+    detail.value = {
+      ...JSON.parse(JSON.stringify(row)),
+      timeTemplateName: row.setting?.timeTemplate ?? '',
+      actionTypeName: actionTypeName(row.setting?.actionType || ''),
+      configName: row.setting?.Action?.Notification ?? '',
+      systemEventType: [],
+      analyseEventType: [],
+      channels: []
+    }
+  }
 }
 
 async function loadRules() {
@@ -241,8 +264,9 @@ async function loadRules() {
     activeRuleUuid.value = ''
     return
   }
-  if (currentPage.value > Math.ceil(total.value / pageSize.value)) currentPage.value = 1
-  const firstRule = rules.value[0]
+  const maxPage = Math.ceil(total.value / pageSize.value)
+  if (currentPage.value > maxPage) currentPage.value = maxPage
+  const firstRule = pagedRules.value[0] ?? rules.value[0]
   if (firstRule) await selectDetail(firstRule)
 }
 
@@ -305,8 +329,15 @@ async function deleteSelected() {
   } catch { }
 }
 
-function handleCurrentChange(page: number) {
+async function handleCurrentChange(page: number) {
   currentPage.value = page
+  const firstRule = pagedRules.value[0]
+  if (firstRule) {
+    await selectDetail(firstRule)
+  } else {
+    detail.value = null
+    activeRuleUuid.value = ''
+  }
 }
 
 onMounted(loadAll)

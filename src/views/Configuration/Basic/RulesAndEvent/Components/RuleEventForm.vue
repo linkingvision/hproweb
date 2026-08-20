@@ -157,7 +157,8 @@ const rules = computed<FormRules>(() => ({
 }))
 
 function responseResult(res: any) {
-  return res?.data?.result ?? []
+  const result = res?.data?.result ?? res?.result ?? []
+  return Array.isArray(result?.list) ? result.list : result
 }
 
 function isSuccess(res: any) {
@@ -183,40 +184,79 @@ function handleAnalyticsCheckAll(value: any) {
   resetChecks()
 }
 
+function syncNotification(defaultOnly = false) {
+  const current = form.setting.Action.Notification
+  const currentExists = filteredConfigList.value.some(item => item.uuid === current)
+  if (!defaultOnly || !currentExists) {
+    form.setting.Action.Notification = filteredConfigList.value[0]?.uuid || ''
+  }
+}
+
 function handleActionTypeChange() {
-  form.setting.Action.Notification = filteredConfigList.value[0]?.uuid || ''
+  syncNotification()
+}
+
+async function resolveSelectedChannels(uuids: string[]) {
+  selectedChannels.value = []
+  if (!uuids.length) return
+  selectedChannels.value = uuids.map(uuid => normalizeSelectedChannel({ uuid, label: uuid, name: uuid, DifferentType: 'devChannel' }))
+  try {
+    const res: any = await GetChannelsByUuidApi({ uuids, all: true })
+    const result = responseResult(res)
+    if (Array.isArray(result)) {
+      const channelMap = new Map(result.map((item: any) => [item.uuid, normalizeSelectedChannel({
+        uuid: item.uuid,
+        token: item.token,
+        label: item.name || item.label || item.uuid,
+        name: item.name || item.label || item.uuid,
+        online: item.online,
+        iconclass: 'iconfont icon-shexiangji-zaixian',
+        DifferentType: 'devChannel'
+      })]))
+      selectedChannels.value = uuids.map(uuid => channelMap.get(uuid) ?? normalizeSelectedChannel({ uuid, label: uuid, name: uuid, DifferentType: 'devChannel' }))
+    }
+  } catch { }
+}
+
+function resetFormValues() {
+  form.uuid = undefined
+  form.ruleEventId = undefined
+  form.ruleEventName = ''
+  form.description = ''
+  form.enabled = true
+  form.setting.eventType = []
+  form.setting.channelUUID = []
+  form.setting.timeTemplate = (props.timeTemplateList[1] ?? props.timeTemplateList[0])?.uuid || ''
+  form.setting.actionType = NOTIFICATION_EMAIL
+  form.setting.Action.Notification = ''
 }
 
 async function fillForm() {
   const rule = props.initialRule
-  form.uuid = rule?.uuid
-  form.ruleEventId = rule?.ruleEventId
-  form.ruleEventName = rule?.ruleEventName || ''
-  form.description = rule?.description || ''
-  form.enabled = rule?.enabled ?? true
-  form.setting.eventType = [...(rule?.setting?.eventType || [])]
-  form.setting.channelUUID = [...(rule?.setting?.channelUUID || [])]
-  form.setting.timeTemplate = rule?.setting?.timeTemplate || props.timeTemplateList[0]?.uuid || ''
-  form.setting.actionType = normalizeNotificationType(rule?.setting?.actionType || NOTIFICATION_EMAIL)
-  form.setting.Action.Notification = rule?.setting?.Action?.Notification || filteredConfigList.value[0]?.uuid || ''
+  if (props.mode === 'edit' && rule) {
+    form.uuid = rule.uuid
+    form.ruleEventId = rule.ruleEventId ?? rule.id
+    form.ruleEventName = rule.ruleEventName || ''
+    form.description = rule.description || ''
+    form.enabled = rule.enabled ?? true
+    form.setting.eventType = Array.isArray(rule.setting?.eventType) ? [...rule.setting.eventType] : []
+    form.setting.channelUUID = Array.isArray(rule.setting?.channelUUID) ? [...rule.setting.channelUUID] : []
+    form.setting.timeTemplate = rule.setting?.timeTemplate || (props.timeTemplateList[1] ?? props.timeTemplateList[0])?.uuid || ''
+    form.setting.actionType = normalizeNotificationType(rule.setting?.actionType || NOTIFICATION_EMAIL)
+    form.setting.Action.Notification = rule.setting?.Action?.Notification || ''
+    syncNotification(true)
+  } else {
+    resetFormValues()
+    syncNotification(true)
+  }
+
   checkedSystemEvents.value = form.setting.eventType.filter(value => systemEventOptions.value.some(item => item.value === value))
   checkedAnalyticsEvents.value = form.setting.eventType.filter(value => analyticsEventOptions.value.some(item => item.value === value))
   resetChecks()
-
-  selectedChannels.value = []
-  const uuids = form.setting.channelUUID
-  if (uuids.length) {
-    try {
-      const res: any = await GetChannelsByUuidApi({ uuids, all: true })
-      const result = responseResult(res)
-      selectedChannels.value = Array.isArray(result) ? result.map((item: any) => normalizeSelectedChannel({ ...item, label: item.name, DifferentType: 'devChannel' })) : []
-    } catch {
-      selectedChannels.value = []
-    }
-  }
+  await resolveSelectedChannels(form.setting.channelUUID)
 }
 
-watch(() => [props.initialRule, props.timeTemplateList, props.configList], fillForm, { immediate: true, deep: true })
+watch(() => [props.mode, props.initialRule, props.timeTemplateList, props.configList], fillForm, { immediate: true, deep: true })
 
 function validateSelection() {
   if (!checkedSystemEvents.value.length && !checkedAnalyticsEvents.value.length) {

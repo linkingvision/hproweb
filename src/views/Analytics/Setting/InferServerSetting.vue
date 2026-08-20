@@ -53,7 +53,15 @@ const selectData1 = [{
   value: 'USC_ANA_MODEL_HIGH',
   label: 'USC_ANA_MODEL_HIGH'
 }]
-const cities = ["Object Detection", "PPE Detection", "LPR Detection", "Face Recognition", "LPR Recognition", "Crowd Detection", "Fire smoke Detection"]
+const languageOptions = [
+  { value: 'English', label: 'English' }
+]
+const loadedModelOptions = [
+  { label: 'Object Detection', value: 'bEnableObjDet' },
+  { label: 'Face Recognition', value: 'bEnableFaceRecog' },
+  { label: 'LPR Recognition', value: 'bEnableLprRecog' }
+] as const
+const cities = loadedModelOptions.map(({ label }) => label)
 
 const GetNode = async () => {
   const res = await GetNodeApi();
@@ -97,26 +105,28 @@ const handleEdit = (row: any) => {
   editForm.value = {
     nodeId: row.nodeId,
     Engine: row.Engine,
-    ModelAccuracy: row.ModelAccuracy
+    ModelAccuracy: row.ModelAccuracy,
+    Language: row.Language || 'English'
   }
-  checkedCities.value = [];
-  for (const key in row.loadedModel) {
-    if (row.loadedModel[key]) {
-      checkedCities.value.push(getLoadedModelName(key))
-    }
-  }
+  checkedCities.value = loadedModelOptions
+    .filter(({ value }) => row.loadedModel?.[value])
+    .map(({ label }) => label)
   editVisible.value = true;
 }
 
 const onSubmit = async () => {
-  const loadedModel: any = {}
+  const loadedModel: Record<string, boolean> = {}
   checkedCities.value.forEach((element) => {
-    loadedModel[getLoadedModelValue(element)] = true;
+    const option = loadedModelOptions.find(({ label }) => label === element)
+    if (option) {
+      loadedModel[option.value] = true
+    }
   });
   const params = {
     nodeId: editForm.value.nodeId,
     engine: editForm.value.Engine,
     modelAccuracy: editForm.value.ModelAccuracy,
+    language: editForm.value.Language,
     loadedModel
   }
   // console.log(params)
@@ -138,60 +148,6 @@ const onSubmit = async () => {
   }
 }
 
-const getLoadedModelName = (item: string) => {
-  switch (item) {
-    case "bEnableObjDet":
-      return "Object Detection"
-
-    case "bEnablePpeDet":
-      return "PPE Detection"
-
-    case "bEnableLprDet":
-      return "LPR Detection"
-
-    case "bEnableFaceRecog":
-      return "Face Recognition"
-
-    case "bEnableLprRecog":
-      return "LPR Recognition"
-
-    case "bEnableFirSmoDet":
-      return "Fire smoke Detection"
-
-    case "bEnableCrowdDet":
-      return "Crowd Detection"
-
-    default:
-      return item;
-  }
-}
-const getLoadedModelValue = (item: string) => {
-  switch (item) {
-    case "Object Detection":
-      return "bEnableObjDet"
-
-    case "PPE Detection":
-      return "bEnablePpeDet"
-
-    case "LPR Detection":
-      return "bEnableLprDet"
-
-    case "Face Recognition":
-      return "bEnableFaceRecog"
-
-    case "LPR Recognition":
-      return "bEnableLprRecog"
-
-    case "Fire smoke Detection":
-      return "bEnableFirSmoDet"
-
-    case "Crowd Detection":
-      return "bEnableCrowdDet"
-
-    default:
-      return item;
-  }
-}
 
 onMounted(async () => {
   await GetNode()
@@ -222,6 +178,11 @@ onMounted(async () => {
         <el-form-item :label="t('Analytics.ana_model_accuracy')">
           <el-select v-model="editForm.ModelAccuracy" style="width:100%">
             <el-option v-for="(value, index) in selectData1" :key="index" :label="value.label" :value="value.value"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item :label="t('Analytics.ana_language')">
+          <el-select v-model="editForm.Language" style="width:100%">
+            <el-option v-for="(value, index) in languageOptions" :key="index" :label="value.label" :value="value.value"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item :label="t('Analytics.ana_load_model')">

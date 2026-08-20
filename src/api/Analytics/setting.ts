@@ -17,14 +17,11 @@ interface PutEngineData {
   nodeId: string,
   engine: string,
   modelAccuracy: string,
+  language?: string,
   loadedModel: {
-    bEnableCrowdDet?: boolean,
     bEnableFaceRecog?: boolean,
-    bEnableFirSmoDet?: boolean,
-    bEnableLprDet?: boolean,
     bEnableLprRecog?: boolean,
-    bEnableObjDet?: boolean,
-    bEnablePpeDet?: boolean
+    bEnableObjDet?: boolean
   }
 }
 export const PutEngineApi = (data: PutEngineData) => axios({

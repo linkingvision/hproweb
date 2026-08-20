@@ -29,6 +29,7 @@
     "ana_license_plate_max_size": "車牌最大尺寸",
     "ana_license_plate_min_size": "車牌最小尺寸",
     "ana_load_model": "加載模型",
+    "ana_language": "語言",
     "ana_lpre": "車牌識別",
     "ana_model_accuracy": "模型精度",
     "ana_more_settings": "更多設置",

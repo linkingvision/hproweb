@@ -29,6 +29,7 @@
     "ana_license_plate_max_size": "Tamaño máximo de la matrícula",
     "ana_license_plate_min_size": "Tamaño mínimo de la matrícula",
     "ana_load_model": "Cargar modelo",
+    "ana_language": "Idioma",
     "ana_lpre": "Reconocimiento de matrículas",
     "ana_model_accuracy": "Precisión del modelo",
     "ana_more_settings": "Más configuraciones",

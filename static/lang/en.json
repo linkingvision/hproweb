@@ -29,6 +29,7 @@
     "ana_license_plate_max_size": "License plate max size",
     "ana_license_plate_min_size": "License plate min size",
     "ana_load_model": "Load Model",
+    "ana_language": "Language",
     "ana_lpre": "License Plate Recognition",
     "ana_model_accuracy": "Model Accuracy",
     "ana_more_settings": "More settings",
