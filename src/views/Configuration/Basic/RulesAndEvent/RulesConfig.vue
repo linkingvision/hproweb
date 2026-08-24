@@ -55,6 +55,14 @@
 
         <div class="InferServerStatus_Right" :class="{ 'empty-detail': !detail }">
           <div class="title">{{ t('CommTableEdit.comm_particulars') }}</div>
+          <div v-if="!detail" style="padding: 20px; color: #999;">
+            {{ t('CommTable.comm_no_data_available') }}
+            <div style="margin-top: 10px; font-size: 12px;">
+              <div>Rules count: {{ rules.length }}</div>
+              <div>TimeTemplates count: {{ timeTemplateList.length }}</div>
+              <div>ConfigList count: {{ configList.length }}</div>
+            </div>
+          </div>
           <template v-if="detail">
           <el-form :inline="true" :model="detail" class="detail-form">
             <el-form-item :label="t('CommTable.comm_table_name')" label-width="150px">
@@ -62,12 +70,21 @@
             </el-form-item>
             <el-form-item :label="t('RulesAndEvent.rule_time_template')" label-width="150px">
               <el-input v-model="detail.timeTemplateName" disabled />
+              <span v-if="!detail.timeTemplateName" style="color: red; font-size: 12px; margin-left: 5px;">
+                (UUID: {{ detail.setting?.timeTemplate }})
+              </span>
             </el-form-item>
             <el-form-item :label="t('RulesAndEvent.rule_operation_type')" label-width="150px">
               <el-input v-model="detail.actionTypeName" disabled />
+              <span v-if="!detail.actionTypeName" style="color: red; font-size: 12px; margin-left: 5px;">
+                (Type: {{ detail.setting?.actionType }})
+              </span>
             </el-form-item>
             <el-form-item :label="t('RulesAndEvent.rule_config_list')" label-width="150px">
               <el-input v-model="detail.configName" disabled />
+              <span v-if="!detail.configName" style="color: red; font-size: 12px; margin-left: 5px;">
+                (UUID: {{ detail.setting?.Action?.Notification }})
+              </span>
             </el-form-item>
           </el-form>
 
@@ -203,16 +220,28 @@ function actionTypeName(type: string) {
 }
 
 async function buildDetail(row: RuleEventRow): Promise<RuleEventDetail> {
+  console.log('buildDetail - Input row:', row)
+  console.log('buildDetail - row.setting:', row.setting)
+
   const eventValues = Array.isArray(row.setting?.eventType) ? row.setting.eventType : []
+  console.log('buildDetail - eventValues:', eventValues)
+
   const systemEventType = systemEventOptions.value.filter(item => eventValues.includes(item.value))
   const analyseEventType = analyticsEventOptions.value.filter(item => eventValues.includes(item.value))
+  console.log('buildDetail - systemEventType:', systemEventType)
+  console.log('buildDetail - analyseEventType:', analyseEventType)
+
   const uuids = Array.isArray(row.setting?.channelUUID) ? row.setting.channelUUID : []
+  console.log('buildDetail - channel uuids:', uuids)
+
   let channels: RuleEventDetail['channels'] = []
   if (uuids.length) {
     channels = uuids.map(uuid => ({ name: uuid, label: uuid, uuid }))
     try {
       const res: any = await GetChannelsByUuidApi({ uuids, all: true })
+      console.log('buildDetail - GetChannelsByUuidApi response:', res)
       const result = responseResult(res)
+      console.log('buildDetail - channels result:', result)
       if (Array.isArray(result)) {
         const channelMap = new Map(result.map((item: any) => [item.uuid, {
           name: item.name || item.label || item.uuid,
@@ -222,25 +251,44 @@ async function buildDetail(row: RuleEventRow): Promise<RuleEventDetail> {
         }]))
         channels = uuids.map(uuid => channelMap.get(uuid) ?? { name: uuid, label: uuid, uuid })
       }
-    } catch { }
+    } catch (err) {
+      console.error('buildDetail - GetChannelsByUuidApi error:', err)
+    }
   }
+
   const notificationUuid = row.setting?.Action?.Notification
-  return {
+  console.log('buildDetail - notificationUuid:', notificationUuid)
+  console.log('buildDetail - timeTemplateList:', timeTemplateList.value)
+  console.log('buildDetail - configList:', configList.value)
+
+  const timeTemplate = timeTemplateList.value.find(item => item.uuid === row.setting?.timeTemplate)
+  console.log('buildDetail - found timeTemplate:', timeTemplate)
+
+  const notificationConfig = configList.value.find(item => item.uuid === notificationUuid)
+  console.log('buildDetail - found notificationConfig:', notificationConfig)
+
+  const detailResult = {
     ...JSON.parse(JSON.stringify(row)),
-    timeTemplateName: timeTemplateList.value.find(item => item.uuid === row.setting?.timeTemplate)?.name ?? row.setting?.timeTemplate ?? '',
+    timeTemplateName: timeTemplate?.name ?? row.setting?.timeTemplate ?? '',
     actionTypeName: actionTypeName(row.setting?.actionType || ''),
-    configName: configList.value.find(item => item.uuid === notificationUuid)?.name ?? notificationUuid ?? '',
+    configName: notificationConfig?.name ?? notificationUuid ?? '',
     systemEventType,
     analyseEventType,
     channels,
   }
+
+  console.log('buildDetail - Final result:', detailResult)
+  return detailResult
 }
 
 async function selectDetail(row: RuleEventRow) {
+  console.log('selectDetail - Selected row:', row)
   activeRuleUuid.value = rowKey(row)
   try {
     detail.value = await buildDetail(row)
-  } catch {
+    console.log('selectDetail - detail.value set to:', detail.value)
+  } catch (err) {
+    console.error('selectDetail - Error building detail:', err)
     detail.value = {
       ...JSON.parse(JSON.stringify(row)),
       timeTemplateName: row.setting?.timeTemplate ?? '',
@@ -250,16 +298,26 @@ async function selectDetail(row: RuleEventRow) {
       analyseEventType: [],
       channels: []
     }
+    console.log('selectDetail - Fallback detail.value:', detail.value)
   }
 }
 
 async function loadRules() {
+  console.log('loadRules - Starting to load rules...')
   const res: any = await GetRuleEventListApi()
+  console.log('loadRules - API response:', res)
+  console.log('loadRules - res.data:', res?.data)
+  console.log('loadRules - res.data.result:', res?.data?.result)
+  console.log('loadRules - res.data.data:', res?.data?.data)
+  console.log('loadRules - res.result:', res?.result)
   const result = responseResult(res)
+  console.log('loadRules - Parsed result:', result)
   rules.value = Array.isArray(result) ? result : []
+  console.log('loadRules - rules.value:', rules.value)
   total.value = rules.value.length
   selectedRows.value = []
   if (!rules.value.length) {
+    console.log('loadRules - No rules found, clearing detail')
     detail.value = null
     activeRuleUuid.value = ''
     return
@@ -267,14 +325,22 @@ async function loadRules() {
   const maxPage = Math.ceil(total.value / pageSize.value)
   if (currentPage.value > maxPage) currentPage.value = maxPage
   const firstRule = pagedRules.value[0] ?? rules.value[0]
+  console.log('loadRules - First rule to display:', firstRule)
   if (firstRule) await selectDetail(firstRule)
 }
 
 async function loadAll() {
   loading.value = true
+  console.log('loadAll - Starting to load all data...')
   try {
     await Promise.all([loadTimeTemplates(), loadConfigList()])
+    console.log('loadAll - Time templates and config list loaded')
+    console.log('loadAll - timeTemplateList:', timeTemplateList.value)
+    console.log('loadAll - configList:', configList.value)
     await loadRules()
+    console.log('loadAll - All data loaded successfully')
+  } catch (err) {
+    console.error('loadAll - Error loading data:', err)
   } finally {
     loading.value = false
   }
