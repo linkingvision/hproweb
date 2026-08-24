@@ -331,8 +331,8 @@ const getRunInfo = async () => {
     const nIn = parseInt(d.strNetworkInK) || 0, nOut = parseInt(d.strNetworkOutK) || 0
     // On first load, pre-fill all 60 data points with the real value to avoid the chart rendering as all zeros
     if (networkDataIn.value.every(v => v === 0) && nIn > 0) {
-      networkDataIn.value.fill(nIn)
-      networkDataOut.value.fill(nOut)
+      networkDataIn.value.fill(nIn as any, 0)
+      networkDataOut.value.fill(nOut, 0)
     }
     initResourceCharts({ nCPUUsage: d.nCPUUsage, strMemory: d.strMemory, nMemoryUsage: d.nMemoryUsage, nTotalMemoryByte: d.nTotalMemoryByte,
       strNetworkIn: formatNetworkSpeed(nIn), strNetworkOut: formatNetworkSpeed(nOut), nNetworkIn: nIn, nNetworkOut: nOut })

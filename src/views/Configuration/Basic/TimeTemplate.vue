@@ -144,11 +144,11 @@
         <el-select v-model="Year" style="width:90px;margin:0 16px;" @change="ChangeYearMonth">
           <el-option v-for="y in OptionYear" :key="y.value" :label="y.label" :value="y.value"></el-option>
         </el-select>
-        <span class="nav-arrow" @click="ChangeMonth('prev',1)">&lt;</span>
+        <span class="nav-arrow" @click="ChangeMonth('prev')">&lt;</span>
         <el-select v-model="Month" style="width:80px;margin:0 10px;" @change="ChangeYearMonth">
           <el-option v-for="m in OptionMonth" :key="m.value" :label="m.label" :value="m.value"></el-option>
         </el-select>
-        <span class="nav-arrow" @click="ChangeMonth('next',1)">&gt;</span>
+        <span class="nav-arrow" @click="ChangeMonth('next')">&gt;</span>
         <el-button size="small" class="today-btn" @click="clickToday">{{ t('Setting.set_today') }}</el-button>
       </div>
       <div class="holiday-dialog">
@@ -173,7 +173,7 @@
             <template v-for="item in tableData" :key="item.publicHolidayId">
               <div v-for="(h, idx2) in item.publicHoliday.publicHoliday" :key="h.holiday" class="holiday-entry">
                 <span>{{ item.year }}-{{ h.holiday }}</span>
-                <i class="iconfont icon-lajitong del-icon" @click="DeletePublicHoliday(item, h, idx2)"></i>
+                <i class="iconfont icon-lajitong del-icon" @click="DeletePublicHoliday(item, h)"></i>
               </div>
             </template>
           </div>
@@ -575,36 +575,45 @@ function handleMouseUp(i: number, day: number, init?: string, data?: any) {
   const dayStart = Math.min(beginDay.value, day), dayEnd = Math.max(beginDay.value, day)
 
   function hasEmpty() {
-    for (let x = dayStart; x <= dayEnd; x++)
+    for (let x = dayStart; x <= dayEnd; x++) {
+      const row = rowUnit.value[x]
+      if (!row) continue
       for (let y = start; y <= end; y++)
-        if (rowUnit.value[x][y].class === null) return true
+        if (row[y].class === null) return true
+    }
     return false
   }
 
   if (!data) {
     const adding = hasEmpty()
     for (let x = dayStart; x <= dayEnd; x++) {
+      const row = rowUnit.value[x]
+      const timeRow = timeContent.value[x]
+      if (!row || !timeRow) continue
       for (let y = start; y <= end; y++) {
-        if (adding && rowUnit.value[x][y].class === null) {
-          rowUnit.value[x][y].class = 'ui-selected'
-          timeContent.value[x].arr.push(rowUnit.value[x][y].timeData)
+        if (adding && row[y].class === null) {
+          row[y].class = 'ui-selected'
+          timeRow.arr.push(row[y].timeData)
         } else if (!adding) {
-          rowUnit.value[x][y].class = null
-          const idx = timeContent.value[x].arr.indexOf(rowUnit.value[x][y].timeData)
-          if (idx > -1) timeContent.value[x].arr.splice(idx, 1)
+          row[y].class = null
+          const idx = timeRow.arr.indexOf(row[y].timeData)
+          if (idx > -1) timeRow.arr.splice(idx, 1)
         }
       }
     }
   } else {
     for (let x = dayStart; x <= dayEnd; x++) {
+      const row = rowUnit.value[x]
+      const timeRow = timeContent.value[x]
+      if (!row || !timeRow) continue
       for (let y = start; y <= end; y++) {
         if (data.type === 'on') {
-          rowUnit.value[x][y].class = 'ui-selected'
-          timeContent.value[x].arr.push(rowUnit.value[x][y].timeData)
+          row[y].class = 'ui-selected'
+          timeRow.arr.push(row[y].timeData)
         } else {
-          rowUnit.value[x][y].class = null
-          const idx = timeContent.value[x].arr.indexOf(rowUnit.value[x][y].timeData)
-          if (idx > -1) timeContent.value[x].arr.splice(idx, 1)
+          row[y].class = null
+          const idx = timeRow.arr.indexOf(row[y].timeData)
+          if (idx > -1) timeRow.arr.splice(idx, 1)
         }
       }
     }
@@ -632,6 +641,7 @@ function copyWeek(item1: any, index1: number) {
 function closePopover(idx: number) { popoverRefs.value[idx]?.hide() }
 function copyConfirm(idx: number) {
   const row = rowUnit.value[idx]
+  if (!row) return
   for (let i = 0; i < row.length; i++) {
     subscribeType.value.forEach((sub, k) => {
       if (sub.checked && k < 8) {

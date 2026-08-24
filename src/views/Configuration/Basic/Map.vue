@@ -435,7 +435,7 @@ async function loadTree() {
       }))
     }
     treeData.value = tree
-    if (tree.length) defaultExpandIds.value = [tree[0].id]
+    if (tree.length && tree[0]) defaultExpandIds.value = [tree[0].id]
   } catch (e) { console.warn('[Map] loadTree error', e) }
 }
 
@@ -516,7 +516,7 @@ function gisMap(data: any, map: any) {
     const ext = p.getExtent()
     const size = getWidth(ext) / 256
     const res = Array.from({length:18}, (_,z) => size / Math.pow(2,z))
-    const ids = Array.from({length:18}, (_,z) => z)
+    const ids = Array.from({length:18}, (_,z) => z.toString())
     map.setView(new View({ projection: proj, center: data.center, zoom: data.zoom||7, minZoom: data.minZoom, maxZoom: data.maxZoom||8 }))
     map.addLayer(new TileLayer({ source: new WMTS({ url: data.mapUrl, layer:'vec', matrixSet:'c', format:'tiles', style:'default', crossOrigin:'anonymous', tileGrid: new WMTSTileGrid({ origin: getTopLeft(ext), resolutions: res, matrixIds: ids }) }) }))
     if (data.mapUrl2) map.addLayer(new TileLayer({ source: new WMTS({ url: data.mapUrl2, layer:'cva', matrixSet:'c', format:'tiles', style:'default', crossOrigin:'anonymous', tileGrid: new WMTSTileGrid({ origin: getTopLeft(ext), resolutions: res, matrixIds: ids }) }) }))
@@ -727,8 +727,8 @@ function mapTypeChange() {
   switch (form.mapType) {
     case 'USC_MAP_GOOGLE':  form.mapurl = urlTest.Google;          form.mapProjection = 'EPSG:3857'; break
     case 'USC_MAP_GAO_DE':  form.mapurl = urlTest.GaoDe;           form.mapProjection = 'EPSG:3857'; break
-    case 'USC_MAP_TIAN':    form.mapurl = urlTest.TianDiTu[0]; form.mapUrl2 = urlTest.TianDiTu[1]; form.mapProjection = 'EPSG:4326'; break
-    case 'USC_MAP_TILE':    form.mapurl = form.onlineTile ? urlTest.onlineTile[0] : urlTest.onlineTile[1]; form.mapProjection = 'EPSG:4326'; break
+    case 'USC_MAP_TIAN':    form.mapurl = urlTest.TianDiTu[0] || ''; form.mapUrl2 = urlTest.TianDiTu[1] || ''; form.mapProjection = 'EPSG:4326'; break
+    case 'USC_MAP_TILE':    form.mapurl = form.onlineTile ? (urlTest.onlineTile[0] || '') : (urlTest.onlineTile[1] || ''); form.mapProjection = 'EPSG:4326'; break
     default: form.mapurl = ''; form.mapUrl2 = ''
   }
 }
@@ -783,7 +783,10 @@ function beforeUpload(file: File) {
 // ─── Add dialog ───────────────────────────────────────────────────────────────
 function openAddMap() {
   Object.assign(form, defaultForm())
-  if (partitionTree.value.length) { form.devPartitionName = partitionTree.value[0].devPartitionName; form.devPartitionId = partitionTree.value[0].devPartitionId }
+  if (partitionTree.value.length && partitionTree.value[0]) {
+    form.devPartitionName = partitionTree.value[0].devPartitionName;
+    form.devPartitionId = partitionTree.value[0].devPartitionId
+  }
   addDefaultChecked.value = [form.devPartitionId]; imgBase64.value = ''; fileList.value = []
   dialogFormVisible.value = true
 }

@@ -264,8 +264,8 @@
           <!-- 音量滑块面板 -->
           <div v-if="cellAudioVisible === cell.id" class="cell-audio-slider" @click.stop>
             <i class="iconfont"
-               :class="(cellAudioSliders[cell.id] ?? 0) === 0 ? 'icon-shengyinguan' : 'icon-shengyinkai'"
-               :style="{ color: (cellAudioSliders[cell.id] ?? 0) === 0 ? 'grey' : '#409EFF' }"></i>
+               :class="(cellAudioSliders[cell.id] || 0) === 0 ? 'icon-shengyinguan' : 'icon-shengyinkai'"
+               :style="{ color: (cellAudioSliders[cell.id] || 0) === 0 ? 'grey' : '#409EFF' }"></i>
             <el-slider :step="0.1" :show-tooltip="false" :max="1"
                        :model-value="cellAudioSliders[cell.id] ?? 0"
                        @update:model-value="(v: number) => setCellVolume(cell.id, v)"
@@ -282,7 +282,7 @@
                   :class="{ active: cell3DZoomId === cell.id }"
                   @mousedown.stop="on3DMouseDown(cell.id, $event)"
                   @mousemove.stop="on3DMouseMove(cell.id, $event)"
-                  @mouseup.stop="on3DMouseUp(cell.id, $event)"
+                  @mouseup.stop="on3DMouseUp(cell.id)"
                   @mouseleave.stop="on3DMouseLeave(cell.id)"></canvas>
 
           <!-- PTZ 云台面板 -->
@@ -312,8 +312,8 @@
           </div>
 
           <!-- 摄像头名称标签 -->
-          <div v-if="cellAssignments[cell.id] && cellAssignments[cell.id].entityType !== 'USC_VIEW_MAP'" class="cell-label-overlay">
-            {{ cellAssignments[cell.id].name }}
+          <div v-if="cellAssignments[cell.id] && cellAssignments[cell.id]?.entityType !== 'USC_VIEW_MAP'" class="cell-label-overlay">
+            {{ cellAssignments[cell.id]?.name }}
           </div>
         </div>
       </div>
@@ -787,7 +787,7 @@ async function loadAll() {
     }
 
     treeWithViews.value = tree
-    if (tree.length) defaultExpandIds.value = [tree[0].id]
+    if (tree.length) defaultExpandIds.value = [tree[0]?.id].filter(Boolean) as string[]
   } catch (e) {
     console.warn('[View] loadTree error', e)
   }
@@ -812,8 +812,8 @@ function getNodeIcon(data: TreeNode): string {
 }
 
 function isMapAssigned(data: TreeNode): boolean {
-  return data.isMap && Object.values(cellAssignments.value).some(a =>
-    a.entityType === 'USC_VIEW_MAP' && a.uuid === String(data.data?.mapId),
+  return !!data.isMap && Object.values(cellAssignments.value).some(a =>
+    a?.entityType === 'USC_VIEW_MAP' && a.uuid === String(data.data?.mapId),
   )
 }
 
@@ -1213,8 +1213,9 @@ async function handleNodeClick(data: TreeNode) {
 
   // 点击地图节点 → 放入当前选中格子并渲染 OL 地图
   if (data.isMap && LiveplayShow.value && previewGrid.value.length) {
-    if (!selectedCellId.value) selectedCellId.value = previewGrid.value[0].id
+    if (!selectedCellId.value) selectedCellId.value = previewGrid.value[0]?.id ?? ''
     const cellId = selectedCellId.value
+    if (!cellId) return
     const mapData = data.data
     // 先销毁旧内容（可能是视频或另一张地图）
     clearCell(cellId)
@@ -1247,8 +1248,9 @@ async function handleNodeClick(data: TreeNode) {
 
   // 点击摄像头通道 → 放入当前选中格子并起播（仅在已选中视图后生效）
   if (data.isDeviceChannel && LiveplayShow.value && previewGrid.value.length) {
-    if (!selectedCellId.value) selectedCellId.value = previewGrid.value[0].id
+    if (!selectedCellId.value) selectedCellId.value = previewGrid.value[0]?.id ?? ''
     const cellId = selectedCellId.value
+    if (!cellId) return
     placeCamera(cellId, data.data)
   }
 }
@@ -1393,16 +1395,17 @@ function loadViewPreview(view: ViewRow) {
 
 function computeCellStyle(cell: LayoutCell) {
   const [rows, cols] = layoutType.value.split('|').map(Number)
+  if (!rows || !cols) return {}
   const cellW = 100 / cols
   const cellH = 100 / rows
   return {
-    position: 'absolute',
+    position: 'absolute' as const,
     top:    `${(cell.rowStart - 1) * cellH}%`,
     left:   `${(cell.colStart - 1) * cellW}%`,
     width:  `${cellW * (cell.colEnd  - cell.colStart)}%`,
     height: `${cellH * (cell.rowEnd  - cell.rowStart)}%`,
-    boxSizing: 'border-box',
-    border: '1px solid #444',   // 比 #333 更亮，空格子清晰可见
+    boxSizing: 'border-box' as const,
+    border: '1px solid #444',
   }
 }
 

@@ -1209,7 +1209,7 @@ onBeforeUnmount(() => {
   closeVideo()
 })
 
-const activeNames = ['1']
+const activeNames = ref(['1'])
 </script>
 
 <template>

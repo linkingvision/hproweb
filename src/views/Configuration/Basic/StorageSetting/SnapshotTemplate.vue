@@ -319,32 +319,39 @@ const copyOptions = ref<DayOption[][]>(Array.from({ length: 8 }, () => buildDayO
 
 function openCopyPopover(rowIdx: number) {
   copyOptions.value[rowIdx] = buildDayOptions()
-  copyOptions.value[rowIdx][rowIdx].disabled = true
+  if (copyOptions.value[rowIdx] && copyOptions.value[rowIdx][rowIdx]) {
+    copyOptions.value[rowIdx][rowIdx]!.disabled = true
+  }
   copyPopoverVisible.value[rowIdx] = true
 }
 
 function toggleCopyDay(rowIdx: number, optIdx: number) {
   const opts = copyOptions.value[rowIdx]
+  if (!opts) return
   if (optIdx === 8) {
-    const allChecked = opts.filter((o, i) => i < 8 && !o.disabled).every(o => o.checked)
-    opts.forEach((o, i) => { if (i < 8 && !o.disabled) o.checked = !allChecked })
-    opts[8].checked = !allChecked
+    const allChecked = opts.filter((o, i) => i < 8 && !o?.disabled).every(o => o?.checked)
+    opts.forEach((o, i) => { if (i < 8 && o && !o.disabled) o.checked = !allChecked })
+    if (opts[8]) opts[8].checked = !allChecked
   } else {
-    opts[optIdx].checked = !opts[optIdx].checked
-    opts[8].checked = opts.filter((o, i) => i < 8 && !o.disabled).every(o => o.checked)
+    if (opts[optIdx]) opts[optIdx]!.checked = !opts[optIdx]!.checked
+    if (opts[8]) opts[8].checked = opts.filter((o, i) => i < 8 && o && !o.disabled).every(o => o?.checked)
   }
 }
 
 function confirmCopy(rowIdx: number) {
   const src = rowUnit.value[rowIdx]
   const opts = copyOptions.value[rowIdx]
+  if (!opts || !src) return
   opts.forEach((opt, i) => {
-    if (i < 8 && opt.checked) {
+    if (i < 8 && opt?.checked) {
+      const dst = rowUnit.value[i]
+      if (!dst) return
       src.forEach((cell, c) => {
-        const dst = rowUnit.value[i][c]
-        dst.class = cell.class
-        dst.type = cell.type
-        dst.text = cell.text
+        if (dst[c]) {
+          dst[c]!.class = cell.class
+          dst[c]!.type = cell.type
+          dst[c]!.text = cell.text
+        }
       })
     }
   })
@@ -389,8 +396,8 @@ async function saveTemplate() {
     uuid: clickItem.value.uuid,
     snapshotTemplateName: clickItem.value.name,
     scheduleSnapshot: Number(clickItem.value.scheduleSnapshot),
-    snapshotWidth: parseInt(wStr, 10) || 0,
-    snapshotHeight: parseInt(hStr, 10) || 0,
+    snapshotWidth: parseInt(wStr || '0', 10),
+    snapshotHeight: parseInt(hStr || '0', 10),
     snapshotQuality: clickItem.value.snapshotQuality,
     snapshotIntervalInSec: Number(clickItem.value.snapshotIntervalInSec),
     snapshotExpireInDay: Number(clickItem.value.snapshotExpireInDay),

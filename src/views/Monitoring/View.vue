@@ -469,7 +469,7 @@
         </el-form-item>
         <el-form-item :label="t('Common.comm_device_partition')">
           <el-select v-model="viewForm.devPartitionId" style="width:100%"
-            @change="v => viewForm.devPartitionName = partitionList.find(p=>p.id===v)?.name??''">
+            @change="(v: number) => viewForm.devPartitionName = partitionList.find(p=>p.id===v)?.name??''">
             <el-option v-for="p in partitionList" :key="p.id" :label="p.name" :value="p.id" />
           </el-select>
         </el-form-item>
@@ -498,7 +498,7 @@
         </el-form-item>
         <el-form-item :label="t('Common.comm_device_partition')">
           <el-select v-model="editForm.devPartitionId" style="width:100%"
-            @change="v => editForm.devPartitionName = partitionList.find(p=>p.id===v)?.name??''">
+            @change="(v: number) => editForm.devPartitionName = partitionList.find(p=>p.id===v)?.name??''">
             <el-option v-for="p in partitionList" :key="p.id" :label="p.name" :value="p.id" />
           </el-select>
         </el-form-item>
@@ -556,6 +556,7 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
+// @ts-ignore
 import { UPlayerSDK as UPlayerSDKClass, UPlayerList as UPlayerListClass, H5sPlayerWS2, Timeline } from '@/assets/js/uplayersdk.esm.js'
 import { useUserStore } from '@/store/user'
 import { useStore } from '@/store'
@@ -622,7 +623,7 @@ const infoShow        = ref(false)        // 码率信息面板显隐
 const infoToken       = ref('')           // 当前显示码率信息的摄像头 token
 const infoVideo       = ref<any[]>([])    // 码率信息-视频
 const infoAudio       = ref<any[]>([])    // 码率信息-音频
-let   timerRunInfo: any = null            // 码率轮询定时器（对照 GridView）
+let   timerRunInfo: ReturnType<typeof setInterval> | null = null  // 码率轮询定时器（对照 GridView）
 const ptzShow         = ref(false)        // PTZ 面板显隐
 const ptzToken        = ref('')           // 当前 PTZ token
 const ptzSpeed        = ref(0.5)          // PTZ 速度
@@ -719,11 +720,11 @@ const layoutDefs: Record<string, { layout:string; cells:CellDef[] }> = {
 }
 
 // ─── computeCellStyle ─────────────────────────────────────────────────────
-const computeCellStyle = (cell: GridCell) => {
+const computeCellStyle = (cell: GridCell): Record<string, string> => {
   if (expandedCellId.value === cell.id)
     return { position:'absolute', top:'0', left:'0', width:'100%', height:'100%', zIndex:'10' }
   const [rows, cols] = layoutType.value.split('|').map(Number)
-  const rH = 100 / rows, cW = 100 / cols
+  const rH = 100 / (rows || 1), cW = 100 / (cols || 1)
   const rSpan = cell.rowEnd - cell.rowStart, cSpan = cell.colEnd - cell.colStart
   return {
     position: 'absolute',
@@ -941,6 +942,7 @@ const onNodeClick = async (data: TreeNode) => {
     const emptyCells = gridCells.value.filter(c => !getCellCamera(c.id))
     if (!emptyCells.length) return
     const cell = emptyCells[nextCellIndex.value % emptyCells.length]
+    if (!cell) return
     nextCellIndex.value++
     await placeCamera(cell.id, data.data, data.id)
     // 回放模式下自动将刚添加的格子转换为回放播放器
@@ -950,9 +952,9 @@ const onNodeClick = async (data: TreeNode) => {
 const onDragStart = (node: any) => {
   const d = node.data
   if (d?.type === 'view') {
-    window._viewDrag = { viewId: d.data?.viewId, nodeId: d.id }
+    (window as any)._viewDrag = { viewId: d.data?.viewId, nodeId: d.id }
   } else if (d?.data?.token) {
-    window._viewDrag = { channel: d.data, nodeId: d.id }
+    (window as any)._viewDrag = { channel: d.data, nodeId: d.id }
   }
 }
 
@@ -1148,8 +1150,8 @@ const loadViewIntoGrid = async (viewId: string | number, nodeId?: string) => {
   clearAllPlayers()
 
   // Determine layout key from layoutType string (e.g. "3|3" → 9 cells)
-  const ltStr = result.layout?.setting?.layoutView ? result.layout.layoutType : '2|2'
-  const defKey = Object.keys(layoutDefs).find(k => layoutDefs[k].layout === ltStr) ?? '4'
+  const ltStr = result.layout?.setting?.layoutView ? (result.layout.layoutType || '2|2') : '2|2'
+  const defKey = (Object.keys(layoutDefs) as Array<keyof typeof layoutDefs>).find(k => layoutDefs[k]?.layout === ltStr) ?? '4'
   changeLayout(defKey)
   layoutType.value = ltStr
   // Rebuild cells from server layout
@@ -1481,6 +1483,7 @@ const onDateChange = async () => {
   if (!xzvalue.value || !pbPlayerMap.size) return
   const d = xzvalue.value instanceof Date ? xzvalue.value : new Date(xzvalue.value)
   const cellId = selectedCellId.value || [...pbPlayerMap.keys()][0]
+  if (!cellId) return
   const item = pbPlayerMap.get(cellId)
   if (item) {
     item.v1.moveto(formatTime(d))
@@ -1516,12 +1519,14 @@ const SearchRecordCalendar = async (token: string, year: number, month: number) 
 const timeSpeed = (speed: string) => {
   if (isLiveview.value || !pbPlayerMap.size) return
   const cellId = selectedCellId.value || [...pbPlayerMap.keys()][0]
+  if (!cellId) return
   pbPlayerMap.get(cellId)?.v1?.speed(speed)
 }
 
 const resumePlayback = () => {
   if (isLiveview.value || !pbPlayerMap.size) return
   const cellId = selectedCellId.value || [...pbPlayerMap.keys()][0]
+  if (!cellId) return
   const item = pbPlayerMap.get(cellId)
   if (!item) return
   if (isPlaying.value) {
@@ -1907,7 +1912,7 @@ const eventPriorityGradient1 = (confidence: number): string => {
 const eventConfidenceColor = (confidence: number): string => {
   const colors = ['#6B84EE','#4F99E8','#33BA7F','#FF7C00','#FE5003']
   const idx = Math.min(Math.floor(confidence / 20), 4)
-  return colors[idx] ?? colors[0]
+  return (colors[idx] || colors[0]) as string
 }
 
 // ─── Event 面板数据方法 ───────────────────────────────────────────────────
@@ -2182,7 +2187,9 @@ const showCellInfo = (cellId: string) => {
   if (!cam) return
   if (infoShow.value && infoToken.value === cam.token) {
     // 再次点击同一格子 → 关闭并停止轮询
-    infoShow.value = false; infoToken.value = ''; clearInterval(timerRunInfo); timerRunInfo = null
+    infoShow.value = false; infoToken.value = ''
+    if (timerRunInfo !== null) clearInterval(timerRunInfo)
+    timerRunInfo = null
   } else {
     infoShow.value = true; infoToken.value = cam.token
     fetchCellInfo(cam.token)
@@ -2190,7 +2197,9 @@ const showCellInfo = (cellId: string) => {
   }
 }
 const closeInfo = () => {
-  infoShow.value = false; infoToken.value = ''; clearInterval(timerRunInfo); timerRunInfo = null
+  infoShow.value = false; infoToken.value = ''
+  if (timerRunInfo !== null) clearInterval(timerRunInfo)
+  timerRunInfo = null
 }
 
 // ─── Float-layer: 对讲/喊话（对照 uscweb Shoutwheat）────────────────────
@@ -2314,10 +2323,11 @@ onBeforeUnmount(() => {
     viewTimeline = null
   }
   // 清理 float-layer 资源（对照 GridView closeAllVideo）
-  clearInterval(timerRunInfo); timerRunInfo = null
+  if (timerRunInfo !== null) clearInterval(timerRunInfo)
+  timerRunInfo = null
   if (audioback) { audioback.disconnect(); audioback = null }
   // 清理悬浮按钮：电子放大 rAF + fullscreenchange 监听
-  cellEZoomTimers.forEach((h) => cancelAnimationFrame(h))
+  cellEZoomTimers.forEach((entry) => { clearInterval(entry.interval); entry.cleanup() })
   cellEZoomTimers.clear()
   document.removeEventListener('fullscreenchange', _onFullscreenChange)
   document.removeEventListener('webkitfullscreenchange', _onFullscreenChange)

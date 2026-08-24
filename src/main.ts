@@ -20,7 +20,9 @@ import { useStore } from './store/index.ts'
 const store = useStore()
 // Use persisted language from localStorage, fallback to English
 const savedLang = localStorage.getItem('lang') || 'en';
-i18n.global.locale.value = savedLang;
+type SupportedLocale = 'zhcht' | 'en' | 'pt' | 'es';
+const validLocales: SupportedLocale[] = ['zhcht', 'en', 'pt', 'es'];
+i18n.global.locale.value = validLocales.includes(savedLang as SupportedLocale) ? savedLang as SupportedLocale : 'en';
 app.use(i18n)
 
 app.use(router)

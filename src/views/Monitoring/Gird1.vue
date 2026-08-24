@@ -127,7 +127,7 @@ const selectEdgeForMerge = (cell: GridCell, edge: string) => {
     mergeSelections.value.push({ cell, edge })
   } else {
     const prev = mergeSelections.value[0]
-    if (isAdjacentAndValid(prev, { cell, edge })) {
+    if (prev && isAdjacentAndValid(prev, { cell, edge })) {
       performMerge(prev, { cell, edge })
       mergeSelections.value = []
     } else {

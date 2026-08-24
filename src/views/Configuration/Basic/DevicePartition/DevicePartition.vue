@@ -102,10 +102,10 @@ async function loadTree() {
     const root: PartitionNode[] = res.data.result ?? []
     treeData.value = root
     // Only set default expanded keys on first load; preserve existing expanded state on subsequent refreshes
-    if (expandedKeys.value.length === 0 && root.length > 0) {
+    if (expandedKeys.value.length === 0 && root.length > 0 && root[0]) {
       expandedKeys.value = [root[0].devPartitionId]
     }
-    if (root.length > 0) {
+    if (root.length > 0 && root[0]) {
       showRootInTable(root[0])
     }
   } catch (e) {
@@ -137,8 +137,10 @@ function handleNodeClick(node: PartitionNode) {
 function handleHome() {
   if (treeData.value.length > 0) {
     const root = treeData.value[0]
-    showRootInTable(root)
-    treeRef.value?.setCurrentKey(root.devPartitionId)
+    if (root) {
+      showRootInTable(root)
+      treeRef.value?.setCurrentKey(root.devPartitionId)
+    }
   }
 }
 
@@ -185,9 +187,9 @@ async function handleTreeOrder(type: 'moveUp' | 'moveDown', node: any, data: Par
   const childrenArr: PartitionNode[] = parentData?.children ?? treeData.value
   const dataIdx   = childrenArr.findIndex(c => c.devPartitionId === data.devPartitionId)
   const targetIdx = childrenArr.findIndex(c => c.devPartitionId === target.devPartitionId)
-  if (dataIdx !== -1 && targetIdx !== -1) {
-    const tmp = childrenArr[dataIdx]
-    childrenArr[dataIdx]   = childrenArr[targetIdx]
+  if (dataIdx !== -1 && targetIdx !== -1 && childrenArr[dataIdx] && childrenArr[targetIdx]) {
+    const tmp = childrenArr[dataIdx]!
+    childrenArr[dataIdx]   = childrenArr[targetIdx]!
     childrenArr[targetIdx] = tmp
   }
 

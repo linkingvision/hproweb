@@ -192,7 +192,8 @@
 <script lang="ts" setup>
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { GridLayoutManager, Timeline, H5sPlayerWS2 } from '@/assets/js/uplayersdk.esm.js'
+// @ts-ignore
+import { GridLayoutManager, H5sPlayerWS2, Timeline } from '@/assets/js/uplayersdk.esm.js'
 import { H5sPlayerWS, H5sPlayerRTC, H5sPlayerAudBack } from '@/assets/js/h5splayer.js'
 import { useUserStore } from '@/store/user'
 import { useStore } from '@/store'
@@ -499,7 +500,7 @@ const transformViewToGrid = (layoutData: any, viewEntities: any[]) => {
     const posKey = `h${cell.rowStart}-${cell.colStart}`
     const cam = positionMap[posKey]
     const vid = uuid(8)
-    if (cam) {
+    if (cam && result[row]) {
       result[row][col] = {
         row, column: col, rowSpan: cell.rowEnd - cell.rowStart, columnSpan: cell.colEnd - cell.colStart,
         forceLbm: false, claimed: true, spannedUpon: false,
