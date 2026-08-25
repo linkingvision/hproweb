@@ -24,9 +24,9 @@ watch(activeIndex, (newVal) => {
   $router.push(newVal)
 })
 
-onMounted(() => {
-  activeIndex.value = $route.path;
-})
+watch(() => $route.path, (newPath) => {
+  activeIndex.value = newPath
+}, { immediate: true })
 </script>
 
 <template>
@@ -38,7 +38,7 @@ onMounted(() => {
         </div>
       </div>
       <el-menu
-        :default-active="activeIndex"
+        :active="activeIndex"
         class="device-menu"
         :collapse="isCollapse"
         router
@@ -102,21 +102,48 @@ onMounted(() => {
 </style>
 
 <style lang="scss">
+.device-left.device-left {
+  .el-menu {
+    background-color: transparent;
+    border: none;
+    --el-menu-text-color: #FFFFFF !important;
+  }
+  .el-menu-item,
+  .el-sub-menu__title {
+    color: #FFFFFF !important;
+    span { color: #FFFFFF !important; }
+    i { color: #B7B7B7 !important; }
+  }
+  .el-menu-item.is-active,
+  .el-menu--vertical .el-menu-item.is-active {
+    color: #0399FE !important;
+    background-color: rgba(3, 153, 254, 0.2) !important;
+    border-right: 2px solid #0399FE !important;
+    span { color: #0399FE !important; }
+    i { color: #0399FE !important; }
+  }
+  .el-sub-menu.is-active > .el-sub-menu__title {
+    color: #0399FE !important;
+    span { color: #0399FE !important; }
+    i { color: #0399FE !important; }
+  }
+  .el-menu-item:hover,
+  .el-sub-menu__title:hover {
+    background-color: rgba(3, 153, 254, 0.08) !important;
+    color: #0399FE !important;
+    span { color: #0399FE !important; }
+    i { color: #0399FE !important; }
+  }
+}
 .el-popper {
-  // background-color: #212121 !important;
-  // border: none !important;
   .el-menu {
     background-color: #212121;
-    .el-menu-item {
-      color: #fff;
-    }
-    .el-menu-item:hover {
-      background-color: #181818;
-    }
+    .el-menu-item { color: #FFFFFF; }
+    .el-menu-item:hover { background-color: rgba(3, 153, 254, 0.08); }
     .is-active {
       color: #0399FE;
-      border-right: #0399FE 3px solid;
-      background-color: #282D33;
+      border-right: 2px solid #0399FE;
+      background-color: rgba(3, 153, 254, 0.2);
     }
   }
 }

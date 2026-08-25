@@ -55,7 +55,7 @@
           </el-button>
         </div>
         <div style="display:flex;align-items:center;">
-          <i class="iconfont icon-tishi" style="color:#FAAD14;margin-right:4px;" />
+          <i class="iconfont icon-warning" style="color:#FAAD14;margin-right:4px;" />
           <span>{{ t('Setting.set_right_click_delete_resource_map') }}</span>
         </div>
         <div class="sdk_setting">
@@ -912,7 +912,7 @@ onBeforeUnmount(() => {
   .sdk_setting { display: flex; gap: 8px; }
   .editmap, .clearmap { height: 29px; padding: 0 12px; border-radius: 4px; }
   .editmap { background: #0399FE; border: none; color: #fff; }
-  .clearmap { background: #252525; border: 1px solid #0399FE; color: #fff; }
+  .clearmap { background: #DF6D3A66; border: 1px solid #DF6D3A; color: #fff; }
 }
 
 .MapSetting {

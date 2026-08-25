@@ -7,7 +7,7 @@
       <img :src="store.lang === 'en' ? LogoWhiteEN : ''" alt="">
     </div>
     <el-menu
-      :default-active="activeIndex"
+      :active="activeIndex"
       class="el-menu-vertical-demo"
     >
       <el-menu-item index="/Home" @click="gotoPage('/Home')">
@@ -118,6 +118,12 @@ watch(() => route.fullPath, () => {
   .el-menu {
     background-color: transparent;
     border: none;
+  }
+  :deep(.el-menu-item.is-active) {
+    color: #0399FE;
+    span, i {
+      color: inherit;
+    }
   }
 }
 .sidebar-hide {

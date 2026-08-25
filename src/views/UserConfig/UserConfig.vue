@@ -274,7 +274,7 @@ const drawerVisible = computed({
 // ─── user avatar ─────────────────────────────────────────────────────────────
 const avatar = ref('')
 const acronym = ref(userStore.username.charAt(0).toUpperCase())
-const background = ref('#222222')
+const background = ref('#70CFC9')
 
 // ─── protocols: locked to WS2 ────────────────────────────────────────────────
 const proto = ref('WS2')
@@ -588,7 +588,8 @@ watch(drawerVisible, async (open) => {
     text-align: center;
     line-height: 36px;
     font-size: 16px;
-    color: #fff;
+    color: #8F3036;
+    background-color: #70CFC9;
   }
   .username-text {
     margin-left: 10px;

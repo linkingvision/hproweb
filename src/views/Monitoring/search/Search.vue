@@ -39,7 +39,7 @@ onMounted(() => {
         </div>
       </div>
       <el-menu
-        :default-active="activeIndex"
+        :active="activeIndex"
         class="search-menu"
         :collapse="isCollapse"
         router

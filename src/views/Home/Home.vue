@@ -299,7 +299,9 @@ const initAlarmChart = () => {
     title: { x: 'center', y: 'center', show: true,
       text: ['{count|' + alarmEventTotal.value + '}', '{label|' + t('Event.event_count') + '}'].join('\n'),
       textStyle: { rich: { count: { fontSize: 50, color: titlecol, lineHeight: 56 }, label: { fontSize: 20, color: titlecol, lineHeight: 24 } } } },
-    series: [{ name: 'alarm', type: 'pie', radius: ['60%', '70%'], label: { show: false }, labelLine: { show: false },
+    series: [{ name: 'alarm-bg', type: 'pie', radius: ['60%', '70%'], silent: true, label: { show: false }, labelLine: { show: false },
+      data: [{ value: 1, itemStyle: { color: store.darkMode ? '#3A3A3A' : '#E0E0E0' } }] },
+      { name: 'alarm', type: 'pie', radius: ['60%', '70%'], label: { show: false }, labelLine: { show: false },
       data: keys.map(k => ({ value: alarmEvent.value[k], name: k, itemStyle: { color: alarmColors[k] } })) }] })
 }
 
@@ -350,7 +352,7 @@ const initResourceCharts = (data: any) => {
     networkChart = echarts.init(chartNetworkContainerRef.value)
     networkChart.setOption({ tooltip: { trigger: 'axis', backgroundColor: bgcol }, legend: { data: [t('SystemInfo.system_network_in'), t('SystemInfo.system_network_out')], icon: 'circle', itemWidth: 8, textStyle: { color: titlecol }, bottom: 37, left: 161 },
       grid: { left: 109, right: 20, top: 40, bottom: 73 }, xAxis: { type: 'category', boundaryGap: false, data: timeAxis, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { color: titlecol, interval: 58 } },
-      yAxis: { type: 'value', axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { color: titlecol, fontSize: 10 } },
+      yAxis: { type: 'value', axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { color: titlecol, fontSize: 10, formatter: (v: number) => { if (v === 0) return '0'; if (v >= 1024) return (v / 1024).toFixed(1) + 'M'; if (v >= 10) return Math.round(v) + 'K'; return v.toFixed(1) + 'K' } } },
       series: [{ name: t('SystemInfo.system_network_in'), data: networkDataIn.value, type: 'line', smooth: true, symbol: 'none', sampling: 'average', lineStyle: { color: '#00FF66' }, itemStyle: { color: '#00FF66' }, areaStyle: { color: 'rgba(0,255,102,0.5)' } },
                { name: t('SystemInfo.system_network_out'), data: networkDataOut.value, type: 'line', smooth: true, symbol: 'none', sampling: 'average', lineStyle: { color: '#468AFF' }, itemStyle: { color: '#468AFF' }, areaStyle: { color: 'rgba(70,138,255,0.5)' } }] })
   }
@@ -365,7 +367,7 @@ const initResourceCharts = (data: any) => {
     memChart = echarts.init(chartMemoryContainerRef.value!)
   }
   const formatMemory = (bytes: number) => { const units = ['B','KB','MB','GB','TB']; let v = bytes, i = 0; while (v >= 1024 && i < units.length - 1) { v /= 1024; i++ }; return `${parseFloat(v.toFixed(2))} ${units[i]}` }
-  memChart.setOption({ legend: { bottom: '3%', left: 'center', selectedMode: false, textStyle: { color: titlecol, fontSize: 16 }, itemWidth: 12, itemHeight: 12 },
+  memChart.setOption({ legend: { data: [t('SystemInfo.system_memory')], bottom: '3%', left: 'center', selectedMode: false, textStyle: { color: titlecol, fontSize: 16 }, itemWidth: 12, itemHeight: 12 },
     series: [{ type: 'pie', radius: ['60%', '70%'], center: ['50%', '40%'], hoverOffset: 0,
       label: { show: true, position: 'center', formatter: data.nTotalMemoryByte === 0 ? data.strMemory : `${data.strMemory}\n${t('CommTable.comm_total')} ${formatMemory(data.nTotalMemoryByte)}`, fontSize: 16, color: titlecol },
       labelLine: { show: false },
@@ -475,25 +477,25 @@ onBeforeUnmount(() => {
 
   .home-top {
     flex-shrink: 0;
-    padding: 10px;
+    padding: 10px 10px 10px 0;
     font-family: Inter, Inter;
     font-style: normal;
     text-transform: none;
     .greeting {
-      height: 36px;
-      line-height: 36px;
+      height: 40px;
+      line-height: 40px;
       font-weight: 400;
-      font-size: 26px;
+      font-size: 32px;
     }
     .datetime {
-      height: 28px;
-      line-height: 28px;
-      font-size: 16px;
+      height: 40px;
+      line-height: 40px;
+      font-size: 20px;
     }
   }
 
   .home-spacer {
-    height: 170px; 
+    height: 134px; 
     flex-shrink: 0;
   }
 
@@ -546,6 +548,7 @@ onBeforeUnmount(() => {
     header {
       font-size: 26px;
       padding-bottom: 5px;
+      color: #FFFFFFDE;
     }
     .home-event-content {
       display: flex;
@@ -572,6 +575,7 @@ onBeforeUnmount(() => {
             width: 220px;
             height: 220px;
             align-self: center;
+            font-size: 20px;
           }
           .event-status {
             text-align: center;

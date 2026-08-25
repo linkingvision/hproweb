@@ -49,10 +49,10 @@ const visible = computed({
 const activeState = ref(1)
 const tabColors = computed(() => {
   if (store.darkMode === 'darkblue') {
-    return { activeTextColor: '#06E8EA', backgroundColor: '#2C4163', textColor: '#fff' }
+    return { activeTextColor: '#06E8EA', backgroundColor: '#2C4163', textColor: 'rgba(255, 255, 255, 0.87)' }
   }
   if (store.darkMode === 'c-dark-theme') {
-    return { activeTextColor: '#0399FE', backgroundColor: '#383838', textColor: 'rgba(255, 255, 255, 0.7)' }
+    return { activeTextColor: '#0399FE', backgroundColor: '#383838', textColor: 'rgba(255, 255, 255, 0.87)' }
   }
   return { activeTextColor: '#0399FE', backgroundColor: '#F9F9F9', textColor: 'rgba(0, 0, 0, 0.6)' }
 })
@@ -77,6 +77,7 @@ const timelineCenter = ref<Date | null>(null)
 const currentPlaybackTime = ref<Date | null>(null)
 const draggingTimeline = ref(false)
 const timelineCanvasRef = ref<HTMLCanvasElement | null>(null)
+const videoPlaying = ref(false)
 
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
 let videoTimeout: ReturnType<typeof setTimeout> | null = null
@@ -609,6 +610,7 @@ const renderMap = async () => {
 }
 
 const cleanupVideo = () => {
+  videoPlaying.value = false
   if (videoTimeout) {
     clearTimeout(videoTimeout)
     videoTimeout = null
@@ -712,7 +714,18 @@ const buildVideo = async () => {
     videoError.value = t('CommTable.comm_no_data_available')
     return
   }
+
+  await new Promise<void>(resolve => setTimeout(resolve, 200))
   await nextTick()
+
+  const vid = document.getElementById(videoId) as HTMLVideoElement | null
+  const canvas = document.getElementById('alarm-popup-pbcanvas') as HTMLCanvasElement | null
+  if (!vid || !canvas) return
+
+  const divWidth = vid.offsetWidth
+  const divHeight = vid.offsetHeight
+  canvas.width = divWidth
+  canvas.height = divHeight
 
   const alarmTime = parseAlarmTime(event)
   selectedDate.value = alarmTime
@@ -727,14 +740,12 @@ const buildVideo = async () => {
   const endStr = formatISOWithOffset(endTime)
   const baseUrl = new URL(userStore.IPPORT || window.location.origin)
 
-  // 对照 uscweb: serverpb 固定 'true'（服务端回放）
   const conf: any = {
     videoid: videoId,
     protocol: baseUrl.protocol,
     host: userStore.WSROOT,
     rootpath: '/',
     token,
-    serverpb: 'true',
     pbconf: {
       begintime: beginStr,
       endtime: endStr,
@@ -749,13 +760,13 @@ const buildVideo = async () => {
     consolelog: 'true',
     buffersize: store.RBufferTime || 300,
     h264cpumode: String(store.H264CpuDecode),
-    session: userStore.session,
-    name: event?.channelName
+    session: userStore.session
   }
 
   try {
     pbPlayer = new H5sPlayerWS2(conf)
     pbPlayer.connect()
+    videoPlaying.value = true
     videoTimeout = setTimeout(() => {
       videoTimeout = null
     }, 15000)
@@ -816,7 +827,6 @@ onBeforeUnmount(() => {
         <div class="popup-left">
           <div class="map-title">{{ t('Configuration.conf_map') }}</div>
           <div id="alarm-popup-map" class="map-container">
-            <el-empty v-if="!defaultMapId && !mapReady" :description="t('CommTable.comm_no_data_available')" />
           </div>
         </div>
         <div class="popup-right">
@@ -827,9 +837,8 @@ onBeforeUnmount(() => {
           <div class="video-box">
             <div class="video-container">
               <video class="popup-video" id="alarm-popup-video" muted></video>
-              <canvas class="popup-pbcanvas" id="alarm-popup-pbcanvas"></canvas>
+              <canvas class="h5vcanvas" id="alarm-popup-pbcanvas"></canvas>
               <el-image v-if="!getEventToken(selectedEvent) && imageSource" :src="imageSource" fit="contain" class="fallback-image" />
-              <el-empty v-else-if="videoError && !getEventToken(selectedEvent)" :description="videoError" />
             </div>
             <div class="progress-bar" @mousedown="draggingTimeline = true" @mouseup="draggingTimeline = false; moveTimelineTo($event)" @mouseleave="draggingTimeline = false">
               <canvas ref="timelineCanvasRef" id="alarm-popup-progress-bar"></canvas>
@@ -882,7 +891,7 @@ onBeforeUnmount(() => {
           :show-channel-token="false"
           :compact="true"
           :current-uuid="selectedEvent?.uuid || ''"
-          height="250"
+          height="280"
           @row-click="handleRowClick"
           @operate="openOperation" />
       </div>
@@ -936,6 +945,7 @@ onBeforeUnmount(() => {
       height: 20px;
       line-height: 20px;
       font-size: 14px;
+      color: rgba(255, 255, 255, 0.87);
     }
 
     .video-title {
@@ -963,6 +973,7 @@ onBeforeUnmount(() => {
         height: 340px;
         .video-container {
           position: relative;
+          width: 100%;
           height: 285px;
           overflow: hidden;
           background: #000;
@@ -973,12 +984,13 @@ onBeforeUnmount(() => {
             object-fit: fill;
           }
 
-          .popup-pbcanvas {
+          .h5vcanvas {
             width: 100%;
             height: 100%;
             position: absolute;
             top: 0;
             left: 0;
+            background-color: transparent;
           }
 
           .fallback-image {
@@ -1026,7 +1038,7 @@ onBeforeUnmount(() => {
           i {
             cursor: pointer;
             font-size: 20px;
-            color: #fff;
+            color: #FFFFFFDE;
             &:hover { color: #0399FE; }
           }
         }
@@ -1078,7 +1090,6 @@ onBeforeUnmount(() => {
 
   .popup-bottom {
     width: 100%;
-    height: 330px;
     position: relative;
 
     :deep(.el-menu-demo) {
@@ -1087,6 +1098,7 @@ onBeforeUnmount(() => {
       padding-left: 20px;
       border-bottom: 0 !important;
       background-color: #404040;
+      color: #FFFFFFDE;
     }
 
     :deep(.el-menu-demo .el-menu-item) {
@@ -1095,11 +1107,17 @@ onBeforeUnmount(() => {
       margin-right: 20px;
       padding: 0 12px;
       border-bottom: 0 !important;
+      color: #FFFFFFDE;
     }
 
-    :deep(.el-menu-demo .el-menu-item:hover),
+    :deep(.el-menu-demo .el-menu-item:hover) {
+      background: rgba(141, 189, 255, 0.16);
+      color: #fff;
+    }
+
     :deep(.el-menu-demo .el-menu-item.is-active) {
-      background: rgba(141, 189, 255, 0.16) !important;
+      color: #fff;
+      background: rgba(141, 189, 255, 0.16);
     }
 
     .state-count {
@@ -1107,8 +1125,6 @@ onBeforeUnmount(() => {
     }
 
     .popup-table {
-      height: 250px;
-      overflow: hidden;
       background: #2d2d2d;
     }
 
@@ -1117,6 +1133,13 @@ onBeforeUnmount(() => {
       display: flex;
       align-items: center;
       justify-content: flex-end;
+      color: #FFFFFFDE;
+    }
+
+    :deep(.el-pagination),
+    :deep(.el-pagination button),
+    :deep(.el-pagination .el-pager li) {
+      color: #FFFFFFDE;
     }
   }
 
@@ -1135,6 +1158,11 @@ onBeforeUnmount(() => {
 :global(.alarm-popup-dialog .el-dialog__header) {
   height: 30px;
   padding: 0;
+  color: #FFFFFFDE;
+}
+
+:global(.alarm-popup-dialog .el-dialog__title) {
+  color: #FFFFFFDE;
 }
 
 :global(.alarm-popup-dialog .el-dialog__headerbtn) {
@@ -1160,6 +1188,20 @@ onBeforeUnmount(() => {
 
 :global(.alarm-popup-dialog .el-table .el-table__row .el-table__cell) {
   padding: 4px 0;
+}
+
+:global(.alarm-popup-dialog .el-date-editor),
+:global(.alarm-popup-dialog .el-date-editor .el-input__wrapper),
+:global(.alarm-popup-dialog .el-select),
+:global(.alarm-popup-dialog .el-select .el-input__wrapper) {
+  background-color: #383838 !important;
+  color: #FFFFFFDE;
+  box-shadow: none !important;
+}
+
+:global(.alarm-popup-dialog .el-date-editor .el-input__inner),
+:global(.alarm-popup-dialog .el-select .el-input__inner) {
+  color: #FFFFFFDE;
 }
 
 :global(.alarm-map-live-overlay) {

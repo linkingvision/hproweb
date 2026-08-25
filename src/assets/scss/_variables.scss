@@ -1,3 +1,21 @@
+// Light / default theme Rules Config variables
+body {
+  --rules-root-bg: #F5F7FA;
+  --rules-root-border: #DCDFE6;
+  --rules-text-color: #303133;
+  --rules-title-bg: #F0F2F5;
+  --rules-title-color: #303133;
+  --rules-detail-btn-bg: rgba(64, 158, 255, 0.15);
+  --rules-detail-btn-color: #409EFF;
+  --rules-detail-btn-active-bg: #409EFF;
+  --rules-empty-color: #909399;
+  --rules-right-bg: transparent;
+  --rules-input-bg: #FFFFFF;
+  --rules-input-border: #DCDFE6;
+  --rules-textarea-bg: #FFFFFF;
+  --rules-textarea-border: #DCDFE6;
+}
+
 // Disk card shared styles for meta storage, local object storage, and S3 storage
 .meta-storage,
 .local-object-storage,
@@ -76,9 +94,15 @@ body {
     position: relative;
     .sidebar-com {
       .el-menu {
+        .el-menu-item {
+          color: #B7B7B7;
+        }
         .el-menu-item.is-active {
-          color: #000;
+          color: #FFFFFF !important;
           background: url("../imgs/sidebar.png") no-repeat;
+          span, i {
+            color: #FFFFFF !important;
+          }
         }
         .el-menu-item:hover {
           background: url("../imgs/sidebar.png") no-repeat;

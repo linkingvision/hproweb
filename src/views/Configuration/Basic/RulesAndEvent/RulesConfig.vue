@@ -25,15 +25,15 @@
             @select="onSelect"
             @select-all="onSelectAll">
             <el-table-column type="selection" width="40" align="center" />
-            <el-table-column prop="ruleEventName" :label="t('CommTable.comm_table_name')" width="150" />
-            <el-table-column :label="t('CommTableEdit.comm_operational')">
+            <el-table-column prop="ruleEventName" :label="t('CommTable.comm_table_name')" width="160" />
+            <el-table-column :label="t('CommTableEdit.comm_operational')" width="120" align="center">
               <template #default="scope">
                 <el-button @click="openEdit(scope.row)" link size="small">{{ t('CommTableEdit.comm_edit') }}</el-button>
               </template>
             </el-table-column>
-            <el-table-column>
+            <el-table-column :label="t('CommTableEdit.comm_particulars')" width="110" align="center">
               <template #header>
-                <span>{{ t('CommTableEdit.comm_particulars') }}<i class="iconfont icon-xiangqing" style="margin-left:10px;"></i></span>
+                <span>{{ t('CommTableEdit.comm_particulars') }}<i class="iconfont icon-xiangqing" style="margin-left:6px;"></i></span>
               </template>
               <template #default="scope">
                 <el-button class="particulars" :class="{ active: activeRuleUuid === rowKey(scope.row) }" @click="selectDetail(scope.row)" link size="small">
@@ -53,81 +53,76 @@
           </div>
         </div>
 
-        <div class="InferServerStatus_Right" :class="{ 'empty-detail': !detail }">
+        <div class="InferServerStatus_Right">
           <div class="title">{{ t('CommTableEdit.comm_particulars') }}</div>
-          <div v-if="!detail" style="padding: 20px; color: #999;">
-            {{ t('CommTable.comm_no_data_available') }}
-            <div style="margin-top: 10px; font-size: 12px;">
-              <div>Rules count: {{ rules.length }}</div>
-              <div>TimeTemplates count: {{ timeTemplateList.length }}</div>
-              <div>ConfigList count: {{ configList.length }}</div>
+          <div class="detail-grid">
+            <div class="grid-row">
+              <el-form :inline="false" :model="viewDetail" class="detail-form">
+                <el-form-item :label="t('CommTable.comm_table_name')" label-width="150px">
+                  <el-input v-model="viewDetail.ruleEventName" disabled />
+                </el-form-item>
+                <el-form-item :label="t('RulesAndEvent.rule_time_template')" label-width="150px">
+                  <el-input v-model="viewDetail.timeTemplateName" disabled />
+                </el-form-item>
+              </el-form>
+              <el-form :inline="false" :model="viewDetail" class="detail-form">
+                <el-form-item :label="t('RulesAndEvent.rule_operation_type')" label-width="150px">
+                  <el-input v-model="viewDetail.actionTypeName" disabled />
+                </el-form-item>
+                <el-form-item :label="t('RulesAndEvent.rule_config_list')" label-width="150px">
+                  <el-input v-model="viewDetail.configName" disabled />
+                </el-form-item>
+              </el-form>
+            </div>
+
+            <div class="grid-row">
+              <el-form :inline="false" :model="viewDetail" class="detail-form">
+                <el-form-item :label="t('CommTable.comm_table_type')" label-width="150px">
+                  <div class="tow_node">
+                    <div class="Root_node Root_node1 left">
+                      <div v-if="viewDetail.systemEventType?.length">
+                        <p class="detail-event-title">{{ t('RulesAndEvent.rule_system_event_type') }}</p>
+                        <div class="event-detail-text">
+                          <span v-for="item in viewDetail.systemEventType" :key="item.value">{{ item.label }};&emsp;</span>
+                        </div>
+                      </div>
+                      <div v-if="viewDetail.analyseEventType?.length">
+                        <p class="detail-event-title">{{ t('RulesAndEvent.rule_ana_event_type') }}</p>
+                        <div class="event-detail-text">
+                          <span v-for="item in viewDetail.analyseEventType" :key="item.value">{{ item.label }};&emsp;</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </el-form-item>
+              </el-form>
+              <el-form :inline="false" :model="viewDetail" class="detail-form">
+                <el-form-item :label="t('SystemInfo.system_channel')" label-width="150px">
+                  <div class="tow_node">
+                    <div class="Root_node Root_node1 right">
+                      <span class="span-slide" v-if="detail" v-for="item in viewDetail.channels" :key="item.uuid">
+                        <i class="iconfont icon-shexiangji-zaixian"></i>
+                        <span>{{ item.name || item.label }};&emsp;</span>
+                      </span>
+                    </div>
+                  </div>
+                </el-form-item>
+              </el-form>
+            </div>
+
+            <div class="grid-row">
+              <el-form :inline="false" :model="viewDetail" class="detail-form">
+                <el-form-item :label="t('Common.comm_enable')" label-width="150px">
+                  <el-switch v-model="viewDetail.enabled" disabled />
+                </el-form-item>
+              </el-form>
+              <el-form :inline="false" :model="viewDetail" class="detail-form">
+                <el-form-item :label="t('RulesAndEvent.rule_description')" label-width="150px">
+                  <el-input type="textarea" disabled v-model="viewDetail.description" />
+                </el-form-item>
+              </el-form>
             </div>
           </div>
-          <template v-if="detail">
-          <el-form :inline="true" :model="detail" class="detail-form">
-            <el-form-item :label="t('CommTable.comm_table_name')" label-width="150px">
-              <el-input v-model="detail.ruleEventName" disabled />
-            </el-form-item>
-            <el-form-item :label="t('RulesAndEvent.rule_time_template')" label-width="150px">
-              <el-input v-model="detail.timeTemplateName" disabled />
-              <span v-if="!detail.timeTemplateName" style="color: red; font-size: 12px; margin-left: 5px;">
-                (UUID: {{ detail.setting?.timeTemplate }})
-              </span>
-            </el-form-item>
-            <el-form-item :label="t('RulesAndEvent.rule_operation_type')" label-width="150px">
-              <el-input v-model="detail.actionTypeName" disabled />
-              <span v-if="!detail.actionTypeName" style="color: red; font-size: 12px; margin-left: 5px;">
-                (Type: {{ detail.setting?.actionType }})
-              </span>
-            </el-form-item>
-            <el-form-item :label="t('RulesAndEvent.rule_config_list')" label-width="150px">
-              <el-input v-model="detail.configName" disabled />
-              <span v-if="!detail.configName" style="color: red; font-size: 12px; margin-left: 5px;">
-                (UUID: {{ detail.setting?.Action?.Notification }})
-              </span>
-            </el-form-item>
-          </el-form>
-
-          <el-form class="detail-form" :inline="true" label-position="right" :model="detail">
-            <el-form-item :label="t('CommTable.comm_table_type')" label-width="150px">
-              <div class="tow_node">
-                <div class="Root_node Root_node1 left">
-                  <div>
-                    <p>{{ t('RulesAndEvent.rule_system_event_type') }}</p>
-                    <div class="event-detail-text">
-                      <span v-for="item in detail.systemEventType" :key="item.value">{{ item.label }};&emsp;</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p>{{ t('RulesAndEvent.rule_ana_event_type') }}</p>
-                    <div class="event-detail-text">
-                      <span v-for="item in detail.analyseEventType" :key="item.value">{{ item.label }};&emsp;</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </el-form-item>
-            <el-form-item :label="t('SystemInfo.system_channel')" label-width="150px">
-              <div class="tow_node">
-                <div class="Root_node Root_node1 right">
-                  <span class="span-slide" v-for="item in detail.channels" :key="item.uuid">
-                    <i class="iconfont icon-shexiangji-zaixian"></i>
-                    <span>{{ item.name || item.label }};&emsp;</span>
-                  </span>
-                </div>
-              </div>
-            </el-form-item>
-          </el-form>
-
-          <el-form class="detail-form bottom-detail" label-position="right" :inline="true" :model="detail">
-            <el-form-item :label="t('Common.comm_enable')">
-              <el-switch v-model="detail.enabled" disabled />
-            </el-form-item>
-            <el-form-item :label="t('RulesAndEvent.rule_description')" class="description">
-              <el-input type="textarea" disabled v-model="detail.description" />
-            </el-form-item>
-          </el-form>
-          </template>
         </div>
       </div>
     </template>
@@ -186,9 +181,30 @@ const pagedRules = computed(() => rules.value.slice((currentPage.value - 1) * pa
 const systemEventOptions = computed(() => getSystemEventOptions(t))
 const analyticsEventOptions = computed(() => getAnalyticsEventOptions(t))
 
+const EMPTY_DETAIL: RuleEventDetail = {
+  ruleEventId: 0,
+  ruleEventName: '',
+  description: '',
+  enabled: false,
+  setting: {
+    eventType: [],
+    channelUUID: [],
+    timeTemplate: '',
+    actionType: '',
+    Action: { Notification: '' }
+  },
+  timeTemplateName: '',
+  actionTypeName: '',
+  configName: '',
+  systemEventType: [],
+  analyseEventType: [],
+  channels: []
+}
+
+const viewDetail = computed<RuleEventDetail>(() => detail.value ?? EMPTY_DETAIL)
+
 function responseResult(res: any) {
-  const result = res?.data?.result ?? res?.result ?? []
-  return Array.isArray(result?.list) ? result.list : result
+  return res?.data?.result ?? []
 }
 
 function isSuccess(res: any) {
@@ -202,13 +218,14 @@ function rowKey(row: RuleEventRow) {
 async function loadTimeTemplates() {
   const res: any = await GetTimeTemplateListApi()
   const result = responseResult(res)
-  timeTemplateList.value = Array.isArray(result) ? result.map((item: any) => ({ id: item.timeTemplateId, name: formatTimeTemplateName(item.timeTemplateName, t), uuid: item.uuid })) : []
+  const list = Array.isArray(result?.list) ? result.list : Array.isArray(result) ? result : []
+  timeTemplateList.value = list.map((item: any) => ({ id: item.timeTemplateId, name: formatTimeTemplateName(item.timeTemplateName, t), uuid: item.uuid }))
 }
 
 async function loadConfigList() {
   const res: any = await GetNotificationConfListApi()
   const result = responseResult(res)
-  configList.value = Array.isArray(result) ? result : []
+  configList.value = Array.isArray(result?.list) ? result.list : Array.isArray(result) ? result : []
 }
 
 function actionTypeName(type: string) {
@@ -220,30 +237,20 @@ function actionTypeName(type: string) {
 }
 
 async function buildDetail(row: RuleEventRow): Promise<RuleEventDetail> {
-  console.log('buildDetail - Input row:', row)
-  console.log('buildDetail - row.setting:', row.setting)
-
   const eventValues = Array.isArray(row.setting?.eventType) ? row.setting.eventType : []
-  console.log('buildDetail - eventValues:', eventValues)
-
   const systemEventType = systemEventOptions.value.filter(item => eventValues.includes(item.value))
   const analyseEventType = analyticsEventOptions.value.filter(item => eventValues.includes(item.value))
-  console.log('buildDetail - systemEventType:', systemEventType)
-  console.log('buildDetail - analyseEventType:', analyseEventType)
-
   const uuids = Array.isArray(row.setting?.channelUUID) ? row.setting.channelUUID : []
-  console.log('buildDetail - channel uuids:', uuids)
 
   let channels: RuleEventDetail['channels'] = []
   if (uuids.length) {
     channels = uuids.map(uuid => ({ name: uuid, label: uuid, uuid }))
     try {
       const res: any = await GetChannelsByUuidApi({ uuids, all: true })
-      console.log('buildDetail - GetChannelsByUuidApi response:', res)
       const result = responseResult(res)
-      console.log('buildDetail - channels result:', result)
-      if (Array.isArray(result)) {
-        const channelMap = new Map(result.map((item: any) => [item.uuid, {
+      const list = Array.isArray(result?.list) ? result.list : Array.isArray(result) ? result : []
+      if (list.length) {
+        const channelMap = new Map<string, RuleEventDetail['channels'][number]>(list.map((item: any) => [item.uuid, {
           name: item.name || item.label || item.uuid,
           label: item.label || item.name || item.uuid,
           uuid: item.uuid,
@@ -251,23 +258,14 @@ async function buildDetail(row: RuleEventRow): Promise<RuleEventDetail> {
         }]))
         channels = uuids.map(uuid => channelMap.get(uuid) ?? { name: uuid, label: uuid, uuid })
       }
-    } catch (err) {
-      console.error('buildDetail - GetChannelsByUuidApi error:', err)
-    }
+    } catch { }
   }
 
   const notificationUuid = row.setting?.Action?.Notification
-  console.log('buildDetail - notificationUuid:', notificationUuid)
-  console.log('buildDetail - timeTemplateList:', timeTemplateList.value)
-  console.log('buildDetail - configList:', configList.value)
-
   const timeTemplate = timeTemplateList.value.find(item => item.uuid === row.setting?.timeTemplate)
-  console.log('buildDetail - found timeTemplate:', timeTemplate)
-
   const notificationConfig = configList.value.find(item => item.uuid === notificationUuid)
-  console.log('buildDetail - found notificationConfig:', notificationConfig)
 
-  const detailResult = {
+  return {
     ...JSON.parse(JSON.stringify(row)),
     timeTemplateName: timeTemplate?.name ?? row.setting?.timeTemplate ?? '',
     actionTypeName: actionTypeName(row.setting?.actionType || ''),
@@ -276,19 +274,13 @@ async function buildDetail(row: RuleEventRow): Promise<RuleEventDetail> {
     analyseEventType,
     channels,
   }
-
-  console.log('buildDetail - Final result:', detailResult)
-  return detailResult
 }
 
 async function selectDetail(row: RuleEventRow) {
-  console.log('selectDetail - Selected row:', row)
   activeRuleUuid.value = rowKey(row)
   try {
     detail.value = await buildDetail(row)
-    console.log('selectDetail - detail.value set to:', detail.value)
-  } catch (err) {
-    console.error('selectDetail - Error building detail:', err)
+  } catch {
     detail.value = {
       ...JSON.parse(JSON.stringify(row)),
       timeTemplateName: row.setting?.timeTemplate ?? '',
@@ -298,49 +290,31 @@ async function selectDetail(row: RuleEventRow) {
       analyseEventType: [],
       channels: []
     }
-    console.log('selectDetail - Fallback detail.value:', detail.value)
   }
 }
 
 async function loadRules() {
-  console.log('loadRules - Starting to load rules...')
   const res: any = await GetRuleEventListApi()
-  console.log('loadRules - API response:', res)
-  console.log('loadRules - res.data:', res?.data)
-  console.log('loadRules - res.data.result:', res?.data?.result)
-  console.log('loadRules - res.data.data:', res?.data?.data)
-  console.log('loadRules - res.result:', res?.result)
   const result = responseResult(res)
-  console.log('loadRules - Parsed result:', result)
-  rules.value = Array.isArray(result) ? result : []
-  console.log('loadRules - rules.value:', rules.value)
+  const list = Array.isArray(result?.list) ? result.list : Array.isArray(result) ? result : []
+  rules.value = list
   total.value = rules.value.length
   selectedRows.value = []
   if (!rules.value.length) {
-    console.log('loadRules - No rules found, clearing detail')
     detail.value = null
     activeRuleUuid.value = ''
     return
   }
-  const maxPage = Math.ceil(total.value / pageSize.value)
-  if (currentPage.value > maxPage) currentPage.value = maxPage
-  const firstRule = pagedRules.value[0] ?? rules.value[0]
-  console.log('loadRules - First rule to display:', firstRule)
+  if (currentPage.value > Math.ceil(total.value / pageSize.value)) currentPage.value = 1
+  const firstRule = rules.value[0]
   if (firstRule) await selectDetail(firstRule)
 }
 
 async function loadAll() {
   loading.value = true
-  console.log('loadAll - Starting to load all data...')
   try {
     await Promise.all([loadTimeTemplates(), loadConfigList()])
-    console.log('loadAll - Time templates and config list loaded')
-    console.log('loadAll - timeTemplateList:', timeTemplateList.value)
-    console.log('loadAll - configList:', configList.value)
     await loadRules()
-    console.log('loadAll - All data loaded successfully')
-  } catch (err) {
-    console.error('loadAll - Error loading data:', err)
   } finally {
     loading.value = false
   }
@@ -395,15 +369,8 @@ async function deleteSelected() {
   } catch { }
 }
 
-async function handleCurrentChange(page: number) {
+function handleCurrentChange(page: number) {
   currentPage.value = page
-  const firstRule = pagedRules.value[0]
-  if (firstRule) {
-    await selectDetail(firstRule)
-  } else {
-    detail.value = null
-    activeRuleUuid.value = ''
-  }
 }
 
 onMounted(loadAll)
@@ -420,6 +387,22 @@ onMounted(loadAll)
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
+
+    :deep(.el-button) {
+      min-width: 86px;
+      flex-shrink: 0;
+    }
+
+    .form_butt {
+      background-color: var(--el-color-primary);
+    }
+
+    .form_butt1 {
+      border: 1px solid var(--el-color-primary);
+      color: var(--el-color-primary);
+      background: transparent;
+    }
   }
 
   .InferServerStatus {
@@ -436,14 +419,17 @@ onMounted(loadAll)
       .particulars {
         width: 24px;
         height: 24px;
-        background-color: rgba(141, 189, 255, 0.3);
+        background-color: var(--rules-detail-btn-bg, rgba(141, 189, 255, 0.3));
         border-radius: 50%;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: #fff;
-        &.active { background-color: #0399fe; }
+        color: var(--rules-detail-btn-color, #fff);
+        &.active {
+          background-color: var(--rules-detail-btn-active-bg, #0399fe);
+          color: #fff;
+        }
       }
     }
 
@@ -453,48 +439,125 @@ onMounted(loadAll)
       margin-left: 20px;
       font-size: 14px;
       overflow: auto;
+      background-color: var(--rules-right-bg, transparent);
 
       .title {
         width: 100%;
         height: 48px;
         line-height: 48px;
         padding-left: 20px;
-        background-color: #2a2a2a;
+        background-color: var(--rules-title-bg, #2a2a2a);
+        color: var(--rules-title-color, inherit);
+        font-weight: 600;
+      }
+
+      .detail-grid {
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .grid-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: stretch;
+
+        > .detail-form {
+          display: flex;
+          flex-direction: column;
+
+          .el-form-item {
+            flex: 1;
+
+            .el-form-item__content {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+            }
+          }
+        }
       }
 
       .detail-form {
         width: 100%;
-        margin: 24px 0 0 24px;
-        :deep(.el-form-item) { margin-right: 30px; }
+        margin: 0;
+
+        :deep(.el-form-item) {
+          margin-right: 0;
+          margin-bottom: 18px;
+        }
+
+        :deep(.el-form-item:last-child) {
+          margin-bottom: 0;
+        }
+
+        :deep(.el-form-item__content) {
+          width: calc(100% - 150px);
+        }
+
+        :deep(.el-input__wrapper) {
+          width: 100%;
+        }
+
+        :deep(.el-input.is-disabled .el-input__wrapper) {
+          background-color: var(--rules-input-bg, transparent) !important;
+        }
+
+        :deep(.el-input.is-disabled .el-input__inner) {
+          -webkit-text-fill-color: var(--rules-text-color, inherit) !important;
+          color: var(--rules-text-color, inherit) !important;
+        }
+
+        :deep(.el-textarea) {
+          width: 100%;
+          .el-textarea__inner {
+            min-height: 64px;
+            resize: vertical;
+          }
+          &.is-disabled .el-textarea__inner {
+            background-color: var(--rules-textarea-bg, transparent) !important;
+            color: var(--rules-text-color, inherit) !important;
+            -webkit-text-fill-color: var(--rules-text-color, inherit) !important;
+            opacity: 1;
+          }
+        }
       }
 
-      :deep(.el-input) { width: 447px; }
+      :deep(.el-input) { width: 100%; }
+      :deep(.el-input.is-disabled) { opacity: 1; }
 
       .tow_node {
-        min-width: 400px;
+        width: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
         .Root_node {
-          width: 447px;
-          min-height: 260px;
-          height: auto;
-          overflow: visible;
-          border: 1px solid rgba(218, 218, 218, 0.2);
+          width: 100%;
+          flex: 1;
+          min-height: 300px;
+          overflow: auto;
+          border: 1px solid var(--rules-root-border, rgba(218, 218, 218, 0.2));
           border-radius: 4px;
-          background-color: #1b1b1b;
+          background-color: var(--rules-root-bg, #1b1b1b);
+          color: var(--rules-text-color, inherit);
           line-height: 22px;
+          box-sizing: border-box;
         }
         .left { padding: 20px 11px; }
         .right { padding: 10px; }
+
+        .detail-event-title {
+          font-weight: 600;
+          margin: 0;
+          padding-left: 10px;
+          line-height: 1.4;
+        }
+
         .event-detail-text { padding: 10px 20px; line-height: 18px; margin-bottom: 10px; }
         .span-slide { display: inline-block; white-space: nowrap; line-height: 24px; }
-      }
-
-      .bottom-detail {
-        display: flex;
-        align-items: flex-start;
-        flex-wrap: nowrap;
-        .description { display: flex; align-items: flex-start; flex: 1; min-width: 420px; }
-        :deep(.el-textarea) { width: 447px; }
-        :deep(.el-textarea__inner) { min-height: 64px; resize: vertical; }
       }
     }
   }

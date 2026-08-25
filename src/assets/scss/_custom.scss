@@ -6,6 +6,22 @@ body.c-dark-theme {
   background-color: #181924;
   color: #fff;
 
+  // Rules Config theme variables
+  --rules-root-bg: #1b1b1b;
+  --rules-root-border: rgba(218, 218, 218, 0.2);
+  --rules-text-color: #fff;
+  --rules-title-bg: #2a2a2a;
+  --rules-title-color: #fff;
+  --rules-detail-btn-bg: rgba(141, 189, 255, 0.3);
+  --rules-detail-btn-color: #fff;
+  --rules-detail-btn-active-bg: #0399fe;
+  --rules-empty-color: #888;
+  --rules-right-bg: transparent;
+  --rules-input-bg: #1b1b1b;
+  --rules-input-border: rgba(218, 218, 218, 0.2);
+  --rules-textarea-bg: #1b1b1b;
+  --rules-textarea-border: rgba(218, 218, 218, 0.2);
+
   .storage-state, .record_status {
     .DatePicker {
       background-color: #2b2b2b;
@@ -37,17 +53,22 @@ body.c-dark-theme {
     background-color: #0c0c0c;
     .el-menu {
       .el-menu-item {
+        color: #B7B7B7;
         i {
           margin-left: 15%;
           margin-right: 10px;
-          font-size: 18px;
+          font-size: 20px;
+          color: #B7B7B7;
         }
       }
       .el-menu-item.is-active {
-        color: #FFFFFF;
+        color: #FFFFFF !important;
         border-right: 2px solid #0399FE;
         background: url("../imgs/sidebar1.png") no-repeat;
         background-color: #202020;
+        span, i {
+          color: #FFFFFF !important;
+        }
       }
       .el-menu-item:hover {
         background: url("../imgs/sidebar1.png") no-repeat;
@@ -135,7 +156,7 @@ body.c-dark-theme {
 
 
   span, div, i, p, ul, li, h1, h2, h3, h4, h5, h6, input, button, label, li {
-    font-size: 12px;
+    font-size: 14px;
   }
   .Pagination {
     width: 100%;
@@ -176,14 +197,15 @@ body.c-dark-theme {
       background-color: #181818;
     }
     .el-menu-item.is-active {
-      background-color: #282D33;
+      background-color: rgba(3, 153, 254, 0.2);
       color: #0399FE;
       span, i {
         color: #0399FE;
       }
     }
     .el-menu-item {
-      --el-menu-text-color: #fff;
+      --el-menu-text-color: #FFFFFF;
+      color: #FFFFFF;
       span {
         margin-left: 10px;
       }
@@ -268,8 +290,15 @@ body.c-dark-theme {
       opacity: 0.5;
     }
   }
-  .el-button--text span {
-    color: #0399FE;
+    .el-button--text span,
+  .el-button.is-link.el-button--primary,
+  .el-button.is-link.el-button--primary span {
+    color: #409EFF;
+  }
+
+  .el-button.is-link.el-button--danger,
+  .el-button.is-link.el-button--danger span {
+    color: #409EFF;
   }
   .normal {
     background-color: transparent;

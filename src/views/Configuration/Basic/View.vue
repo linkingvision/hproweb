@@ -2030,7 +2030,7 @@ onBeforeUnmount(() => {
   &.cell-selected { outline: 2px solid #f44336; outline-offset: -2px; }
 }
 
-.videoColor { background-color: #111; }
+.videoColor { background-color: #222222; }
 
 // 码率信息浮层（对照 Monitoring/View .malv）
 .layout-preview-area {

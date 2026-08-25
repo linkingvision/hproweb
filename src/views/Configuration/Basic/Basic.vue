@@ -36,7 +36,7 @@ watch(() => $route.path, (newPath) => {
         </div>
       </div>
       <el-menu
-        :default-active="activeIndex"
+        :active="activeIndex"
         :default-openeds="[]"
         class="basic-menu"
         :collapse="isCollapse"
@@ -194,25 +194,37 @@ watch(() => $route.path, (newPath) => {
   .el-menu {
     background-color: transparent;
     border: none;
+    --el-menu-text-color: #FFFFFF;
+  }
+  .el-menu-item,
+  .el-sub-menu__title {
+    color: #FFFFFF !important;
+    span { color: #FFFFFF !important; }
+    i { color: #B7B7B7 !important; }
   }
   .el-menu-item.is-active {
     color: #0399FE !important;
     background-color: rgba(3, 153, 254, 0.2) !important;
     border-right: 2px solid #0399FE !important;
-    span, i { color: #0399FE; }
+    span { color: #0399FE !important; }
+    i { color: #0399FE !important; }
   }
   .el-sub-menu.is-active > .el-sub-menu__title {
     color: #0399FE !important;
-    span, i { color: #0399FE; }
+    span { color: #0399FE !important; }
+    i { color: #0399FE !important; }
   }
   .el-menu-item:hover,
   .el-sub-menu__title:hover {
     background-color: rgba(3, 153, 254, 0.08) !important;
+    color: #0399FE !important;
+    span { color: #0399FE !important; }
+    i { color: #0399FE !important; }
   }
   .el-popper {
     .el-menu {
       background-color: #181818;
-      .el-menu-item { color: #fff; }
+      .el-menu-item { color: #FFFFFF; }
       .el-menu-item:hover { background-color: rgba(3, 153, 254, 0.08); }
       .is-active {
         color: #0399FE;

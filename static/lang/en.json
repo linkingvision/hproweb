@@ -686,7 +686,7 @@
     "cascade_central_record": "Central Record"
   },
   "Event": {
-    "event_count": "Alarms",
+    "event_count": "Event Count",
     "event_search_quantity": "Search Quantity",
     "event_online_status": "Online Status",
     "event_offline_status": "Offline Status",

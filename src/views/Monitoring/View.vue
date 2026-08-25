@@ -26,7 +26,7 @@
                 class="tree-node" :class="getNodeClass(data)">
                 <span :class="isNodePlaying(data) ? 'node-playing-label' : ''"
                   style="display:flex;align-items:center;flex:1;overflow:hidden;">
-                  <i :class="`iconfont ${getNodeIcon(data)}`" style="margin-right:6px;font-size:19px;flex-shrink:0;"></i>
+                  <i :class="`iconfont ${getNodeIcon(data)}`" style="margin-right:6px;font-size:16px;flex-shrink:0;"></i>
                   <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ node.label }}</span>
                   <span v-if="data.totalCount !== undefined" style="padding-left:4px;flex-shrink:0;">
                     {{ data.onlineCount }}/{{ data.totalCount }}
@@ -320,8 +320,7 @@
             <div>{{ t('Analytics.ana_event') }}</div>
           </div>
           <div class="alarm_right_right_body">
-            <el-empty v-if="!eventTableData.length" description="No Data" />
-            <template v-else>
+            <template v-if="eventTableData.length">
               <div v-for="(item, index) in eventTableData.slice((eventCurrentPage-1)*eventPageSize, eventCurrentPage*eventPageSize)"
                    :key="index" class="alarm_right_right_content">
               <!-- 彩色 header：channel名 + 目标类型图标 -->
@@ -2352,7 +2351,9 @@ onBeforeUnmount(() => {
     .fold-btn { font-size: 18px; cursor: pointer; }
   }
   .collapse-title { display: flex; justify-content: space-between; width: 90%; align-items: center; padding-left: 10px; }
-  .tree-node { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .tree-node { width: 100%; display: flex; align-items: center; justify-content: space-between;
+    .icon-shexiangjizaixian { font-size: 19px !important; }
+  }
   .node-playing-label { color: #30d158; }
   .node-playing {
     display: flex; align-items: center;
@@ -2366,9 +2367,10 @@ onBeforeUnmount(() => {
     .el-collapse-item__wrap { background: transparent; border: 0;
       .el-collapse-item__content { padding: 0 10px; }
     }
-    .el-tree { background: transparent; font-size: 13px;
+    .el-tree { background: transparent; font-size: 14px;
       .el-tree-node__content {
         min-height: 26px; height: auto;
+        font-size: 14px; color: #fff;
         &:hover { background: rgba(255,255,255,0.1); }
       }
     }
@@ -2457,10 +2459,10 @@ onBeforeUnmount(() => {
   .show-play-replay {
     display: flex; align-items: center;
     .changeLiveReplay {
-      width: 60px; height: 22px; border-radius: 4px; text-align: center;
-      line-height: 22px; cursor: pointer; font-size: 13px;
-      &.live   { color: #0399FE; background: rgba(3,153,254,0.15); }
-      &.replay { color: #888;   background: transparent; }
+      width: 100px; height: 20px; border-radius: 4px; text-align: center;
+      line-height: 20px; cursor: pointer; font-size: 14px;
+      &.live   { color: #FFFFFF; background: #0399FE; }
+      &.replay { color: #0399FE; background: #313131; }
     }
   }
   .footer-right {
@@ -2594,7 +2596,7 @@ onBeforeUnmount(() => {
 // 时间轴容器背景
 .timeline-box-view { background: #1a1a1a; }
 .palace {
-  position: relative; background: #111; cursor: pointer;
+  position: relative; background: #222222; cursor: pointer;
   video { display: block; width: 100%; height: 100%; object-fit: fill; }
   .cell-label {
     position: absolute; bottom: 0; left: 0; right: 0;

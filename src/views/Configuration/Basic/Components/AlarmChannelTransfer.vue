@@ -163,21 +163,31 @@ onMounted(async () => {
   display: flex;
   align-items: stretch;
   justify-content: space-between;
-  width: 900px;
+  width: auto;
+  max-width: 1050px;
   margin-right: 0;
   padding-right: 0;
 
   .channel-panel {
     width: 447px;
+    min-width: 380px;
     height: 496px;
     padding: 10px;
-    border: 1px solid rgba(218, 218, 218, 0.2);
+    border: 1px solid var(--rules-root-border, rgba(218, 218, 218, 0.2));
     border-radius: 4px;
-    background-color: #1b1b1b;
+    background-color: var(--rules-root-bg, #1b1b1b);
+    color: var(--rules-text-color, inherit);
     overflow: auto;
+    box-sizing: border-box;
 
     .filter-input {
       margin-bottom: 8px;
+    }
+
+    :deep(.el-input),
+    :deep(.el-select) {
+      width: 100%;
+      height: 32px;
     }
 
     .el-tree {
@@ -187,22 +197,30 @@ onMounted(async () => {
   }
 
   .transfer-buttons {
-    width: 10%;
+    width: auto;
+    min-width: 60px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 12px;
+    padding: 0 8px;
 
     button {
       width: 40px;
       min-width: 40px;
       height: 40px;
       border-radius: 4px;
-      border: 1px solid #0399fe;
-      color: #0399fe;
+      border: 1px solid var(--el-color-primary, #0399fe);
+      color: var(--el-color-primary, #0399fe);
       background: transparent;
       cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: var(--el-color-primary, #0399fe);
+        color: #fff;
+      }
     }
   }
 

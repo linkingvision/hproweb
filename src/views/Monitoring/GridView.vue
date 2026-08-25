@@ -25,7 +25,7 @@
                 <div class="tree-node" :class="getNodeClass(data)" draggable="true" @dragstart="onDragStart($event, data)">
                   <span :class="isNodePlaying(data) ? 'node-playing-label' : ''"
                     style="display:flex;align-items:center;flex:1;overflow:hidden;">
-                    <i :class="`iconfont ${getNodeIcon(data)}`" style="margin-right:6px;font-size:19px;flex-shrink:0;"></i>
+                    <i :class="`iconfont ${getNodeIcon(data)}`" style="margin-right:6px;font-size:16px;flex-shrink:0;"></i>
                     <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ node.label }}</span>
                     <span v-if="data.totalCount !== undefined" style="padding-left:4px;flex-shrink:0;">
                       {{ data.onlineCount }}/{{ data.totalCount }}
@@ -959,7 +959,9 @@ onBeforeUnmount(() => {
     }
 
     .collapse-title { display: flex; justify-content: space-between; width: 90%; align-items: center; padding-left: 10px; }
-    .tree-node { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+    .tree-node { width: 100%; display: flex; align-items: center; justify-content: space-between;
+      .icon-shexiangjizaixian { font-size: 19px !important; }
+    }
     .node-playing-label { color: #30d158; }
     .node-playing {
       display: flex; align-items: center;
@@ -1179,9 +1181,9 @@ onBeforeUnmount(() => {
   .show-play-replay {
     display: flex; align-items: center;
     .changeLiveReplay {
-      width: 60px; height: 22px; border-radius: 4px; text-align: center; line-height: 22px; cursor: pointer; font-size: 13px;
-      &.live   { color: #0399FE; background: rgba(3,153,254,0.15); }
-      &.replay { color: #888;   background: transparent; }
+      width: 100px; height: 20px; border-radius: 4px; text-align: center; line-height: 20px; cursor: pointer; font-size: 14px;
+      &.live   { color: #FFFFFF; background: #0399FE; }
+      &.replay { color: #0399FE; background: #313131; }
     }
   }
   .footer-right {

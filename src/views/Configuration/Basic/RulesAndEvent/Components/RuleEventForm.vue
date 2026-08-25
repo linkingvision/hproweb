@@ -2,7 +2,7 @@
   <div id="add_rules">
     <div class="header">
       <el-button @click="back" type="text">{{ t('RulesAndEvent.rule_config') }}</el-button>
-      <span style="margin:0 8px;font-size:16px;">&gt;</span>
+      <span style="margin:0 8px;font-size:16px;">></span>
       <span>{{ modeTitle }}</span>
     </div>
     <p style="font-weight:600;">{{ modeTitle }}</p>
@@ -25,7 +25,9 @@
           </el-select>
         </el-form-item>
         <el-form-item :label="t('RulesAndEvent.rule_config_list')" prop="setting.Action.Notification">
-          <el-select v-model="form.setting.Action.Notification" :placeholder="t('Common.comm_please_select')">
+          <el-select v-model="form.setting.Action.Notification"
+                     :placeholder="t('Common.comm_please_select')"
+                     :no-data-text="t('Common.comm_no_data')">
             <el-option v-for="item in filteredConfigList" :key="item.uuid || item.id" :label="item.name" :value="item.uuid || ''" />
           </el-select>
         </el-form-item>
@@ -41,7 +43,7 @@
                   {{ t('Common.comm_check_all') }}
                 </el-checkbox>
               </div>
-              <el-checkbox-group v-model="checkedSystemEvents" @change="resetChecks" class="event-grid">
+              <el-checkbox-group v-model="checkedSystemEvents" @change="resetChecks" class="system-event event-grid">
                 <el-checkbox v-for="item in systemEventOptions" :key="item.value" :label="item.value">
                   {{ item.label }}
                 </el-checkbox>
@@ -53,7 +55,7 @@
                   {{ t('Common.comm_check_all') }}
                 </el-checkbox>
               </div>
-              <el-checkbox-group v-model="checkedAnalyticsEvents" @change="resetChecks" class="event-grid">
+              <el-checkbox-group v-model="checkedAnalyticsEvents" @change="resetChecks" class="analyse-event event-grid">
                 <el-checkbox v-for="item in analyticsEventOptions" :key="item.value" :label="item.value">
                   {{ item.label }}
                 </el-checkbox>
@@ -68,7 +70,7 @@
       </el-form>
 
       <el-form class="bottom-form" :inline="true" label-position="left" :model="form">
-        <el-form-item :label="t('Common.comm_enable')">
+        <el-form-item :label="t('Common.comm_enable')" class="enable-item">
           <el-switch v-model="form.enabled" />
         </el-form-item>
         <el-form-item :label="t('RulesAndEvent.rule_description')" class="description">
@@ -157,8 +159,7 @@ const rules = computed<FormRules>(() => ({
 }))
 
 function responseResult(res: any) {
-  const result = res?.data?.result ?? res?.result ?? []
-  return Array.isArray(result?.list) ? result.list : result
+  return res?.data?.result ?? []
 }
 
 function isSuccess(res: any) {
@@ -203,8 +204,9 @@ async function resolveSelectedChannels(uuids: string[]) {
   try {
     const res: any = await GetChannelsByUuidApi({ uuids, all: true })
     const result = responseResult(res)
-    if (Array.isArray(result)) {
-      const channelMap = new Map(result.map((item: any) => [item.uuid, normalizeSelectedChannel({
+    const list = Array.isArray(result?.list) ? result.list : Array.isArray(result) ? result : []
+    if (list.length) {
+      const channelMap = new Map<string, DeviceTreeNode>(list.map((item: any) => [item.uuid, normalizeSelectedChannel({
         uuid: item.uuid,
         token: item.token,
         label: item.name || item.label || item.uuid,
@@ -319,16 +321,46 @@ function back() {
   }
 
   .form-content {
-    padding-left: 10px;
+    padding: 0 40px;
+  }
+
+  :deep(.demo-form-inline) {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
   }
 
   :deep(.demo-form-inline .el-form-item) {
     margin-right: 30px;
+    margin-bottom: 18px;
   }
 
   :deep(.el-input),
   :deep(.el-select) {
-    width: 260px;
+    width: 312px;
+    height: 32px;
+  }
+
+  :deep(.el_form) {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  :deep(.el_form .type-form-item) {
+    .el-form-item__content {
+      width: 400px;
+    }
+  }
+
+  :deep(.el_form .channel-form-item) {
+    width: auto;
+    margin-left: 20px;
+    .el-form-item__content {
+      width: auto;
+    }
   }
 
   .tow_node {
@@ -336,12 +368,19 @@ function back() {
   }
 
   .Root_node {
-    width: 900px;
-    min-height: 260px;
+    width: 100%;
+    min-height: 496px;
     padding: 16px;
     border: 1px solid rgba(218, 218, 218, 0.2);
     border-radius: 4px;
-    background-color: #1b1b1b;
+    background-color: var(--rules-root-bg, #1b1b1b);
+    color: var(--rules-text-color, inherit);
+    box-sizing: border-box;
+    overflow: auto;
+  }
+
+  .Root_node1 {
+    min-height: 496px;
   }
 
   .event-title {
@@ -349,34 +388,69 @@ function back() {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
+    line-height: 1.2;
+  }
+
+  .event-title > span {
     font-weight: 600;
   }
 
-  .ana-title {
-    margin-top: 22px;
+  :deep(.event-title .el-checkbox) {
+    margin-right: 0;
   }
 
-  .event-grid {
+  .ana-title {
+    margin-top: 20px;
+  }
+
+  .event-grid.system-event,
+  .event-grid.analyse-event {
     display: grid;
-    grid-template-columns: repeat(3, minmax(180px, 1fr));
-    gap: 8px 16px;
+    grid-template-columns: 34% 1fr 30%;
+    gap: 6px 8px;
+  }
+
+  :deep(.event-grid .el-checkbox) {
+    margin-right: 0;
   }
 
   .bottom-form {
-    margin-top: 12px;
+    margin-top: 20px;
+  }
+
+  .enable-item {
+    width: 100px;
   }
 
   .description {
-    width: 620px;
-    :deep(.el-textarea) { width: 447px; }
-    :deep(.el-textarea__inner) { min-height: 64px; }
+    :deep(.el-textarea) {
+      width: 336px;
+    }
+    :deep(.el-textarea__inner) {
+      min-height: 64px;
+    }
   }
 
   .button_table {
+    margin-left: 40px;
     margin-top: 20px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 8px;
+
+    .form_butt1 {
+      border: 1px solid var(--el-color-primary);
+      color: var(--el-color-primary);
+      background: transparent;
+    }
+
+    .form_butt {
+      background-color: var(--el-color-primary);
+    }
+  }
+
+  :deep(.bottom-form .el-form-item) {
+    margin-bottom: 10px;
   }
 }
 </style>

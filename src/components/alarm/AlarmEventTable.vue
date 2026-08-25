@@ -74,6 +74,9 @@ const rowClassName = ({ row }: { row: AlarmEventItem }) => {
     :empty-text="t('CommTable.comm_no_data_available')"
     :row-class-name="rowClassName"
     size="small"
+    stripe
+    highlight-current-row
+    :current-row-key="props.currentUuid"
     @row-click="handleRowClick">
     <el-table-column
       v-if="props.showIndex"
@@ -82,24 +85,24 @@ const rowClassName = ({ row }: { row: AlarmEventItem }) => {
       width="120"
       align="center"
       class-name="serial-number-column" />
-    <el-table-column :label="t('AlarmConfig.ala_time')" prop="strTime" width="200">
+    <el-table-column :label="t('AlarmConfig.ala_time')" prop="strTime" width="280">
       <template #default="{ row }">
         <span>{{ row.strTime || row.time || '' }}</span>
       </template>
     </el-table-column>
-    <el-table-column :label="t('AlarmConfig.ala_level')" prop="alarmLevel" width="120">
+    <el-table-column :label="t('AlarmConfig.ala_level')" prop="alarmLevel">
       <template #default="{ row }">
         <span v-if="row.alarmLevel !== undefined && row.alarmLevel !== null" class="level-span" :style="alarmLevelStyle(row)">
           {{ formatAlarmLevel(row.alarmLevel, props.alarmLevels) }}
         </span>
       </template>
     </el-table-column>
-    <el-table-column :label="t('RulesAndEvent.rule_event_type')" prop="moduleType" width="180">
+    <el-table-column :label="t('RulesAndEvent.rule_event_type')" prop="moduleType">
       <template #default="{ row }">
         <span>{{ formatModuleType(row.moduleType, t) }}</span>
       </template>
     </el-table-column>
-    <el-table-column :label="t('Analytics.ana_channel_name')" prop="channelName" width="160" />
+    <el-table-column :label="t('Analytics.ana_channel_name')" prop="channelName" />
     <el-table-column v-if="props.showStatus" :label="t('Configuration.conf_iscsi_status')" prop="stateName" width="100">
       <template #default="{ row }">
         <span>{{ formatAlarmState(row.stateName || row.stateLevel, t) }}</span>
@@ -119,7 +122,7 @@ const rowClassName = ({ row }: { row: AlarmEventItem }) => {
         </el-popover>
       </template>
     </el-table-column>
-    <el-table-column v-if="props.showOperation" :label="t('CommTableEdit.comm_operational')" width="120" align="center">
+    <el-table-column v-if="props.showOperation" :label="t('CommTableEdit.comm_operational')" width="100" align="center">
       <template #default="{ row }">
         <span class="span-button" @click.stop="emit('operate', row)">{{ t('CommTableEdit.comm_operational') }}</span>
       </template>
@@ -129,12 +132,13 @@ const rowClassName = ({ row }: { row: AlarmEventItem }) => {
 
 <style scoped lang="scss">
 .level-span {
-  display: block;
-  width: 80px;
+  display: inline-block;
+  min-width: 80px;
   height: 20px;
   line-height: 20px;
   border-radius: 2px;
   text-align: center;
+  padding: 0 8px;
 }
 
 .image-preview {
@@ -167,17 +171,25 @@ const rowClassName = ({ row }: { row: AlarmEventItem }) => {
 
 :deep(.el-table__cell) {
   font-size: 12px;
+  color: rgba(255, 255, 255, 0.87) !important;
 }
 
 :deep(.el-table__header .cell) {
   font-size: 12px;
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+:deep(.el-table__body tr) {
+  color: rgba(255, 255, 255, 0.87) !important;
 }
 
 :deep(.el-table__inner-wrapper::before) {
   display: none;
 }
 
-:deep(.alarm-current-row .el-table__cell) {
+:deep(.alarm-current-row .el-table__cell),
+:deep(.el-table__body tr.current-row > td.el-table__cell),
+:deep(.el-table__body tr:hover > td.el-table__cell) {
   background-color: rgba(64, 145, 255, 0.2) !important;
 }
 </style>

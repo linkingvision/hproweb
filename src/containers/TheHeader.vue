@@ -22,7 +22,7 @@
       <div class="header-title">{{ title }}</div>
       <div class="header-nav">
         <el-menu
-          :default-active="activeRouter"
+          :active="activeRouter"
           class="haeder-nav-menu"
           mode="horizontal"
           @select="handleSelect">
@@ -35,20 +35,23 @@
     </div>
     <div class="header-right">
       <div class="alarm-entry" @click="openAlarmPopup">
-        <el-badge :value="alarmStore.newCount" :hidden="alarmStore.newCount === 0" :max="99">
-          <i class="iconfont icon-baojingsousuo"></i>
+        <el-badge :value="alarmStore.newCount" :hidden="alarmStore.newCount === 0" :max="999">
+          <i style="color: #fff; font-size: 16px;" class="iconfont icon-lingdang"></i>
         </el-badge>
       </div>
-      <div class="avatar"
-        :style="{ background: '#222', width: '24px', height: '24px', borderRadius: '50%', fontSize: '14px', textAlign: 'center', lineHeight: '24px', position: 'relative', }">
+      <div v-if="avatar">
+        <img :src="avatar" alt="" width="24px" height="24px">
+      </div>
+      <div v-else class="avatar"
+        :style="{ background: background, color: avatarColor, width: '24px', height: '24px', borderRadius: '50%', fontSize: '14px', textAlign: 'center', lineHeight: '24px', position: 'relative', }">
         {{ acronym }}
         <div
-          style="width: 6px;height: 6px;background: #5CFF00;border-radius: 50%;position: absolute;right:2px;top:17px;">
+          style="width: 6px;height: 6px;background: #5CFF00;border-radius: 50%;position: absolute;right: -10px;bottom: 0px;">
         </div>
       </div>
       <div class="more">
         <el-dropdown trigger="click" popper-style="background-color: transparent; border: 0; box-shadow: none;">
-          <i class="iconfont icon-androidgengduo"></i>
+          <i style="font-size: 16px;" class="iconfont icon-androidgengduo"></i>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click="router.push('/Configuration/Basic/User/UserConfig')">{{ t('SetUser.set_user_config') }}</el-dropdown-item>
@@ -72,6 +75,7 @@ import { useUserStore } from '@/store/user';
 import { useAlarmStore } from '@/store/alarm';
 import { GetAlarmEventStateCountApi } from '@/api/alarmEvent';
 import { useI18n } from 'vue-i18n';
+import getOppositeColor from '@/views/public/OppositeColor';
 
 const store = useStore()
 const userStore = useUserStore()
@@ -86,6 +90,10 @@ const activeRouter = ref('Liveview')
 
 const acronym = ref('')
 acronym.value = userStore.username.charAt(0).toUpperCase();
+
+const avatar = ref('')
+const background = ref('#70CFC9')
+const avatarColor = ref('#8F3036')
 
 const title = ref<string>('')
 
@@ -202,6 +210,29 @@ watch(path, (newVal) => {
   getAtciveRouter(newVal)
 })
 
+const getUserAvatar = async () => {
+  try {
+    const root = userStore.IPPORT
+    const url = root + "/uapi/v1/User/List?pageSize=100"
+    const res = await fetch(url, { credentials: 'include' })
+    if (res.ok) {
+      const result = await res.json()
+      if (result.msg === "Success") {
+        const data = result.result.list
+        const currentUser = data.find((element: any) => element.username === userStore.username)
+        if (currentUser) {
+          acronym.value = currentUser.acronym
+          background.value = currentUser.background
+          avatar.value = currentUser.avatar
+          avatarColor.value = getOppositeColor(currentUser.background)
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('[TheHeader] get user avatar failed', error)
+  }
+}
+
 onMounted(() => {
   userStore.setSetIntervalKeepAlive(setInterval(() => KeepSession(), 60 * 1000))
   getRouterList();
@@ -209,6 +240,7 @@ onMounted(() => {
   SystemInfo()
   initStorageConfig()
   loadAlarmCount()
+  getUserAvatar()
 })
 onBeforeMount(() => {
   userStore.setSetIntervalKeepAlive(null);
@@ -259,7 +291,7 @@ onBeforeMount(() => {
       font-size: 14px;
       line-height: 20px;
       height: 20px;
-      border-right: 2px solid;  // color is inherited from the parent theme rules above
+      border-right: 2px solid #4A4A4A;  // color is inherited from the parent theme rules above
       margin-right: 20px;
       margin-top: 5px;
     }
@@ -272,20 +304,23 @@ onBeforeMount(() => {
         border: none;
         background-color: transparent;
         
-        .el-menu-item {
+        :deep(.el-menu-item) {
           color: #fff;
+          i {
+            font-size: 16px;
+          }
           span {
             line-height: 20px;
-            margin-left: 5px;
           }
         }
-        .el-menu-item:hover, .el-menu-item:focus {
+        :deep(.el-menu-item:hover) {
           background-color: rgba($color: #fff, $alpha: 0.2);
           color: #fff;
         }
-        .is-active {
-          span, i {
-            color: #0399FE;
+        :deep(.el-menu-item.is-active) {
+          color: #0399FE !important;
+          i, span {
+            color: #0399FE !important;
           }
         }
       }
@@ -307,11 +342,14 @@ onBeforeMount(() => {
       height: 30px;
       line-height: 30px;
       text-align: center;
+      margin-right: 30px !important;
       i {
         font-size: 18px;
       }
       :deep(.el-badge__content) {
         top: 5px;
+        right: 15px;
+        border: none;
       }
     }
     .more {

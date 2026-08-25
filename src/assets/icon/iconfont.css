@@ -1149,6 +1149,10 @@
   content: "\e80d";
 }
 
+.icon-warning:before {
+  content: "\e722";
+}
+
 .icon-zuojiantou:before {
   content: "\e808";
 }
