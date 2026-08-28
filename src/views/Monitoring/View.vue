@@ -26,7 +26,10 @@
                 class="tree-node" :class="getNodeClass(data)">
                 <span :class="isNodePlaying(data) ? 'node-playing-label' : ''"
                   style="display:flex;align-items:center;flex:1;overflow:hidden;">
-                  <i :class="`iconfont ${getNodeIcon(data)}`" style="margin-right:6px;font-size:16px;flex-shrink:0;"></i>
+                  <span style="position:relative;display:inline-flex;align-items:center;margin-right:6px;flex-shrink:0;">
+                    <i :class="`iconfont ${getNodeIcon(data)}`" style="font-size:16px;"></i>
+                    <svg v-if="isNodeRecording(data)" class="rec-dot-svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#ff3333"/></svg>
+                  </span>
                   <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ node.label }}</span>
                   <span v-if="data.totalCount !== undefined" style="padding-left:4px;flex-shrink:0;">
                     {{ data.onlineCount }}/{{ data.totalCount }}
@@ -139,6 +142,9 @@
                title="Close"
                @click.stop="clearCell(cell.id)"></i>
           </div>
+
+          <!-- 录像呼吸灯：录像中时左下角闪烁小红点（对照 uscweb .breath_light） -->
+          <div v-if="getCellCamera(cell.id)?.recording" class="breath_light"></div>
 
           <!-- 音量滑块面板 -->
           <div v-if="cellAudioVisible === cell.id" class="cell-audio-slider" @click.stop>
@@ -564,7 +570,7 @@ import { GetDevPartitionApi } from '@/api/configuration/device'
 import { H5sPlayerAudBack } from '@/assets/js/h5splayer.js'
 import {
   GetDeviceChannels, getSearchDeviceRecordByTimeApi, getSearchStorRecordByTimeApi, GetRecordCalendar,
-  setRecEnableApi, GetInformationDataApi, GetPresetsApi, PresetJumpApi, SetPresetApi, PtzApi,
+  RecEnableApi, setRecEnableApi, GetInformationDataApi, GetPresetsApi, PresetJumpApi, SetPresetApi, PtzApi,
 } from '@/api/channel'
 import { UpdateUserConfigApi } from '@/api/system'
 import { GetViewApi, CreateViewApi, UpdateViewApi, DeleteViewApi, GetLayoutListApi, CreateLayoutApi, DeleteLayoutApi } from '@/api/view'
@@ -881,6 +887,15 @@ const getNodeClass = (n: TreeNode) => {
   return (n.online ?? n.data?.online) ? 'device-online' : 'device-offline'
 }
 const isNodePlaying = (n: TreeNode) => playingNodeIds.value.includes(n.id)
+const isNodeRecording = (n: TreeNode) => {
+  if (!n.data?.token && !n.isDeviceChannel) return false
+  const token = n.data?.token
+  if (!token) return false
+  for (const cam of cameraMap.value.values()) {
+    if (cam.token === token && cam.recording) return true
+  }
+  return false
+}
 
 // Next-empty-cell cursor for click-to-place (mirrors uscweb selectedCellId cycling)
 const nextCellIndex = ref(0)
@@ -1109,6 +1124,35 @@ const restorePlayingState = async () => {
           recording: cam.recording ?? false,
         }, cam.nodeId)
       }
+      // 恢复后同步录制状态：对于保存时 recording=true 的摄像头，重新启用后端录制并同步真实状态
+      await nextTick()
+      for (const cam of state.cameras) {
+        if (cam.recording) {
+          try {
+            // 先调用后端确保录制开启
+            await setRecEnableApi({ devUUID: cam.resourceUUID, setting: { manualRecEnable: true } })
+            const cellCam = cameraMap.value.get(cam.cellId)
+            if (cellCam) {
+              cameraMap.value.set(cam.cellId, { ...cellCam, recording: true })
+            }
+          } catch (e) {
+            console.warn('restore recording state failed for', cam.name, e)
+          }
+        } else {
+          // 对于 recording=false 的，也同步后端真实状态以防 UI 不一致
+          try {
+            const res = await RecEnableApi(cam.token)
+            if (res?.data?.code === 0) {
+              const realState = !!res.data.result?.manualRecEnable
+              const cellCam = cameraMap.value.get(cam.cellId)
+              if (cellCam) {
+                cameraMap.value.set(cam.cellId, { ...cellCam, recording: realState })
+              }
+            }
+          } catch {}
+        }
+      }
+      savePlayingState()
     }
     // 恢复播放模式（刷新后保持回放/实时状态）
     if (state.isLiveview === false) {
@@ -2259,6 +2303,7 @@ const doManualRec = async (cellId: string) => {
     const res = await setRecEnableApi({ devUUID: cam.resourceUUID, setting: { manualRecEnable: newState } })
     if (res.status === 200 && res.data.msg === 'Success') {
       cameraMap.value.set(cellId, { ...cam, recording: newState })
+      savePlayingState()
       ElMessage.success(newState ? t('Liveview.live_rec_start') : t('Liveview.live_rec_stop'))
     } else {
       ElMessage.error(t('CommTableEdit.comm_modify_failed'))
@@ -2353,6 +2398,10 @@ onBeforeUnmount(() => {
   .collapse-title { display: flex; justify-content: space-between; width: 90%; align-items: center; padding-left: 10px; }
   .tree-node { width: 100%; display: flex; align-items: center; justify-content: space-between;
     .icon-shexiangjizaixian { font-size: 19px !important; }
+    .rec-dot-svg {
+      position: absolute; bottom: 10px; right: 6px;
+      width: 7px; height: 7px;
+    }
   }
   .node-playing-label { color: #30d158; }
   .node-playing {
@@ -2602,6 +2651,19 @@ onBeforeUnmount(() => {
     position: absolute; bottom: 0; left: 0; right: 0;
     background: rgba(0,0,0,0.6); color: #fff; font-size: 12px; padding: 2px 6px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  // 录像呼吸灯：左下角闪烁小红点（对照 uscweb .breath_light）
+  .breath_light {
+    position: absolute; bottom: 45px; left: 19px; z-index: 6;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: red; opacity: 0.1;
+    animation: breath 2s ease-in-out infinite;
+    -webkit-animation: breath 2s ease-in-out infinite;
+  }
+  @keyframes breath {
+    from { opacity: 0.1; }
+    50%  { opacity: 1; }
+    to   { opacity: 0.1; }
   }
   // 悬浮按钮层：默认偏移到顶部以上，悬停时滑入（对照 GridView float-layer / uscweb liveplay_butt）
   &:hover .float-layer { top: 0; }
@@ -2922,6 +2984,8 @@ onBeforeUnmount(() => {
 </style>
 
 <style lang="scss">
+@keyframes rec-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
 /* ── GongGePopover ── */
 .GongGePopover {
   /* 强制深色背景，不依赖 CSS 变量继承 */

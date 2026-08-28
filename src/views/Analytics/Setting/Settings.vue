@@ -24,9 +24,9 @@ watch(activeIndex, (newVal) => {
   $router.push(newVal)
 })
 
-onMounted(() => {
-  activeIndex.value = $route.path;
-})
+watch(() => $route.path, (newPath) => {
+  activeIndex.value = newPath
+}, { immediate: true })
 </script>
 
 <template>
@@ -38,7 +38,7 @@ onMounted(() => {
         </div>
       </div>
       <el-menu
-        :active="activeIndex"
+        :default-active="activeIndex"
         class="setting-menu"
         :collapse="isCollapse"
         router

@@ -22,7 +22,7 @@
       <div class="header-title">{{ title }}</div>
       <div class="header-nav">
         <el-menu
-          :active="activeRouter"
+          :default-active="activeRouter"
           class="haeder-nav-menu"
           mode="horizontal"
           @select="handleSelect">

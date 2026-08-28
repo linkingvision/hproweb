@@ -36,7 +36,7 @@ watch(() => $route.path, (newPath) => {
         </div>
       </div>
       <el-menu
-        :active="activeIndex"
+        :default-active="activeIndex"
         :default-openeds="[]"
         class="basic-menu"
         :collapse="isCollapse"

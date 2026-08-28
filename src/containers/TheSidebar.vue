@@ -7,7 +7,7 @@
       <img :src="store.lang === 'en' ? LogoWhiteEN : ''" alt="">
     </div>
     <el-menu
-      :active="activeIndex"
+      :default-active="activeIndex"
       class="el-menu-vertical-demo"
     >
       <el-menu-item index="/Home" @click="gotoPage('/Home')">
